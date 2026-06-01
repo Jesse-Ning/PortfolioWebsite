@@ -1190,7 +1190,8 @@ body[data-theme="dark"] .dev-action.primary {
 }
 
 .dev-section-head,
-.dev-item-head {
+.dev-item-head,
+.dev-inline-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1203,6 +1204,26 @@ body[data-theme="dark"] .dev-action.primary {
 
 .dev-section-head.nested {
   margin-top: 16px;
+}
+
+.dev-inline-head {
+  min-height: 40px;
+}
+
+.project-tags-editor {
+  padding: 10px;
+  border: 1px solid color-mix(in srgb, var(--line) 84%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--surface) 54%, transparent);
+}
+
+.project-tag-row {
+  grid-template-columns: minmax(0, 1fr) 40px;
+}
+
+.dev-empty.compact {
+  padding: 12px;
+  font-size: 0.82rem;
 }
 
 .dev-section-head h3,

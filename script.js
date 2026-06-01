@@ -1239,6 +1239,8 @@ function renderProjectsEditor() {
 }
 
 function renderProjectEditor(project, index) {
+  const tags = toTags(project.tags);
+
   return `
     <article class="dev-item" data-project-index="${index}">
       <div class="dev-item-head">
@@ -1254,11 +1256,32 @@ function renderProjectEditor(project, index) {
         ${field("我的职责", "project-responsibility", project.responsibility || project.role, `data-project-field="responsibility"`)}
         ${field("编程语言", "project-language", project.language, `data-project-field="language"`)}
         ${field("游戏类型", "project-game-type", project.gameType, `data-project-field="gameType"`)}
-        ${field("补充标签", "project-tags", toTags(project.tags).join(", "), `data-project-field="tags"`)}
+        <div class="dev-field wide project-tags-editor">
+          <div class="dev-inline-head">
+            <span>补充标签</span>
+            <button class="dev-small-button" type="button" data-add-project-tag="${index}">${icon("plus")}添加标签</button>
+          </div>
+          <div class="dev-list nested">
+            ${
+              tags.length
+                ? tags.map((tag, tagIndex) => renderProjectTagEditor(tag, index, tagIndex)).join("")
+                : `<div class="dev-empty compact">还没有补充标签，点击添加标签。</div>`
+            }
+          </div>
+        </div>
         ${textarea("简介", "project-description", project.description, 4, `data-project-field="description"`)}
         ${imageField("图片", project.image, `data-project-field="image"`, "project", index)}
       </div>
     </article>
+  `;
+}
+
+function renderProjectTagEditor(tag, projectIndex, tagIndex) {
+  return `
+    <div class="dev-mini-row project-tag-row" data-project-tag-index="${tagIndex}">
+      <input aria-label="补充标签" data-project-tag-field="value" value="${attr(tag)}" />
+      <button class="dev-icon-button danger" type="button" data-delete-project-tag="${projectIndex}:${tagIndex}" aria-label="删除补充标签">${icon("trash")}</button>
+    </div>
   `;
 }
 
@@ -1436,6 +1459,23 @@ function handleEditorButton(button) {
     syncFromEditor();
     siteData.projects.splice(Number(button.dataset.deleteProject), 1);
     renderEditor();
+  } else if (button.matches("[data-add-project-tag]")) {
+    syncFromEditor();
+    const project = siteData.projects[Number(button.dataset.addProjectTag)];
+    if (project) {
+      project.tags = toTags(project.tags);
+      project.tags.push("新标签");
+    }
+    renderEditor();
+  } else if (button.matches("[data-delete-project-tag]")) {
+    syncFromEditor();
+    const [projectIndex, tagIndex] = button.dataset.deleteProjectTag.split(":").map(Number);
+    const project = siteData.projects[projectIndex];
+    if (project) {
+      project.tags = toTags(project.tags);
+      project.tags.splice(tagIndex, 1);
+    }
+    renderEditor();
   } else if (button.matches("[data-add-section]")) {
     syncFromEditor();
     const nextNumber = siteData.customSections.length + 1;
@@ -1540,7 +1580,9 @@ function collectEditorData() {
         gameType: row.querySelector("[data-project-field='gameType']").value.trim(),
         image: row.querySelector("[data-project-field='image']").value.trim(),
         description: row.querySelector("[data-project-field='description']").value.trim(),
-        tags: toTags(row.querySelector("[data-project-field='tags']").value)
+        tags: Array.from(row.querySelectorAll("[data-project-tag-index]"))
+          .map((tagRow) => tagRow.querySelector("[data-project-tag-field='value']").value.trim())
+          .filter(Boolean)
       };
     });
     next.projects = updatedProjects.filter(Boolean);
