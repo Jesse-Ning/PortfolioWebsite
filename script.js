@@ -509,6 +509,83 @@ function renderNav() {
     .join("");
 }
 
+const softwareIconMap = [
+  { pattern: /unreal|ue5|ue\b/i, slug: "unrealengine" },
+  { pattern: /unity/i, slug: "unity" },
+  { pattern: /blender/i, slug: "blender" },
+  { pattern: /^git$/i, slug: "git" },
+  { pattern: /github/i, slug: "github" },
+  { pattern: /sketchup|sketch up/i, slug: "sketchup" },
+  { pattern: /photoshop|photo shop|ps\b/i, slug: "adobephotoshop" },
+  { pattern: /\bword\b|microsoft word/i, slug: "microsoftword" },
+  { pattern: /\bexcel\b|microsoft excel/i, slug: "microsoftexcel" },
+  { pattern: /powerpoint|power point|ppt/i, slug: "microsoftpowerpoint" }
+];
+
+function isSoftwareKeywordGroup(group) {
+  const label = String(group?.label || "").trim();
+  return label === "软件" || /software/i.test(label);
+}
+
+function getSoftwareIcon(item) {
+  const label = String(item || "").trim();
+  if (!label) return null;
+
+  const match = softwareIconMap.find((entry) => entry.pattern.test(label));
+  if (!match) return null;
+
+  return {
+    label,
+    src: "https://cdn.simpleicons.org/" + match.slug
+  };
+}
+
+function renderProfileKeywordGroup(group) {
+  const items = toTags(group.items);
+  const softwareGroup = isSoftwareKeywordGroup(group);
+
+  return `
+    <article class="keyword-group${softwareGroup ? " is-software" : ""} reveal">
+      <h3>${escapeHtml(group.label)}</h3>
+      ${softwareGroup ? renderSoftwareIconList(items) : renderKeywordChipList(items)}
+    </article>
+  `;
+}
+
+function renderKeywordChipList(items) {
+  return `
+    <div class="keyword-list">
+      ${items.map((item) => `<span class="keyword-chip">${escapeHtml(item)}</span>`).join("")}
+    </div>
+  `;
+}
+
+function renderSoftwareIconList(items) {
+  return `
+    <div class="software-icon-list">
+      ${items.map(renderSoftwareIconItem).join("")}
+    </div>
+  `;
+}
+
+function renderSoftwareIconItem(item) {
+  const iconData = getSoftwareIcon(item);
+  const fallback = String(item || "").trim().slice(0, 2).toUpperCase();
+
+  return `
+    <span class="software-icon-card" title="${attr(item)}">
+      <span class="software-icon-mark" aria-hidden="true">
+        ${
+          iconData
+            ? `<img src="${attr(iconData.src)}" alt="" loading="lazy" onerror="this.remove();" />`
+            : `<span>${escapeHtml(fallback)}</span>`
+        }
+      </span>
+      <span>${escapeHtml(item)}</span>
+    </span>
+  `;
+}
+
 function renderProfile() {
   const { profile } = siteData;
   document.title = `${profile.name} | Personal Portfolio`;
@@ -535,16 +612,7 @@ function renderProfile() {
     .join("");
 
   document.getElementById("profile-keywords").innerHTML = profile.keywords
-    .map(
-      (group) => `
-        <article class="keyword-group reveal">
-          <h3>${escapeHtml(group.label)}</h3>
-          <div class="keyword-list">
-            ${toTags(group.items).map((item) => `<span class="keyword-chip">${escapeHtml(item)}</span>`).join("")}
-          </div>
-        </article>
-      `
-    )
+    .map(renderProfileKeywordGroup)
     .join("");
 
   const links = profile.links

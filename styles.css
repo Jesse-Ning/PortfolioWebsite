@@ -503,6 +503,52 @@ h2 {
   font-size: 0.82rem;
   font-weight: 760;
 }
+.keyword-group.is-software {
+  align-items: stretch;
+}
+
+.software-icon-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.software-icon-card {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 5px 8px 5px 5px;
+  border: 1px solid color-mix(in srgb, var(--line) 86%, transparent);
+  border-radius: 8px;
+  color: color-mix(in srgb, var(--ink) 88%, var(--muted));
+  background: color-mix(in srgb, var(--surface-strong) 56%, transparent);
+  font-size: 0.78rem;
+  font-weight: 780;
+}
+
+.software-icon-mark {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid color-mix(in srgb, var(--line) 58%, transparent);
+  border-radius: 8px;
+  color: #111318;
+  background: #f7f8f7;
+}
+
+.software-icon-mark img {
+  width: 21px;
+  height: 21px;
+  object-fit: contain;
+}
+
+.software-icon-mark span {
+  font-size: 0.68rem;
+  font-weight: 900;
+}
 
 .fact-item {
   min-height: 76px;
@@ -1440,6 +1486,10 @@ body[data-theme="dark"] .dev-action.primary {
   .keyword-group {
     grid-template-columns: 1fr;
     gap: 8px;
+  }
+
+  .software-icon-list {
+    grid-template-columns: 1fr;
   }
 
   .project-card.is-featured {
