@@ -944,14 +944,14 @@ body[data-theme="dark"] .filter-button.is-active {
 
 .project-card.is-featured .project-media {
   order: 3;
-  width: min(34%, 360px);
-  min-width: 280px;
+  width: min(58%, 620px);
+  min-width: 420px;
   min-height: 0;
   aspect-ratio: 16 / 9;
-  margin: 0 auto clamp(20px, 2.4vw, 30px);
+  margin: 4px auto clamp(24px, 2.8vw, 36px);
   border: 1px solid var(--line);
   border-radius: 8px;
-  box-shadow: 0 12px 28px rgba(17, 19, 24, 0.16);
+  box-shadow: 0 14px 32px rgba(17, 19, 24, 0.18);
 }
 
 .project-card.is-featured p {
@@ -1681,11 +1681,11 @@ body[data-theme="dark"] .dev-action.primary {
   }
 
   .project-card.is-featured .project-media {
-    width: min(72%, 340px);
+    width: min(100%, 520px);
     min-width: 0;
     min-height: 0;
     aspect-ratio: 16 / 9;
-    margin-bottom: 18px;
+    margin-bottom: 20px;
   }
 
   .project-card.is-featured p {
