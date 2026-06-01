@@ -523,12 +523,52 @@ function isNewer(left, right) {
   return new Date(left?.updatedAt || 0).getTime() > new Date(right?.updatedAt || 0).getTime();
 }
 
+function isDevModeRequested() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    return params.has("dev") || localStorage.getItem(DEV_MODE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function mergePublishedAdditions(localData, serverData) {
+  if (!serverData) return localData;
+
+  const merged = {
+    ...serverData,
+    ...localData,
+    sections: {
+      ...(serverData.sections || {}),
+      ...(localData.sections || {})
+    }
+  };
+  const localSteam = localData.steamLibrary;
+  const serverSteam = serverData.steamLibrary;
+  const localSteamCount = Array.isArray(localSteam?.games) ? localSteam.games.length : 0;
+  const serverSteamCount = Array.isArray(serverSteam?.games) ? serverSteam.games.length : 0;
+
+  if (
+    serverSteam &&
+    (!localSteam ||
+      (serverSteamCount > 0 && localSteamCount === 0) ||
+      isNewer({ updatedAt: serverSteam.updatedAt }, { updatedAt: localSteam.updatedAt }))
+  ) {
+    merged.steamLibrary = serverSteam;
+  }
+
+  return merged;
+}
+
 async function loadInitialData() {
   const localData = readLocalData();
   const serverData = await readServerData();
 
-  if (localData && (!serverData || isNewer(localData, serverData))) {
-    return normalizeData(localData);
+  if (localData) {
+    const mergedLocalData = mergePublishedAdditions(localData, serverData);
+    if (isDevModeRequested() || !serverData || isNewer(mergedLocalData, serverData)) {
+      return normalizeData(mergedLocalData);
+    }
   }
 
   return normalizeData(serverData || localData || DEFAULT_SITE_DATA);
