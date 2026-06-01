@@ -22,7 +22,8 @@ const DEFAULT_SITE_DATA = {
     ],
     keywords: [
       { label: "技能", items: ["战斗系统", "玩法原型", "镜头反馈", "Boss AI"] },
-      { label: "语言", items: ["C++", "Blueprint", "C#", "JavaScript"] },
+      { label: "编程语言", items: ["C++", "Blueprint", "C#", "JavaScript"] },
+      { label: "语言", items: ["中文", "英语", "日语"] },
       { label: "软件", items: ["Unreal Engine 5", "Unity", "Blender", "Git"] }
     ],
     links: [
@@ -34,7 +35,7 @@ const DEFAULT_SITE_DATA = {
   },
   timeline: [
     {
-      date: "2026",
+      date: "2026-现在",
       title: "阴阳之力 | UE5 动作战斗项目",
       description: "搭建玩家战斗、Boss AI、完美闪避、弹反处决、镜头反馈和 HUD 表现等核心模块。",
       tags: ["Unreal Engine", "C++", "Action Combat"]
@@ -258,13 +259,42 @@ function isFeatured(item, index = 0) {
   return orderValue(item, index) === 1;
 }
 
+function isCurrentTimelineItem(item) {
+  return /现在|至今|当前|present|current|now/i.test(String(item?.date || ""));
+}
+
+function isProgrammingKeyword(value) {
+  const text = String(value || "").trim();
+  return /^(c\+\+|c#|c|blueprint|java|javascript|typescript|python|lua|gdscript|hlsl|glsl|shader|html|css|sql)$/i.test(text) || /蓝图|编程|脚本|script/i.test(text);
+}
+
 function normalizeKeywordGroups(groups) {
-  return (Array.isArray(groups) ? groups : [])
+  const normalized = (Array.isArray(groups) ? groups : [])
     .map((group) => ({
       label: String(group?.label || "关键词").trim(),
       items: toTags(group?.items)
     }))
     .filter((group) => group.label || group.items.length);
+
+  const hasProgrammingGroup = normalized.some((group) => group.label === "编程语言");
+  const migrated = [];
+  let migratedOldLanguage = false;
+
+  normalized.forEach((group) => {
+    if ((group.label === "语言" || group.label.toLowerCase() === "language") && group.items.some(isProgrammingKeyword) && !hasProgrammingGroup) {
+      migrated.push({ ...group, label: "编程语言" });
+      migratedOldLanguage = true;
+      return;
+    }
+
+    migrated.push(group);
+  });
+
+  if (migratedOldLanguage && !migrated.some((group) => group.label === "语言")) {
+    migrated.push({ label: "语言", items: ["中文", "英语", "日语"] });
+  }
+
+  return migrated;
 }
 
 function inferProjectLanguage(project) {
@@ -567,7 +597,7 @@ function renderTimeline() {
           ? visibleItems
               .map(
                 (item) => `
-                  <article class="timeline-item reveal${isFeatured(item, item.index) ? " is-featured" : ""}">
+                  <article class="timeline-item reveal${isFeatured(item, item.index) ? " is-featured" : ""}${isCurrentTimelineItem(item) ? " is-current" : ""}">
                     <div class="timeline-date">${escapeHtml(item.date)}</div>
                     <div class="timeline-card">
                       <h3>${escapeHtml(item.title)}</h3>
@@ -1100,7 +1130,7 @@ function renderProfileEditor() {
     <div class="dev-section-head">
       <div>
         <h3>关键词分组</h3>
-        <p>可以写技能、语言、软件等。每组关键词用逗号或换行分隔。</p>
+        <p>可以写技能、编程语言、语言、软件等。每组关键词用逗号或换行分隔。</p>
       </div>
       <button class="dev-small-button" type="button" data-add-keyword-group>${icon("plus")}添加分组</button>
     </div>

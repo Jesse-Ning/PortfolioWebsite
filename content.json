@@ -61,12 +61,20 @@
         ]
       },
       {
-        "label": "语言",
+        "label": "编程语言",
         "items": [
           "C++",
           "Blueprint",
           "C#",
           "JavaScript"
+        ]
+      },
+      {
+        "label": "语言",
+        "items": [
+          "中文",
+          "英语",
+          "日语"
         ]
       },
       {
@@ -82,7 +90,7 @@
   },
   "timeline": [
     {
-      "date": "2026",
+      "date": "2026-现在",
       "title": "阴阳之力 | UE5 动作战斗项目",
       "description": "搭建玩家战斗、Boss AI、完美闪避、弹反处决、镜头反馈和 HUD 表现等核心模块。",
       "tags": [
