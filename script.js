@@ -1,0 +1,1264 @@
+const STORAGE_KEY = "portfolio-site-data-v1";
+const DEV_MODE_KEY = "portfolio-dev-mode";
+
+const DEFAULT_SITE_DATA = {
+  updatedAt: "2026-05-30T00:00:00.000Z",
+  profile: {
+    name: "你的名字",
+    initials: "YY",
+    kicker: "Game Designer / Gameplay Programmer",
+    title: "游戏设计师 & 战斗系统程序员",
+    summary: "我关注动作游戏中的时机、反馈、节奏和玩家决策，喜欢把设计想法落到可玩的系统里。",
+    about: [
+      "我是一名偏设计实现型的游戏创作者，工作重点放在战斗系统、镜头反馈、角色状态机和关卡节奏上。比起只写一个功能，我更在意玩家按下按钮之后，画面、声音、动画和数值是否形成清楚的回应。",
+      "目前主要使用 Unreal Engine 和 C++ 做动作游戏原型，围绕完美闪避、弹反、处决、Boss 行为树、战斗镜头和 UI 反馈建立可迭代的玩法模块。",
+      "我喜欢用研究的方式做设计：拆解优秀游戏，记录机制意图，再把假设做成小原型验证。这个网站可以作为个人介绍、作品归档和开发日志入口。"
+    ],
+    facts: [
+      { value: "UE5", label: "主要引擎" },
+      { value: "C++", label: "核心实现" },
+      { value: "Combat", label: "设计方向" },
+      { value: "Prototype", label: "当前阶段" }
+    ],
+    links: [
+      { label: "Email", href: "mailto:yourname@example.com", icon: "mail", primary: true },
+      { label: "GitHub", href: "https://github.com/", icon: "github" },
+      { label: "Bilibili", href: "https://space.bilibili.com/", icon: "video" },
+      { label: "Steam", href: "https://steamcommunity.com/", icon: "gamepad" }
+    ]
+  },
+  timeline: [
+    {
+      date: "2026",
+      title: "阴阳之力 | UE5 动作战斗项目",
+      description: "搭建玩家战斗、Boss AI、完美闪避、弹反处决、镜头反馈和 HUD 表现等核心模块。",
+      tags: ["Unreal Engine", "C++", "Action Combat"]
+    },
+    {
+      date: "2026",
+      title: "战斗反馈系统迭代",
+      description: "围绕命中停顿、镜头冲击、受击反馈、血量表现和状态窗口设计可调参数，提升可读性和手感。",
+      tags: ["Game Feel", "Camera", "UI Feedback"]
+    },
+    {
+      date: "2025",
+      title: "游戏机制研究与原型练习",
+      description: "持续拆解动作、解谜和 Roguelike 游戏中的风险回报、节奏曲线与玩家学习路径。",
+      tags: ["Gameplay Research", "Design Notes", "Prototyping"]
+    }
+  ],
+  projects: [
+    {
+      title: "阴阳之力",
+      year: "2026",
+      role: "Solo Developer",
+      category: "games",
+      engine: "UE5",
+      image: "assets/slash-preview.png",
+      description: "以阴阳资源、近战攻防和高反馈动作为核心的第三人称动作游戏原型。",
+      tags: ["Action", "Combat", "Boss"]
+    },
+    {
+      title: "完美闪避与反击窗口",
+      year: "2026",
+      role: "Gameplay Programmer",
+      category: "systems",
+      engine: "C++",
+      image: "assets/recovery-preview.png",
+      description: "用通知窗口、状态约束和镜头反馈组合出更清晰的闪避收益与反击节奏。",
+      tags: ["Dodge", "Timing", "Feedback"]
+    },
+    {
+      title: "Boss 行为树战斗循环",
+      year: "2026",
+      role: "AI / Combat",
+      category: "systems",
+      engine: "UE5",
+      image: "assets/blood-veins-preview.png",
+      description: "处理近远距离攻击、受击恢复、压迫感参数和阶段切换，让敌人行为更稳定。",
+      tags: ["Boss AI", "Behavior Tree", "Balance"]
+    },
+    {
+      title: "动作镜头反馈库",
+      year: "2026",
+      role: "Tools / Feel",
+      category: "design",
+      engine: "Data Assets",
+      image: "assets/slash-preview.png",
+      description: "把攻击、处决和完美动作的镜头表现拆成可复用配置，方便快速调手感。",
+      tags: ["Camera", "Data Asset", "Game Feel"]
+    },
+    {
+      title: "生命值与受击表现",
+      year: "2026",
+      role: "UI / VFX",
+      category: "design",
+      engine: "UMG",
+      image: "assets/blood-veins-preview.png",
+      description: "探索伤痕、回血流动、屏幕边缘压迫等反馈，让战斗状态更容易被玩家感知。",
+      tags: ["HUD", "VFX", "Readability"]
+    },
+    {
+      title: "机制拆解笔记",
+      year: "2025",
+      role: "Research",
+      category: "research",
+      engine: "Notes",
+      image: "assets/recovery-preview.png",
+      description: "记录动作游戏中的风险回报、节奏设计、技能引导和玩家成长曲线。",
+      tags: ["Research", "Design", "Analysis"]
+    }
+  ],
+  research: [
+    {
+      title: "战斗节奏",
+      description: "关注攻击前摇、取消窗口、破绽暴露和奖励反馈之间的关系。"
+    },
+    {
+      title: "玩家可读性",
+      description: "通过动画姿态、镜头重心、UI 层级和音效提示降低判断成本。"
+    },
+    {
+      title: "原型验证",
+      description: "用小范围可玩版本验证机制，再决定是否扩展成完整系统。"
+    }
+  ],
+  customSections: []
+};
+
+const iconMap = {
+  mail:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4z" fill="none" stroke="currentColor" stroke-width="2"/><path d="m4 7 8 6 8-6" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
+  github:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-3 19c.5.1.7-.2.7-.5v-2c-2.8.6-3.4-1.2-3.4-1.2-.5-1.1-1.1-1.4-1.1-1.4-.9-.6.1-.6.1-.6 1 0 1.6 1.1 1.6 1.1.9 1.6 2.5 1.1 3.1.8.1-.7.4-1.1.7-1.4-2.2-.3-4.6-1.1-4.6-4.9 0-1.1.4-2 1.1-2.7-.1-.3-.5-1.3.1-2.7 0 0 .9-.3 2.8 1a9.8 9.8 0 0 1 5.2 0c2-1.3 2.8-1 2.8-1 .6 1.4.2 2.4.1 2.7.7.7 1.1 1.6 1.1 2.7 0 3.8-2.3 4.6-4.6 4.9.4.3.8 1 .8 2.1v3.1c0 .3.2.6.8.5A10 10 0 0 0 12 2z" fill="currentColor"/></svg>',
+  video:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="6" width="16" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="m10 9 5 3-5 3z" fill="currentColor"/></svg>',
+  gamepad:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10h10a4 4 0 0 1 3.8 5.3l-.5 1.5a2 2 0 0 1-3.2.8L15 16H9l-2.1 1.6a2 2 0 0 1-3.2-.8l-.5-1.5A4 4 0 0 1 7 10z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 13v3M6.5 14.5h3M16.8 13.5h.1M18.8 15.5h.1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+  sun:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+  moon:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15.5A8.5 8.5 0 0 1 8.5 4 7 7 0 1 0 20 15.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>',
+  edit:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20z" fill="none" stroke="currentColor" stroke-width="2"/><path d="m13.5 7.5 3 3" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
+  close:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+  plus:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+  save:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h12l2 2v14H5z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 4v6h8V4M8 20v-6h8v6" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
+  download:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  trash:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 14h10l1-14M9 7V4h6v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'
+};
+
+const baseNavItems = [
+  { id: "about", label: "介绍" },
+  { id: "experience", label: "经历" },
+  { id: "projects", label: "作品" },
+  { id: "research", label: "研究" },
+  { id: "contact", label: "联系" }
+];
+
+const categoryLabels = {
+  all: "全部",
+  games: "游戏",
+  systems: "系统",
+  design: "设计",
+  research: "研究"
+};
+
+let siteData = cloneData(DEFAULT_SITE_DATA);
+let activeProjectFilter = "all";
+let revealObserver;
+let scrollSpy;
+let currentEditorTab = "profile";
+
+function cloneData(data) {
+  return JSON.parse(JSON.stringify(data));
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function attr(value) {
+  return escapeHtml(value);
+}
+
+function icon(name) {
+  return iconMap[name] || "";
+}
+
+function toParagraphs(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item).trim()).filter(Boolean);
+  }
+  return String(value || "")
+    .split(/\n\s*\n/g)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function toTags(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item).trim()).filter(Boolean);
+  }
+  return String(value || "")
+    .split(/[,，\n]/g)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function normalizeData(data) {
+  const fallback = cloneData(DEFAULT_SITE_DATA);
+  const source = data && typeof data === "object" ? data : {};
+  return {
+    updatedAt: source.updatedAt || fallback.updatedAt,
+    profile: {
+      ...fallback.profile,
+      ...(source.profile || {}),
+      about: toParagraphs(source.profile?.about || fallback.profile.about),
+      facts: Array.isArray(source.profile?.facts) ? source.profile.facts : fallback.profile.facts,
+      links: Array.isArray(source.profile?.links) ? source.profile.links : fallback.profile.links
+    },
+    timeline: Array.isArray(source.timeline) ? source.timeline : fallback.timeline,
+    projects: Array.isArray(source.projects) ? source.projects : fallback.projects,
+    research: Array.isArray(source.research) ? source.research : fallback.research,
+    customSections: Array.isArray(source.customSections) ? source.customSections : []
+  };
+}
+
+function isNewer(left, right) {
+  return new Date(left?.updatedAt || 0).getTime() > new Date(right?.updatedAt || 0).getTime();
+}
+
+async function loadInitialData() {
+  const localData = readLocalData();
+  const serverData = await readServerData();
+
+  if (localData && (!serverData || isNewer(localData, serverData))) {
+    return normalizeData(localData);
+  }
+
+  return normalizeData(serverData || localData || DEFAULT_SITE_DATA);
+}
+
+function readLocalData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+async function readServerData() {
+  if (!["http:", "https:"].includes(window.location.protocol)) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(`content.json?ts=${Date.now()}`, { cache: "no-store" });
+    return response.ok ? response.json() : null;
+  } catch {
+    return null;
+  }
+}
+
+async function saveServerData(data) {
+  if (!["http:", "https:"].includes(window.location.protocol)) {
+    return false;
+  }
+
+  try {
+    const response = await fetch("api/content", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+function setText(selector, value) {
+  document.querySelectorAll(selector).forEach((node) => {
+    node.textContent = value;
+  });
+}
+
+function renderAll() {
+  renderNav();
+  renderProfile();
+  renderTimeline();
+  renderFilters(activeProjectFilter);
+  renderProjects(activeProjectFilter);
+  renderResearch();
+  renderCustomSections();
+  setupScrollSpy();
+  observeReveals();
+}
+
+function renderNav() {
+  const customItems = siteData.customSections.map((section) => ({
+    id: section.id,
+    label: section.navTitle || section.title || "新页签"
+  }));
+  const navItems = [...baseNavItems.slice(0, 4), ...customItems, baseNavItems[4]];
+
+  document.querySelector(".site-nav").innerHTML = navItems
+    .map((item) => `<a href="#${attr(item.id)}">${escapeHtml(item.label)}</a>`)
+    .join("");
+}
+
+function renderProfile() {
+  const { profile } = siteData;
+  document.title = `${profile.name} | Personal Portfolio`;
+  setText("[data-profile-name]", profile.name);
+  setText("[data-profile-initials]", profile.initials);
+  setText("[data-profile-kicker]", profile.kicker);
+  setText("[data-profile-title]", profile.title);
+  setText("[data-profile-summary]", profile.summary);
+  setText("[data-current-year]", new Date().getFullYear());
+
+  document.getElementById("about-copy").innerHTML = profile.about
+    .map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`)
+    .join("");
+
+  document.getElementById("profile-facts").innerHTML = profile.facts
+    .map(
+      (fact) => `
+        <div class="fact-item reveal">
+          <strong>${escapeHtml(fact.value)}</strong>
+          <span>${escapeHtml(fact.label)}</span>
+        </div>
+      `
+    )
+    .join("");
+
+  const links = profile.links
+    .map(
+      (link) => `
+        <a class="link-button${link.primary ? " primary" : ""}" href="${attr(link.href)}" target="${String(link.href || "").startsWith("http") ? "_blank" : "_self"}" rel="noreferrer">
+          ${icon(link.icon)}
+          <span>${escapeHtml(link.label)}</span>
+        </a>
+      `
+    )
+    .join("");
+
+  document.getElementById("hero-links").innerHTML = links;
+  document.getElementById("footer-links").innerHTML = links;
+}
+
+function renderTimeline() {
+  document.getElementById("timeline").innerHTML = siteData.timeline
+    .map(
+      (item) => `
+        <article class="timeline-item reveal">
+          <div class="timeline-date">${escapeHtml(item.date)}</div>
+          <div class="timeline-card">
+            <h3>${escapeHtml(item.title)}</h3>
+            <p>${escapeHtml(item.description)}</p>
+            <div class="tag-row">${toTags(item.tags).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}</div>
+          </div>
+        </article>
+      `
+    )
+    .join("");
+}
+
+function getProjectCounts() {
+  return siteData.projects.reduce(
+    (counts, project) => {
+      const category = project.category || "design";
+      counts.all += 1;
+      counts[category] = (counts[category] || 0) + 1;
+      return counts;
+    },
+    { all: 0 }
+  );
+}
+
+function getProjectCategories() {
+  const preferred = ["all", "games", "systems", "design", "research"];
+  const custom = Array.from(new Set(siteData.projects.map((project) => project.category).filter(Boolean)));
+  return [...preferred, ...custom.filter((category) => !preferred.includes(category))];
+}
+
+function renderFilters(active = "all") {
+  const counts = getProjectCounts();
+  const categories = getProjectCategories();
+  if (!counts[active]) {
+    activeProjectFilter = "all";
+    active = "all";
+  }
+
+  document.getElementById("project-filters").innerHTML = categories
+    .filter((category) => counts[category])
+    .map(
+      (category) => `
+        <button class="filter-button${category === active ? " is-active" : ""}" type="button" data-filter="${attr(category)}">
+          <span>${escapeHtml(categoryLabels[category] || category)}</span>
+          <span class="count">${counts[category]}</span>
+        </button>
+      `
+    )
+    .join("");
+}
+
+function renderProjects(active = "all") {
+  const projects =
+    active === "all"
+      ? siteData.projects
+      : siteData.projects.filter((project) => project.category === active);
+
+  document.getElementById("project-grid").innerHTML = projects
+    .map(
+      (project) => `
+        <article class="project-card reveal">
+          <div class="project-media">
+            <img src="${attr(project.image)}" alt="${attr(project.title)}" loading="lazy" />
+          </div>
+          <div class="project-body">
+            <div class="project-meta">
+              <span>${escapeHtml(project.year)}</span>
+              <span>${escapeHtml(project.engine)}</span>
+            </div>
+            <h3>${escapeHtml(project.title)}</h3>
+            <p>${escapeHtml(project.description)}</p>
+            <div class="tag-row">${toTags(project.tags).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}</div>
+          </div>
+        </article>
+      `
+    )
+    .join("");
+}
+
+function renderResearch() {
+  document.getElementById("research-notes").innerHTML = siteData.research
+    .map(
+      (note) => `
+        <article class="note-item reveal">
+          <h3>${escapeHtml(note.title)}</h3>
+          <p>${escapeHtml(note.description)}</p>
+        </article>
+      `
+    )
+    .join("");
+}
+
+function renderCustomSections() {
+  const host = document.getElementById("custom-sections");
+  host.innerHTML = siteData.customSections
+    .map(
+      (section, index) => `
+        <section class="section-band custom-section" id="${attr(section.id)}">
+          <div class="section-inner custom-section-grid">
+            <div>
+              <p class="section-kicker">${escapeHtml(section.kicker || "Custom Section")}</p>
+              <h2>${escapeHtml(section.title || section.navTitle || "新页签")}</h2>
+              <div class="copy-stack">
+                ${toParagraphs(section.body).map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join("")}
+              </div>
+            </div>
+            ${renderSectionImages(section.images || [], index)}
+          </div>
+        </section>
+      `
+    )
+    .join("");
+}
+
+function renderSectionImages(images) {
+  if (!images.length) {
+    return "";
+  }
+
+  return `
+    <div class="section-media-grid">
+      ${images
+        .map(
+          (image) => `
+            <figure class="section-media-item reveal">
+              <img src="${attr(image.src)}" alt="${attr(image.alt || image.caption || "section image")}" loading="lazy" />
+              ${image.caption ? `<figcaption>${escapeHtml(image.caption)}</figcaption>` : ""}
+            </figure>
+          `
+        )
+        .join("")}
+    </div>
+  `;
+}
+
+function setupFilters() {
+  document.getElementById("project-filters").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-filter]");
+    if (!button) return;
+    activeProjectFilter = button.dataset.filter;
+    renderFilters(activeProjectFilter);
+    renderProjects(activeProjectFilter);
+    observeReveals();
+  });
+}
+
+function setupTheme() {
+  const toggle = document.querySelector("[data-theme-toggle]");
+  const themeIcon = document.querySelector("[data-theme-icon]");
+  const savedTheme = localStorage.getItem("portfolio-theme");
+
+  function applyTheme(theme) {
+    document.body.dataset.theme = theme;
+    themeIcon.innerHTML = icon(theme === "dark" ? "sun" : "moon");
+    localStorage.setItem("portfolio-theme", theme);
+  }
+
+  applyTheme(savedTheme || "light");
+
+  toggle.addEventListener("click", () => {
+    applyTheme(document.body.dataset.theme === "dark" ? "light" : "dark");
+  });
+}
+
+function observeReveals() {
+  if (!("IntersectionObserver" in window)) {
+    document.querySelectorAll(".reveal").forEach((item) => item.classList.add("is-visible"));
+    return;
+  }
+
+  if (!revealObserver) {
+    revealObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            revealObserver.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.14 }
+    );
+  }
+
+  document.querySelectorAll(".reveal:not(.is-visible)").forEach((item) => {
+    revealObserver.observe(item);
+  });
+}
+
+function setupScrollSpy() {
+  if (scrollSpy) {
+    scrollSpy.disconnect();
+  }
+
+  const navLinks = Array.from(document.querySelectorAll(".site-nav a"));
+  const sections = navLinks
+    .map((link) => document.querySelector(link.getAttribute("href")))
+    .filter(Boolean);
+
+  scrollSpy = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        navLinks.forEach((link) => {
+          link.classList.toggle("is-active", link.getAttribute("href") === `#${entry.target.id}`);
+        });
+      });
+    },
+    { rootMargin: "-45% 0px -45% 0px" }
+  );
+
+  sections.forEach((section) => scrollSpy.observe(section));
+}
+
+function setupParticleCanvas() {
+  const canvas = document.getElementById("particle-canvas");
+  const context = canvas.getContext("2d");
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const pointer = { x: -1000, y: -1000 };
+  let width = 0;
+  let height = 0;
+  let inkMarks = [];
+  let animationFrame = 0;
+  let tick = 0;
+
+  function colorFor(index) {
+    const colors =
+      document.body.dataset.theme === "dark"
+        ? ["rgba(255,79,95,", "rgba(68,184,157,", "rgba(90,167,232,"]
+        : ["rgba(198,32,46,", "rgba(19,124,106,", "rgba(35,105,164,"];
+    return colors[index % colors.length];
+  }
+
+  function randomBetween(min, max) {
+    return min + Math.random() * (max - min);
+  }
+
+  function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    width = window.innerWidth;
+    height = window.innerHeight;
+    canvas.width = Math.floor(width * dpr);
+    canvas.height = Math.floor(height * dpr);
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
+    context.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const count = Math.min(28, Math.max(14, Math.floor((width * height) / 52000)));
+    inkMarks = Array.from({ length: count }, (_, index) => ({
+      x: randomBetween(-width * 0.15, width * 1.15),
+      y: randomBetween(-height * 0.1, height * 1.1),
+      length: randomBetween(width * 0.24, width * 0.58),
+      bend: randomBetween(-height * 0.16, height * 0.16),
+      angle: randomBetween(-0.42, 0.42),
+      width: randomBetween(0.8, 3.2),
+      drift: randomBetween(0.08, 0.34),
+      phase: randomBetween(0, Math.PI * 2),
+      alpha: randomBetween(0.08, 0.22),
+      color: colorFor(index),
+      kind: index % 5 === 0 ? "accent" : "ink"
+    }));
+    draw();
+  }
+
+  function draw() {
+    context.clearRect(0, 0, width, height);
+    tick += reducedMotion ? 0 : 0.006;
+
+    inkMarks.forEach((mark, index) => {
+      const pointerDistance = Math.hypot(mark.x - pointer.x, mark.y - pointer.y);
+      const push = pointerDistance < 180 ? (180 - pointerDistance) * 0.025 : 0;
+      const wave = Math.sin(tick * mark.drift + mark.phase) * 18;
+      const startX = mark.x + wave + push;
+      const startY = mark.y + Math.cos(tick * mark.drift + mark.phase) * 10;
+      const endY = startY + mark.bend * 0.36;
+
+      context.save();
+      context.translate(startX, startY);
+      context.rotate(mark.angle);
+      context.lineCap = "round";
+      context.lineJoin = "round";
+      context.globalCompositeOperation = document.body.dataset.theme === "dark" ? "screen" : "multiply";
+
+      const isAccent = mark.kind === "accent";
+      const baseAlpha = isAccent ? mark.alpha * 1.2 : mark.alpha;
+      const gray = document.body.dataset.theme === "dark" ? "rgba(255,255,255," : "rgba(17,19,24,";
+      context.strokeStyle = isAccent ? `${mark.color}${baseAlpha})` : `${gray}${baseAlpha})`;
+      context.lineWidth = isAccent ? mark.width : mark.width * 1.2;
+      context.beginPath();
+      context.moveTo(0, 0);
+      context.bezierCurveTo(
+        mark.length * 0.28,
+        mark.bend + wave * 0.4,
+        mark.length * 0.72,
+        endY - startY - mark.bend * 0.9,
+        mark.length,
+        endY - startY
+      );
+      context.stroke();
+
+      if (!isAccent) {
+        context.strokeStyle = `${mark.color}${mark.alpha * 0.32})`;
+        context.lineWidth = Math.max(0.5, mark.width * 0.38);
+        context.beginPath();
+        context.moveTo(12, 9);
+        context.bezierCurveTo(
+          mark.length * 0.28,
+          mark.bend + 28,
+          mark.length * 0.72,
+          endY - startY - mark.bend * 0.8 - 20,
+          mark.length - 18,
+          endY - startY + 6
+        );
+        context.stroke();
+      }
+
+      if (index % 4 === 0) {
+        const gradient = context.createRadialGradient(0, 0, 0, 0, 0, 48);
+        gradient.addColorStop(
+          0,
+          document.body.dataset.theme === "dark" ? "rgba(255,255,255,0.06)" : "rgba(17,19,24,0.045)"
+        );
+        gradient.addColorStop(1, "rgba(255,255,255,0)");
+        context.fillStyle = gradient;
+        context.beginPath();
+        context.ellipse(0, 0, 48, 24, mark.phase, 0, Math.PI * 2);
+        context.fill();
+      }
+
+      context.restore();
+    });
+
+    if (!reducedMotion) {
+      animationFrame = window.requestAnimationFrame(draw);
+    }
+  }
+
+  window.addEventListener("resize", resize);
+  window.addEventListener("pointermove", (event) => {
+    pointer.x = event.clientX;
+    pointer.y = event.clientY;
+  });
+  document.querySelector("[data-theme-toggle]").addEventListener("click", () => {
+    inkMarks.forEach((mark, index) => {
+      mark.color = colorFor(index);
+    });
+  });
+
+  resize();
+
+  return () => {
+    window.cancelAnimationFrame(animationFrame);
+  };
+}
+
+function enableDevMode() {
+  localStorage.setItem(DEV_MODE_KEY, "1");
+  if (!document.querySelector("[data-dev-open]")) {
+    createEditorShell();
+  }
+  openEditor();
+}
+
+function setupDevMode() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.has("dev") || localStorage.getItem(DEV_MODE_KEY) === "1") {
+    createEditorShell();
+  }
+
+  document.addEventListener("keydown", (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === "e") {
+      event.preventDefault();
+      enableDevMode();
+    }
+  });
+}
+
+function createEditorShell() {
+  if (document.querySelector("[data-dev-open]")) return;
+
+  document.body.insertAdjacentHTML(
+    "beforeend",
+    `
+      <button class="dev-open-button" type="button" data-dev-open title="打开内容编辑器">
+        ${icon("edit")}
+        <span>编辑</span>
+      </button>
+      <aside class="dev-panel" data-dev-panel aria-hidden="true">
+        <div class="dev-panel-header">
+          <div>
+            <p>Developer Mode</p>
+            <h2>内容编辑器</h2>
+          </div>
+          <button class="icon-only" type="button" data-dev-close aria-label="关闭编辑器">${icon("close")}</button>
+        </div>
+        <div class="dev-tabs" role="tablist">
+          <button class="dev-tab is-active" type="button" data-editor-tab="profile">个人</button>
+          <button class="dev-tab" type="button" data-editor-tab="projects">作品</button>
+          <button class="dev-tab" type="button" data-editor-tab="sections">页签</button>
+          <button class="dev-tab" type="button" data-editor-tab="data">数据</button>
+        </div>
+        <div class="dev-panel-body" data-editor-body></div>
+        <div class="dev-panel-footer">
+          <button class="dev-action primary" type="button" data-dev-save>${icon("save")}保存</button>
+          <button class="dev-action" type="button" data-dev-export>${icon("download")}导出</button>
+        </div>
+      </aside>
+      <div class="dev-scrim" data-dev-scrim></div>
+      <div class="dev-toast" data-dev-toast></div>
+      <input class="visually-hidden" type="file" accept="application/json" data-dev-import />
+    `
+  );
+
+  renderEditor();
+  bindEditorEvents();
+}
+
+function bindEditorEvents() {
+  document.querySelector("[data-dev-open]").addEventListener("click", openEditor);
+  document.querySelector("[data-dev-close]").addEventListener("click", closeEditor);
+  document.querySelector("[data-dev-scrim]").addEventListener("click", closeEditor);
+  document.querySelector("[data-dev-save]").addEventListener("click", saveCurrentContent);
+  document.querySelector("[data-dev-export]").addEventListener("click", exportCurrentContent);
+  document.querySelector("[data-dev-import]").addEventListener("change", importContentFile);
+
+  document.querySelector(".dev-tabs").addEventListener("click", (event) => {
+    const tab = event.target.closest("[data-editor-tab]");
+    if (!tab) return;
+    syncFromEditor();
+    currentEditorTab = tab.dataset.editorTab;
+    renderEditor();
+  });
+
+  document.querySelector("[data-editor-body]").addEventListener("click", (event) => {
+    const button = event.target.closest("button");
+    if (!button) return;
+    handleEditorButton(button);
+  });
+
+  document.querySelector("[data-editor-body]").addEventListener("change", (event) => {
+    const input = event.target.closest("input[type='file'][data-image-upload]");
+    if (input) {
+      handleImageUpload(input);
+    }
+  });
+}
+
+function openEditor() {
+  document.querySelector("[data-dev-panel]")?.classList.add("is-open");
+  document.querySelector("[data-dev-scrim]")?.classList.add("is-open");
+  document.querySelector("[data-dev-panel]")?.setAttribute("aria-hidden", "false");
+}
+
+function closeEditor() {
+  document.querySelector("[data-dev-panel]")?.classList.remove("is-open");
+  document.querySelector("[data-dev-scrim]")?.classList.remove("is-open");
+  document.querySelector("[data-dev-panel]")?.setAttribute("aria-hidden", "true");
+}
+
+function renderEditor() {
+  const body = document.querySelector("[data-editor-body]");
+  if (!body) return;
+
+  document.querySelectorAll("[data-editor-tab]").forEach((tab) => {
+    tab.classList.toggle("is-active", tab.dataset.editorTab === currentEditorTab);
+  });
+
+  const renderers = {
+    profile: renderProfileEditor,
+    projects: renderProjectsEditor,
+    sections: renderSectionsEditor,
+    data: renderDataEditor
+  };
+  body.innerHTML = renderers[currentEditorTab]();
+}
+
+function renderProfileEditor() {
+  const profile = siteData.profile;
+  return `
+    <div class="dev-form-grid">
+      ${field("姓名", "profile-name", profile.name)}
+      ${field("头像缩写", "profile-initials", profile.initials)}
+      ${field("英文身份", "profile-kicker", profile.kicker)}
+      ${field("中文标题", "profile-title", profile.title)}
+      ${textarea("一句话介绍", "profile-summary", profile.summary, 3)}
+      ${textarea("个人介绍段落", "profile-about", profile.about.join("\\n\\n"), 8)}
+    </div>
+    <div class="dev-section-head">
+      <h3>亮点数字</h3>
+      <button class="dev-small-button" type="button" data-add-fact>${icon("plus")}添加</button>
+    </div>
+    <div class="dev-list" data-fact-list>
+      ${profile.facts.map((fact, index) => renderFactEditor(fact, index)).join("")}
+    </div>
+  `;
+}
+
+function renderFactEditor(fact, index) {
+  return `
+    <div class="dev-mini-row" data-fact-index="${index}">
+      <input aria-label="亮点值" data-fact-field="value" value="${attr(fact.value)}" />
+      <input aria-label="亮点说明" data-fact-field="label" value="${attr(fact.label)}" />
+      <button class="dev-icon-button danger" type="button" data-delete-fact="${index}" aria-label="删除亮点">${icon("trash")}</button>
+    </div>
+  `;
+}
+
+function renderProjectsEditor() {
+  return `
+    <div class="dev-section-head">
+      <div>
+        <h3>作品卡片</h3>
+        <p>可以添加文字、标签和图片。图片可填 assets 路径，也可以直接选择本地图片。</p>
+      </div>
+      <button class="dev-small-button" type="button" data-add-project>${icon("plus")}添加作品</button>
+    </div>
+    <div class="dev-list">
+      ${siteData.projects.map((project, index) => renderProjectEditor(project, index)).join("")}
+    </div>
+  `;
+}
+
+function renderProjectEditor(project, index) {
+  return `
+    <article class="dev-item" data-project-index="${index}">
+      <div class="dev-item-head">
+        <strong>${escapeHtml(project.title || "未命名作品")}</strong>
+        <button class="dev-icon-button danger" type="button" data-delete-project="${index}" aria-label="删除作品">${icon("trash")}</button>
+      </div>
+      <div class="dev-form-grid compact">
+        ${field("标题", "project-title", project.title, `data-project-field="title"`)}
+        ${field("年份", "project-year", project.year, `data-project-field="year"`)}
+        ${field("职责", "project-role", project.role, `data-project-field="role"`)}
+        ${selectField("分类", "project-category", project.category, `data-project-field="category"`)}
+        ${field("引擎 / 技术", "project-engine", project.engine, `data-project-field="engine"`)}
+        ${field("标签", "project-tags", toTags(project.tags).join(", "), `data-project-field="tags"`)}
+        ${textarea("简介", "project-description", project.description, 4, `data-project-field="description"`)}
+        ${imageField("图片", project.image, `data-project-field="image"`, "project", index)}
+      </div>
+    </article>
+  `;
+}
+
+function renderSectionsEditor() {
+  return `
+    <div class="dev-section-head">
+      <div>
+        <h3>自定义标题页签</h3>
+        <p>这里创建的页签会自动出现在顶部导航里，并在网站底部生成新章节。</p>
+      </div>
+      <button class="dev-small-button" type="button" data-add-section>${icon("plus")}添加页签</button>
+    </div>
+    <div class="dev-list">
+      ${siteData.customSections.map((section, index) => renderSectionEditor(section, index)).join("")}
+    </div>
+  `;
+}
+
+function renderSectionEditor(section, index) {
+  return `
+    <article class="dev-item" data-section-index="${index}">
+      <div class="dev-item-head">
+        <strong>${escapeHtml(section.navTitle || section.title || "新页签")}</strong>
+        <button class="dev-icon-button danger" type="button" data-delete-section="${index}" aria-label="删除页签">${icon("trash")}</button>
+      </div>
+      <div class="dev-form-grid compact">
+        ${field("导航页签名", "section-nav-title", section.navTitle, `data-section-field="navTitle"`)}
+        ${field("章节 ID", "section-id", section.id, `data-section-field="id"`)}
+        ${field("小标题", "section-kicker", section.kicker, `data-section-field="kicker"`)}
+        ${field("大标题", "section-title", section.title, `data-section-field="title"`)}
+        ${textarea("正文", "section-body", toParagraphs(section.body).join("\\n\\n"), 7, `data-section-field="body"`)}
+      </div>
+      <div class="dev-section-head nested">
+        <h4>图片</h4>
+        <button class="dev-small-button" type="button" data-add-section-image="${index}">${icon("plus")}添加图片</button>
+      </div>
+      <div class="dev-list nested">
+        ${(section.images || []).map((image, imageIndex) => renderSectionImageEditor(image, index, imageIndex)).join("")}
+      </div>
+    </article>
+  `;
+}
+
+function renderSectionImageEditor(image, sectionIndex, imageIndex) {
+  return `
+    <div class="dev-image-row" data-section-image-index="${imageIndex}">
+      ${imageField("图片", image.src, `data-section-image-field="src"`, "section", sectionIndex, imageIndex)}
+      ${field("说明", "section-image-caption", image.caption, `data-section-image-field="caption"`)}
+      ${field("替代文字", "section-image-alt", image.alt, `data-section-image-field="alt"`)}
+      <button class="dev-small-button danger" type="button" data-delete-section-image="${sectionIndex}:${imageIndex}">${icon("trash")}删除图片</button>
+    </div>
+  `;
+}
+
+function renderDataEditor() {
+  return `
+    <div class="dev-data-panel">
+      <h3>数据导入 / 导出</h3>
+      <p>保存按钮会优先写入本地预览服务器的 content.json；如果不是用服务器打开，则保存到当前浏览器。</p>
+      <div class="dev-button-row">
+        <button class="dev-action" type="button" data-trigger-import>导入 JSON</button>
+        <button class="dev-action danger" type="button" data-reset-content>恢复默认</button>
+      </div>
+      <textarea class="dev-json-preview" readonly>${escapeHtml(JSON.stringify(siteData, null, 2))}</textarea>
+    </div>
+  `;
+}
+
+function field(label, id, value, extra = "") {
+  return `
+    <label class="dev-field">
+      <span>${escapeHtml(label)}</span>
+      <input id="${attr(id)}" value="${attr(value || "")}" ${extra} />
+    </label>
+  `;
+}
+
+function textarea(label, id, value, rows = 4, extra = "") {
+  return `
+    <label class="dev-field wide">
+      <span>${escapeHtml(label)}</span>
+      <textarea id="${attr(id)}" rows="${rows}" ${extra}>${escapeHtml(value || "")}</textarea>
+    </label>
+  `;
+}
+
+function selectField(label, id, value, extra = "") {
+  const categories = [
+    ["games", "游戏"],
+    ["systems", "系统"],
+    ["design", "设计"],
+    ["research", "研究"]
+  ];
+  return `
+    <label class="dev-field">
+      <span>${escapeHtml(label)}</span>
+      <select id="${attr(id)}" ${extra}>
+        ${categories
+          .map(([optionValue, optionLabel]) => `<option value="${optionValue}"${optionValue === value ? " selected" : ""}>${optionLabel}</option>`)
+          .join("")}
+      </select>
+    </label>
+  `;
+}
+
+function imageField(label, value, extra, target, index, imageIndex = "") {
+  const imageInputId = `image-${target}-${index}-${imageIndex}`;
+  return `
+    <label class="dev-field wide">
+      <span>${escapeHtml(label)}</span>
+      <input value="${attr(value || "")}" ${extra} />
+      <span class="dev-help">可以填 assets/example.png、https 图片地址，或选择本地图片。</span>
+      <input id="${attr(imageInputId)}" type="file" accept="image/*" data-image-upload data-image-target="${target}" data-image-index="${attr(index)}" data-sub-image-index="${attr(imageIndex)}" />
+    </label>
+  `;
+}
+
+function handleEditorButton(button) {
+  if (button.matches("[data-add-fact]")) {
+    syncFromEditor();
+    siteData.profile.facts.push({ value: "New", label: "说明" });
+    renderEditor();
+  } else if (button.matches("[data-delete-fact]")) {
+    syncFromEditor();
+    siteData.profile.facts.splice(Number(button.dataset.deleteFact), 1);
+    renderEditor();
+  } else if (button.matches("[data-add-project]")) {
+    syncFromEditor();
+    siteData.projects.unshift({
+      title: "新作品",
+      year: String(new Date().getFullYear()),
+      role: "Designer / Developer",
+      category: "design",
+      engine: "UE5",
+      image: "assets/slash-preview.png",
+      description: "在这里写作品简介。",
+      tags: ["Prototype"]
+    });
+    renderEditor();
+  } else if (button.matches("[data-delete-project]")) {
+    syncFromEditor();
+    siteData.projects.splice(Number(button.dataset.deleteProject), 1);
+    renderEditor();
+  } else if (button.matches("[data-add-section]")) {
+    syncFromEditor();
+    const nextNumber = siteData.customSections.length + 1;
+    siteData.customSections.push({
+      id: `custom-${Date.now()}`,
+      navTitle: `页签${nextNumber}`,
+      kicker: "Custom",
+      title: "新的标题页签",
+      body: ["在这里添加正文。"],
+      images: []
+    });
+    renderEditor();
+  } else if (button.matches("[data-delete-section]")) {
+    syncFromEditor();
+    siteData.customSections.splice(Number(button.dataset.deleteSection), 1);
+    renderEditor();
+  } else if (button.matches("[data-add-section-image]")) {
+    syncFromEditor();
+    const section = siteData.customSections[Number(button.dataset.addSectionImage)];
+    section.images = section.images || [];
+    section.images.push({ src: "assets/recovery-preview.png", caption: "图片说明", alt: "" });
+    renderEditor();
+  } else if (button.matches("[data-delete-section-image]")) {
+    syncFromEditor();
+    const [sectionIndex, imageIndex] = button.dataset.deleteSectionImage.split(":").map(Number);
+    siteData.customSections[sectionIndex]?.images?.splice(imageIndex, 1);
+    renderEditor();
+  } else if (button.matches("[data-trigger-import]")) {
+    document.querySelector("[data-dev-import]").click();
+  } else if (button.matches("[data-reset-content]")) {
+    if (confirm("确定恢复默认内容？当前浏览器保存的编辑会被清除。")) {
+      localStorage.removeItem(STORAGE_KEY);
+      siteData = cloneData(DEFAULT_SITE_DATA);
+      renderAll();
+      renderEditor();
+      showToast("已恢复默认内容");
+    }
+  }
+}
+
+function syncFromEditor() {
+  const panel = document.querySelector("[data-dev-panel]");
+  if (!panel) return;
+  siteData = collectEditorData();
+}
+
+function collectEditorData() {
+  const next = normalizeData(siteData);
+
+  const profileName = document.getElementById("profile-name");
+  if (profileName) {
+    next.profile.name = profileName.value.trim() || "你的名字";
+    next.profile.initials = document.getElementById("profile-initials").value.trim() || "YY";
+    next.profile.kicker = document.getElementById("profile-kicker").value.trim();
+    next.profile.title = document.getElementById("profile-title").value.trim();
+    next.profile.summary = document.getElementById("profile-summary").value.trim();
+    next.profile.about = toParagraphs(document.getElementById("profile-about").value);
+    next.profile.facts = Array.from(document.querySelectorAll("[data-fact-index]")).map((row) => ({
+      value: row.querySelector("[data-fact-field='value']").value.trim(),
+      label: row.querySelector("[data-fact-field='label']").value.trim()
+    }));
+  }
+
+  if (document.querySelector("[data-project-index]")) {
+    next.projects = Array.from(document.querySelectorAll("[data-project-index]")).map((row) => ({
+      title: row.querySelector("[data-project-field='title']").value.trim() || "未命名作品",
+      year: row.querySelector("[data-project-field='year']").value.trim(),
+      role: row.querySelector("[data-project-field='role']").value.trim(),
+      category: row.querySelector("[data-project-field='category']").value,
+      engine: row.querySelector("[data-project-field='engine']").value.trim(),
+      image: row.querySelector("[data-project-field='image']").value.trim(),
+      description: row.querySelector("[data-project-field='description']").value.trim(),
+      tags: toTags(row.querySelector("[data-project-field='tags']").value)
+    }));
+  }
+
+  if (document.querySelector("[data-section-index]")) {
+    next.customSections = Array.from(document.querySelectorAll("[data-section-index]")).map((row) => {
+      const rawId = row.querySelector("[data-section-field='id']").value.trim();
+      const section = {
+        id: slugify(rawId || row.querySelector("[data-section-field='navTitle']").value || `custom-${Date.now()}`),
+        navTitle: row.querySelector("[data-section-field='navTitle']").value.trim() || "新页签",
+        kicker: row.querySelector("[data-section-field='kicker']").value.trim(),
+        title: row.querySelector("[data-section-field='title']").value.trim(),
+        body: toParagraphs(row.querySelector("[data-section-field='body']").value),
+        images: []
+      };
+
+      section.images = Array.from(row.querySelectorAll("[data-section-image-index]")).map((imageRow) => ({
+        src: imageRow.querySelector("[data-section-image-field='src']").value.trim(),
+        caption: imageRow.querySelector("[data-section-image-field='caption']").value.trim(),
+        alt: imageRow.querySelector("[data-section-image-field='alt']").value.trim()
+      }));
+
+      return section;
+    });
+  }
+
+  next.updatedAt = new Date().toISOString();
+  return normalizeData(next);
+}
+
+function slugify(value) {
+  const cleaned = String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9\u4e00-\u9fa5-]/g, "")
+    .replace(/-+/g, "-");
+  return cleaned || `custom-${Date.now()}`;
+}
+
+async function handleImageUpload(input) {
+  const file = input.files?.[0];
+  if (!file) return;
+
+  try {
+    const dataUrl = await imageFileToDataUrl(file);
+    const field = input.closest(".dev-field")?.querySelector("input:not([type='file'])");
+    if (field) {
+      field.value = dataUrl;
+      showToast("图片已载入，点击保存后生效");
+    }
+  } catch {
+    showToast("图片读取失败");
+  } finally {
+    input.value = "";
+  }
+}
+
+function imageFileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = () => {
+      const image = new Image();
+      image.onerror = reject;
+      image.onload = () => {
+        const maxWidth = 1600;
+        const scale = Math.min(1, maxWidth / image.width);
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(image.width * scale));
+        canvas.height = Math.max(1, Math.round(image.height * scale));
+        const context = canvas.getContext("2d");
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", 0.84));
+      };
+      image.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function saveCurrentContent() {
+  syncFromEditor();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(siteData));
+  const serverSaved = await saveServerData(siteData);
+  renderAll();
+  renderEditor();
+  showToast(serverSaved ? "已保存到 content.json" : "已保存到当前浏览器，可导出 JSON");
+}
+
+function exportCurrentContent() {
+  syncFromEditor();
+  const blob = new Blob([JSON.stringify(siteData, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "portfolio-content.json";
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function importContentFile(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      siteData = normalizeData(JSON.parse(String(reader.result)));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(siteData));
+      renderAll();
+      renderEditor();
+      showToast("JSON 已导入");
+    } catch {
+      showToast("JSON 格式不正确");
+    }
+  };
+  reader.readAsText(file, "utf-8");
+  event.target.value = "";
+}
+
+function showToast(message) {
+  const toast = document.querySelector("[data-dev-toast]");
+  if (!toast) return;
+  toast.textContent = message;
+  toast.classList.add("is-visible");
+  window.clearTimeout(showToast.timeout);
+  showToast.timeout = window.setTimeout(() => {
+    toast.classList.remove("is-visible");
+  }, 2600);
+}
+
+async function init() {
+  siteData = await loadInitialData();
+  renderAll();
+  setupFilters();
+  setupTheme();
+  setupDevMode();
+  observeReveals();
+  setupParticleCanvas();
+}
+
+init();

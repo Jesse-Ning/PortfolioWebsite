@@ -1,0 +1,187 @@
+{
+  "updatedAt": "2026-05-30T09:11:48.883Z",
+  "profile": {
+    "name": "你的名字",
+    "initials": "YY",
+    "kicker": "Game Designer / Gameplay Programmer",
+    "title": "游戏设计师 & 战斗系统程序员",
+    "summary": "我关注动作游戏中的时机、反馈、节奏和玩家决策，喜欢把设计想法落到可玩的系统里。",
+    "about": [
+      "我是一名偏设计实现型的游戏创作者，工作重点放在战斗系统、镜头反馈、角色状态机和关卡节奏上。比起只写一个功能，我更在意玩家按下按钮之后，画面、声音、动画和数值是否形成清楚的回应。\\n\\n目前主要使用 Unreal Engine 和 C++ 做动作游戏原型，围绕完美闪避、弹反、处决、Boss 行为树、战斗镜头和 UI 反馈建立可迭代的玩法模块。\\n\\n我喜欢用研究的方式做设计：拆解优秀游戏，记录机制意图，再把假设做成小原型验证。这个网站可以作为个人介绍、作品归档和开发日志入口。"
+    ],
+    "facts": [
+      {
+        "value": "UE5",
+        "label": "主要引擎"
+      },
+      {
+        "value": "C++",
+        "label": "核心实现"
+      },
+      {
+        "value": "Combat",
+        "label": "设计方向"
+      },
+      {
+        "value": "Prototype",
+        "label": "当前阶段"
+      }
+    ],
+    "links": [
+      {
+        "label": "Email",
+        "href": "mailto:yourname@example.com",
+        "icon": "mail",
+        "primary": true
+      },
+      {
+        "label": "GitHub",
+        "href": "https://github.com/",
+        "icon": "github"
+      },
+      {
+        "label": "Bilibili",
+        "href": "https://space.bilibili.com/",
+        "icon": "video"
+      },
+      {
+        "label": "Steam",
+        "href": "https://steamcommunity.com/",
+        "icon": "gamepad"
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "date": "2026",
+      "title": "阴阳之力 | UE5 动作战斗项目",
+      "description": "搭建玩家战斗、Boss AI、完美闪避、弹反处决、镜头反馈和 HUD 表现等核心模块。",
+      "tags": [
+        "Unreal Engine",
+        "C++",
+        "Action Combat"
+      ]
+    },
+    {
+      "date": "2026",
+      "title": "战斗反馈系统迭代",
+      "description": "围绕命中停顿、镜头冲击、受击反馈、血量表现和状态窗口设计可调参数，提升可读性和手感。",
+      "tags": [
+        "Game Feel",
+        "Camera",
+        "UI Feedback"
+      ]
+    },
+    {
+      "date": "2025",
+      "title": "游戏机制研究与原型练习",
+      "description": "持续拆解动作、解谜和 Roguelike 游戏中的风险回报、节奏曲线与玩家学习路径。",
+      "tags": [
+        "Gameplay Research",
+        "Design Notes",
+        "Prototyping"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "title": "阴阳之力",
+      "year": "2026",
+      "role": "Solo Developer",
+      "category": "games",
+      "engine": "UE5",
+      "image": "assets/slash-preview.png",
+      "description": "以阴阳资源、近战攻防和高反馈动作为核心的第三人称动作游戏原型。",
+      "tags": [
+        "Action",
+        "Combat",
+        "Boss"
+      ]
+    },
+    {
+      "title": "完美闪避与反击窗口",
+      "year": "2026",
+      "role": "Gameplay Programmer",
+      "category": "systems",
+      "engine": "C++",
+      "image": "assets/recovery-preview.png",
+      "description": "用通知窗口、状态约束和镜头反馈组合出更清晰的闪避收益与反击节奏。",
+      "tags": [
+        "Dodge",
+        "Timing",
+        "Feedback"
+      ]
+    },
+    {
+      "title": "Boss 行为树战斗循环",
+      "year": "2026",
+      "role": "AI / Combat",
+      "category": "systems",
+      "engine": "UE5",
+      "image": "assets/blood-veins-preview.png",
+      "description": "处理近远距离攻击、受击恢复、压迫感参数和阶段切换，让敌人行为更稳定。",
+      "tags": [
+        "Boss AI",
+        "Behavior Tree",
+        "Balance"
+      ]
+    },
+    {
+      "title": "动作镜头反馈库",
+      "year": "2026",
+      "role": "Tools / Feel",
+      "category": "design",
+      "engine": "Data Assets",
+      "image": "assets/slash-preview.png",
+      "description": "把攻击、处决和完美动作的镜头表现拆成可复用配置，方便快速调手感。",
+      "tags": [
+        "Camera",
+        "Data Asset",
+        "Game Feel"
+      ]
+    },
+    {
+      "title": "生命值与受击表现",
+      "year": "2026",
+      "role": "UI / VFX",
+      "category": "design",
+      "engine": "UMG",
+      "image": "assets/blood-veins-preview.png",
+      "description": "探索伤痕、回血流动、屏幕边缘压迫等反馈，让战斗状态更容易被玩家感知。",
+      "tags": [
+        "HUD",
+        "VFX",
+        "Readability"
+      ]
+    },
+    {
+      "title": "机制拆解笔记",
+      "year": "2025",
+      "role": "Research",
+      "category": "research",
+      "engine": "Notes",
+      "image": "assets/recovery-preview.png",
+      "description": "记录动作游戏中的风险回报、节奏设计、技能引导和玩家成长曲线。",
+      "tags": [
+        "Research",
+        "Design",
+        "Analysis"
+      ]
+    }
+  ],
+  "research": [
+    {
+      "title": "战斗节奏",
+      "description": "关注攻击前摇、取消窗口、破绽暴露和奖励反馈之间的关系。"
+    },
+    {
+      "title": "玩家可读性",
+      "description": "通过动画姿态、镜头重心、UI 层级和音效提示降低判断成本。"
+    },
+    {
+      "title": "原型验证",
+      "description": "用小范围可玩版本验证机制，再决定是否扩展成完整系统。"
+    }
+  ],
+  "customSections": []
+}

@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Personal Portfolio</title>
+    <meta
+      name="description"
+      content="Personal portfolio for a game designer and gameplay programmer."
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <canvas id="particle-canvas" aria-hidden="true"></canvas>
+    <div class="ink-wash" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="回到顶部">
+        <span class="brand-mark" data-profile-initials>YY</span>
+        <span data-profile-name>你的名字</span>
+      </a>
+
+      <nav class="site-nav" aria-label="主导航"></nav>
+
+      <button class="icon-only" type="button" data-theme-toggle aria-label="切换明暗主题">
+        <span data-theme-icon></span>
+      </button>
+    </header>
+
+    <main id="top">
+      <section class="hero section-band" id="about">
+        <div class="hero-inner">
+          <div class="avatar-wrap" aria-hidden="true">
+            <div class="avatar" data-profile-initials>YY</div>
+          </div>
+
+          <p class="eyebrow" data-profile-kicker>Game Designer / Gameplay Programmer</p>
+          <h1 data-profile-name>你的名字</h1>
+          <p class="hero-title" data-profile-title>游戏设计师 & 战斗系统程序员</p>
+          <p class="hero-copy" data-profile-summary>
+            我关注动作游戏中的时机、反馈、节奏和玩家决策，喜欢把设计想法落到可玩的系统里。
+          </p>
+
+          <div class="contact-actions" id="hero-links" aria-label="主要链接"></div>
+        </div>
+      </section>
+
+      <section class="section-band about-detail">
+        <div class="section-inner about-grid">
+          <div>
+            <p class="section-kicker">Personal Introduction</p>
+            <h2>个人介绍</h2>
+            <div class="copy-stack" id="about-copy"></div>
+          </div>
+
+          <div class="profile-facts" id="profile-facts" aria-label="个人亮点"></div>
+        </div>
+      </section>
+
+      <section class="section-band" id="experience">
+        <div class="section-inner">
+          <div class="section-heading">
+            <p class="section-kicker">Experience & Education</p>
+            <h2>经历与学习</h2>
+          </div>
+          <div class="timeline" id="timeline"></div>
+        </div>
+      </section>
+
+      <section class="section-band projects-section" id="projects">
+        <div class="section-inner">
+          <div class="section-heading">
+            <p class="section-kicker">Selected Work</p>
+            <h2>个人作品</h2>
+          </div>
+
+          <div class="filter-row" id="project-filters" aria-label="作品筛选"></div>
+          <div class="project-grid" id="project-grid"></div>
+        </div>
+      </section>
+
+      <section class="section-band research-section" id="research">
+        <div class="section-inner research-grid">
+          <div>
+            <p class="section-kicker">Research & Notes</p>
+            <h2>研究方向</h2>
+            <p class="section-copy">
+              把游玩经验、机制拆解和工程验证连接起来，形成可复用的设计判断。
+            </p>
+          </div>
+          <div class="note-list" id="research-notes"></div>
+        </div>
+      </section>
+
+      <div id="custom-sections"></div>
+    </main>
+
+    <footer class="site-footer" id="contact">
+      <div class="section-inner footer-grid">
+        <div>
+          <p class="section-kicker">Contact</p>
+          <h2>一起聊聊游戏设计与战斗系统</h2>
+        </div>
+        <div class="contact-actions" id="footer-links" aria-label="联系链接"></div>
+      </div>
+      <p class="copyright">© <span data-current-year></span> <span data-profile-name>你的名字</span></p>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
