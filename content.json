@@ -35,6 +35,16 @@
         "primary": true
       },
       {
+        "label": "微信",
+        "href": "weixin://",
+        "icon": "wechat"
+      },
+      {
+        "label": "电话",
+        "href": "tel:+86-000-0000-0000",
+        "icon": "phone"
+      },
+      {
         "label": "GitHub",
         "href": "https://github.com/",
         "icon": "github"

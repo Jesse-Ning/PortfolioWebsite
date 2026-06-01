@@ -35,6 +35,8 @@ const DEFAULT_SITE_DATA = {
     ],
     links: [
       { label: "Email", href: "mailto:yourname@example.com", icon: "mail", primary: true },
+      { label: "微信", href: "weixin://", icon: "wechat" },
+      { label: "电话", href: "tel:+86-000-0000-0000", icon: "phone" },
       { label: "GitHub", href: "https://github.com/", icon: "github" },
       { label: "Bilibili", href: "https://space.bilibili.com/", icon: "video" },
       { label: "Steam", href: "https://steamcommunity.com/", icon: "gamepad" }
@@ -142,6 +144,10 @@ const DEFAULT_SITE_DATA = {
 const iconMap = {
   mail:
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4z" fill="none" stroke="currentColor" stroke-width="2"/><path d="m4 7 8 6 8-6" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
+  wechat:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6a6 5 0 0 0-6 5 4.8 4.8 0 0 0 2.2 3.9l-.5 2 2.2-1a7.6 7.6 0 0 0 2.1.3 6 5 0 0 0 6-5 6 5 0 0 0-6-5z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M14.2 10.2a5.2 4.3 0 0 1 6.3 4.2 4.2 4.2 0 0 1-2 3.5l.4 1.7-1.9-.8a6.4 6.4 0 0 1-1.8.2 5.4 4.4 0 0 1-5.1-3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M7.7 10.4h.1M11.2 10.4h.1M14.4 14.1h.1M17.2 14.1h.1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+  phone:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h3l1.5 4-2 1.2a11 11 0 0 0 5.3 5.3l1.2-2 4 1.5v3a2 2 0 0 1-2.2 2A16 16 0 0 1 5 6.2 2 2 0 0 1 7 4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>',
   github:
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-3 19c.5.1.7-.2.7-.5v-2c-2.8.6-3.4-1.2-3.4-1.2-.5-1.1-1.1-1.4-1.1-1.4-.9-.6.1-.6.1-.6 1 0 1.6 1.1 1.6 1.1.9 1.6 2.5 1.1 3.1.8.1-.7.4-1.1.7-1.4-2.2-.3-4.6-1.1-4.6-4.9 0-1.1.4-2 1.1-2.7-.1-.3-.5-1.3.1-2.7 0 0 .9-.3 2.8 1a9.8 9.8 0 0 1 5.2 0c2-1.3 2.8-1 2.8-1 .6 1.4.2 2.4.1 2.7.7.7 1.1 1.6 1.1 2.7 0 3.8-2.3 4.6-4.6 4.9.4.3.8 1 .8 2.1v3.1c0 .3.2.6.8.5A10 10 0 0 0 12 2z" fill="currentColor"/></svg>',
   video:
@@ -631,6 +637,17 @@ function renderSoftwareIconItem(item) {
   `;
 }
 
+function renderContactLink(link) {
+  const href = String(link.href || "#").trim() || "#";
+  const isExternal = href.startsWith("http://") || href.startsWith("https://");
+  return `
+    <a class="link-button${link.primary ? " primary" : ""}" href="${attr(href)}" target="${isExternal ? "_blank" : "_self"}" rel="noreferrer">
+      ${icon(link.icon)}
+      <span>${escapeHtml(link.label)}</span>
+    </a>
+  `;
+}
+
 function renderProfile() {
   const { profile } = siteData;
   document.title = `${profile.name} | Personal Portfolio`;
@@ -660,19 +677,11 @@ function renderProfile() {
     .map(renderProfileKeywordGroup)
     .join("");
 
-  const links = profile.links
-    .map(
-      (link) => `
-        <a class="link-button${link.primary ? " primary" : ""}" href="${attr(link.href)}" target="${String(link.href || "").startsWith("http") ? "_blank" : "_self"}" rel="noreferrer">
-          ${icon(link.icon)}
-          <span>${escapeHtml(link.label)}</span>
-        </a>
-      `
-    )
-    .join("");
-
-  document.getElementById("hero-links").innerHTML = links;
-  document.getElementById("footer-links").innerHTML = links;
+  const links = profile.links.map(renderContactLink).join("");
+  ["about-links", "footer-links"].forEach((id) => {
+    const container = document.getElementById(id);
+    if (container) container.innerHTML = links;
+  });
 }
 
 function renderTimeline() {
@@ -1234,6 +1243,13 @@ function renderProfileEditor() {
       ${textarea("个人介绍段落", "profile-about", profile.about.join("\\n\\n"), 8)}
     </div>
     <div class="dev-section-head">
+      <h3>联系方式</h3>
+      <button class="dev-small-button" type="button" data-add-link>${icon("plus")}添加</button>
+    </div>
+    <div class="dev-list">
+      ${profile.links.map((link, index) => renderContactLinkEditor(link, index)).join("")}
+    </div>
+    <div class="dev-section-head">
       <h3>亮点数字</h3>
       <button class="dev-small-button" type="button" data-add-fact>${icon("plus")}添加</button>
     </div>
@@ -1250,6 +1266,26 @@ function renderProfileEditor() {
     <div class="dev-list">
       ${profile.keywords.map((group, index) => renderKeywordGroupEditor(group, index)).join("")}
     </div>
+  `;
+}
+
+function renderContactLinkEditor(link, index) {
+  return `
+    <article class="dev-item" data-link-index="${index}">
+      <div class="dev-item-head">
+        <strong>${escapeHtml(link.label || "联系方式")}</strong>
+        <button class="dev-icon-button danger" type="button" data-delete-link="${index}" aria-label="删除联系方式">${icon("trash")}</button>
+      </div>
+      <div class="dev-form-grid compact">
+        ${field("显示文字", "link-label", link.label, `data-link-field="label"`)}
+        ${field("链接 / 电话 / 微信", "link-href", link.href, `data-link-field="href"`)}
+        ${contactIconField("图标", "link-icon", link.icon, `data-link-field="icon"`)}
+        <label class="dev-check-field">
+          <input type="checkbox" data-link-field="primary"${link.primary ? " checked" : ""} />
+          <span>主按钮</span>
+        </label>
+      </div>
+    </article>
   `;
 }
 
@@ -1526,6 +1562,27 @@ function selectField(label, id, value, extra = "") {
   `;
 }
 
+function contactIconField(label, id, value, extra = "") {
+  const icons = [
+    ["mail", "Email"],
+    ["wechat", "微信"],
+    ["phone", "电话"],
+    ["github", "GitHub"],
+    ["video", "Bilibili"],
+    ["gamepad", "Steam"]
+  ];
+  return `
+    <label class="dev-field">
+      <span>${escapeHtml(label)}</span>
+      <select id="${attr(id)}" ${extra}>
+        ${icons
+          .map(([optionValue, optionLabel]) => `<option value="${optionValue}"${optionValue === value ? " selected" : ""}>${optionLabel}</option>`)
+          .join("")}
+      </select>
+    </label>
+  `;
+}
+
 function imageField(label, value, extra, target, index, imageIndex = "") {
   const imageInputId = `image-${target}-${index}-${imageIndex}`;
   return `
@@ -1539,7 +1596,15 @@ function imageField(label, value, extra, target, index, imageIndex = "") {
 }
 
 function handleEditorButton(button) {
-  if (button.matches("[data-add-fact]")) {
+  if (button.matches("[data-add-link]")) {
+    syncFromEditor();
+    siteData.profile.links.push({ label: "微信", href: "weixin://", icon: "wechat" });
+    renderEditor();
+  } else if (button.matches("[data-delete-link]")) {
+    syncFromEditor();
+    siteData.profile.links.splice(Number(button.dataset.deleteLink), 1);
+    renderEditor();
+  } else if (button.matches("[data-add-fact]")) {
     syncFromEditor();
     siteData.profile.facts.push({ value: "New", label: "说明" });
     renderEditor();
@@ -1679,6 +1744,12 @@ function collectEditorData() {
     next.profile.keywords = Array.from(document.querySelectorAll("[data-keyword-index]")).map((row) => ({
       label: row.querySelector("[data-keyword-field='label']").value.trim() || "关键词",
       items: toTags(row.querySelector("[data-keyword-field='items']").value)
+    }));
+    next.profile.links = Array.from(document.querySelectorAll("[data-link-index]")).map((row) => ({
+      label: row.querySelector("[data-link-field='label']").value.trim() || "联系方式",
+      href: row.querySelector("[data-link-field='href']").value.trim(),
+      icon: row.querySelector("[data-link-field='icon']").value,
+      primary: row.querySelector("[data-link-field='primary']").checked
     }));
   }
 
