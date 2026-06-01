@@ -686,53 +686,57 @@ function renderProfile() {
 
 function renderTimeline() {
   const container = document.getElementById("timeline");
-  const activeGroup = normalizeTimelineType(activeTimelineGroup);
-  const counts = timelineGroups.reduce((result, group) => ({ ...result, [group.id]: 0 }), {});
+  const entries = siteData.timeline.map((item, index) => ({ ...item, index, type: normalizeTimelineType(item.type) }));
+  const grouped = {
+    work: sortByOrder(entries.filter((item) => item.type === "work")),
+    education: sortByOrder(entries.filter((item) => item.type === "education"))
+  };
+  const hasAnyItems = grouped.work.length || grouped.education.length;
 
-  siteData.timeline.forEach((item) => {
-    counts[normalizeTimelineType(item.type)] += 1;
-  });
+  container.innerHTML = hasAnyItems
+    ? [renderTimelineGroup("work", grouped.work), renderTimelineGroup("education", grouped.education, true)].filter(Boolean).join("")
+    : `<div class="timeline-empty reveal">还没有添加经历。</div>`;
+}
 
-  const visibleItems = sortByOrder(
-    siteData.timeline
-      .map((item, index) => ({ ...item, index }))
-      .filter((item) => normalizeTimelineType(item.type) === activeGroup)
-  );
-  const activeConfig = getTimelineGroupConfig(activeGroup);
+function renderTimelineGroup(type, items, compact = false) {
+  if (!items.length && compact) return "";
 
-  container.innerHTML = `
-    <div class="timeline-tabs" role="tablist" aria-label="经历分类">
-      ${timelineGroups
-        .map(
-          (group) => `
-            <button class="filter-button timeline-tab${group.id === activeGroup ? " is-active" : ""}" type="button" data-timeline-tab="${attr(group.id)}">
-              <span>${escapeHtml(group.label)}</span>
-              <span class="count">${counts[group.id] || 0}</span>
-            </button>
-          `
-        )
-        .join("")}
-    </div>
-    <div class="timeline-list${visibleItems.length ? "" : " is-empty"}">
-      ${
-        visibleItems.length
-          ? visibleItems
-              .map(
-                (item) => `
-                  <article class="timeline-item reveal${isFeatured(item, item.index) ? " is-featured" : ""}${isCurrentTimelineItem(item) ? " is-current" : ""}">
-                    <div class="timeline-date">${escapeHtml(item.date)}</div>
-                    <div class="timeline-card">
-                      <h3>${escapeHtml(item.title)}</h3>
-                      ${renderTimelineDescription(item.description)}
-                      <div class="tag-row">${toTags(item.tags).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}</div>
-                    </div>
-                  </article>
-                `
-              )
-              .join("")
-          : `<div class="timeline-empty reveal">${escapeHtml(activeConfig.empty)}</div>`
-      }
-    </div>
+  const config = getTimelineGroupConfig(type);
+  const title = type === "work" ? "工作经历" : "教育经历";
+  const kicker = type === "work" ? "Work Experience" : "Education";
+
+  return `
+    <section class="timeline-group${compact ? " is-compact" : ""}">
+      <div class="timeline-group-heading reveal">
+        <div>
+          <p>${escapeHtml(kicker)}</p>
+          <h3>${escapeHtml(title)}</h3>
+          <span class="timeline-group-count">${items.length}</span>
+        </div>
+      </div>
+      <div class="timeline-list${items.length ? "" : " is-empty"}">
+        ${
+          items.length
+            ? items.map((item) => renderTimelineItem(item, compact)).join("")
+            : `<div class="timeline-empty reveal">${escapeHtml(config.empty)}</div>`
+        }
+      </div>
+    </section>
+  `;
+}
+
+function renderTimelineItem(item, compact = false) {
+  const featured = !compact && isFeatured(item, item.index);
+
+  return `
+    <article class="timeline-item reveal${featured ? " is-featured" : ""}${isCurrentTimelineItem(item) ? " is-current" : ""}">
+      <div class="timeline-date">${escapeHtml(item.date)}</div>
+      <div class="timeline-card">
+        <h3>${escapeHtml(item.title)}</h3>
+        ${renderTimelineDescription(item.description)}
+        <div class="tag-row">${toTags(item.tags).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}</div>
+      </div>
+    </article>
   `;
 }
 
