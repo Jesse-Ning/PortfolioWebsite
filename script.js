@@ -7,6 +7,7 @@ const DEFAULT_SITE_DATA = {
     about: { nav: "介绍", kicker: "Personal Introduction", title: "个人介绍", copy: "" },
     experience: { nav: "经历", kicker: "Experience & Education", title: "经历与学习", copy: "" },
     projects: { nav: "作品", kicker: "Selected Work", title: "个人作品", copy: "" },
+    steam: { nav: "游戏库", kicker: "Steam Library", title: "游戏库", copy: "这些游戏记录了我的游玩兴趣、类型偏好和长期体验积累。" },
     research: { nav: "研究", kicker: "Research & Notes", title: "研究方向", copy: "把游玩经验、机制拆解和工程验证连接起来，形成可复用的设计判断。" },
     contact: { nav: "联系", kicker: "Contact", title: "一起聊聊游戏设计与战斗系统", copy: "" }
   },
@@ -138,6 +139,12 @@ const DEFAULT_SITE_DATA = {
       description: "用小范围可玩版本验证机制，再决定是否扩展成完整系统。"
     }
   ],
+  steamLibrary: {
+    steamId: "76561198819812464",
+    profileUrl: "https://steamcommunity.com/profiles/76561198819812464/",
+    updatedAt: "",
+    games: []
+  },
   customSections: []
 };
 
@@ -176,6 +183,7 @@ const baseNavItems = [
   { id: "about", label: "介绍" },
   { id: "experience", label: "经历" },
   { id: "projects", label: "作品" },
+  { id: "steam", label: "游戏库" },
   { id: "research", label: "研究" },
   { id: "contact", label: "联系" }
 ];
@@ -348,6 +356,58 @@ function normalizeProjects(projects) {
   return (Array.isArray(projects) ? projects : []).map((project, index) => normalizeProject(project, index));
 }
 
+function normalizeSteamLibrary(library) {
+  const source = library && typeof library === "object" ? library : {};
+  const games = Array.isArray(source.games) ? source.games : [];
+  return {
+    steamId: String(source.steamId || "76561198819812464"),
+    profileUrl: String(source.profileUrl || "https://steamcommunity.com/profiles/76561198819812464/"),
+    updatedAt: String(source.updatedAt || ""),
+    games: games.map((game) => normalizeSteamGame(game)).filter((game) => game.name)
+  };
+}
+
+function normalizeSteamGame(game) {
+  const source = game && typeof game === "object" ? game : {};
+  const appid = Number(source.appid || source.appId || 0);
+  return {
+    appid,
+    name: String(source.name || "").trim(),
+    image: String(source.image || source.headerImage || steamImageForApp(appid)).trim(),
+    genres: toTags(source.genres || source.genre || source.type),
+    playtimeMinutes: toOrder(source.playtimeMinutes ?? source.playtime_forever, 0),
+    playtimeRecentMinutes: toOrder(source.playtimeRecentMinutes ?? source.playtime_2weeks, 0)
+  };
+}
+
+function steamImageForApp(appid) {
+  return appid ? `https://cdn.cloudflare.steamstatic.com/steam/apps/${appid}/header.jpg` : "";
+}
+
+function formatPlaytime(minutes) {
+  const value = Number(minutes || 0);
+  if (!value) return "未记录";
+  if (value < 60) return `${value} 分钟`;
+  const hours = value / 60;
+  return hours >= 100 ? `${Math.round(hours)} 小时` : `${hours.toFixed(1)} 小时`;
+}
+
+function formatSteamDate(value) {
+  if (!value) return "尚未导入";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return date.toLocaleDateString("zh-CN", { year: "numeric", month: "short", day: "numeric" });
+}
+
+function getOrderedSteamGames() {
+  return [...siteData.steamLibrary.games].sort((left, right) => {
+    if (right.playtimeMinutes !== left.playtimeMinutes) {
+      return right.playtimeMinutes - left.playtimeMinutes;
+    }
+    return left.name.localeCompare(right.name);
+  });
+}
+
 function getOrderedProjects(active = "all") {
   return sortByOrder(
     siteData.projects
@@ -453,6 +513,7 @@ function normalizeData(data) {
     },
     timeline: normalizeTimeline(Array.isArray(source.timeline) ? source.timeline : fallback.timeline),
     projects: normalizeProjects(Array.isArray(source.projects) ? source.projects : fallback.projects),
+    steamLibrary: normalizeSteamLibrary(source.steamLibrary || fallback.steamLibrary),
     research: Array.isArray(source.research) ? source.research : fallback.research,
     customSections: Array.isArray(source.customSections) ? source.customSections : []
   };
@@ -525,6 +586,7 @@ function renderAll() {
   renderTimeline();
   renderFilters(activeProjectFilter);
   renderProjects(activeProjectFilter);
+  renderSteamLibrary();
   renderResearch();
   renderCustomSections();
   setupScrollSpy();
@@ -553,7 +615,9 @@ function renderNav() {
     id: section.id,
     label: section.navTitle || section.title || "新页签"
   }));
-  const navItems = [...baseItems.slice(0, 4), ...customItems, baseItems[4]];
+  const contactItem = baseItems.find((item) => item.id === "contact");
+  const mainItems = baseItems.filter((item) => item.id !== "contact");
+  const navItems = [...mainItems, ...customItems, contactItem].filter(Boolean);
 
   document.querySelector(".site-nav").innerHTML = navItems
     .map((item) => `<a href="#${attr(item.id)}">${escapeHtml(item.label)}</a>`)
@@ -824,6 +888,55 @@ function renderProjectTags(project) {
   const tags = toTags(project.tags);
   if (!tags.length) return "";
   return `<div class="tag-row project-extra-tags">${tags.map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}</div>`;
+}
+
+function renderSteamLibrary() {
+  const library = siteData.steamLibrary;
+  const games = getOrderedSteamGames();
+  const summary = document.getElementById("steam-summary");
+  const grid = document.getElementById("steam-library-grid");
+  if (!summary || !grid) return;
+
+  const totalMinutes = games.reduce((sum, game) => sum + Number(game.playtimeMinutes || 0), 0);
+  summary.innerHTML = `
+    <article>
+      <strong>${escapeHtml(games.length)}</strong>
+      <span>已导入游戏</span>
+    </article>
+    <article>
+      <strong>${escapeHtml(formatPlaytime(totalMinutes))}</strong>
+      <span>累计游玩</span>
+    </article>
+    <article>
+      <strong>${escapeHtml(formatSteamDate(library.updatedAt))}</strong>
+      <span>最近更新</span>
+    </article>
+  `;
+
+  grid.innerHTML = games.length
+    ? games.map(renderSteamGameCard).join("")
+    : `<div class="steam-empty reveal">还没有导入 Steam 游戏库。运行 ImportSteamLibrary.bat 后，这里会显示游戏名字、图片、类型和游玩时间。</div>`;
+}
+
+function renderSteamGameCard(game) {
+  const genres = toTags(game.genres);
+  return `
+    <article class="steam-card reveal">
+      <div class="steam-media">
+        <img src="${attr(game.image)}" alt="${attr(game.name)}" loading="lazy" />
+      </div>
+      <div class="steam-card-body">
+        <h3>${escapeHtml(game.name)}</h3>
+        <div class="steam-card-meta">
+          <span>${escapeHtml(formatPlaytime(game.playtimeMinutes))}</span>
+          ${game.playtimeRecentMinutes ? `<span>近两周 ${escapeHtml(formatPlaytime(game.playtimeRecentMinutes))}</span>` : ""}
+        </div>
+        <div class="tag-row steam-genre-row">
+          ${genres.length ? genres.map((genre) => `<span class="tag">${escapeHtml(genre)}</span>`).join("") : `<span class="tag">未分类</span>`}
+        </div>
+      </div>
+    </article>
+  `;
 }
 
 function renderResearch() {

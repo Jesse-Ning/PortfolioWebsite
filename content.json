@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-30T09:11:48.883Z",
+  "updatedAt": "2026-06-01T14:19:52.451Z",
   "profile": {
     "name": "你的名字",
     "initials": "YY",
@@ -280,6 +280,12 @@
       "title": "个人作品",
       "copy": ""
     },
+    "steam": {
+      "nav": "游戏库",
+      "kicker": "Steam Library",
+      "title": "游戏库",
+      "copy": "这些游戏记录了我的游玩兴趣、类型偏好和长期体验积累。"
+    },
     "research": {
       "nav": "研究",
       "kicker": "Research & Notes",
@@ -292,5 +298,11 @@
       "title": "一起聊聊游戏设计与战斗系统",
       "copy": ""
     }
+  },
+  "steamLibrary": {
+    "steamId": "76561198819812464",
+    "profileUrl": "https://steamcommunity.com/profiles/76561198819812464/",
+    "updatedAt": "",
+    "games": []
   }
 }
