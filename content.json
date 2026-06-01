@@ -250,5 +250,37 @@
       "description": "用小范围可玩版本验证机制，再决定是否扩展成完整系统。"
     }
   ],
-  "customSections": []
+  "customSections": [],
+  "sections": {
+    "about": {
+      "nav": "介绍",
+      "kicker": "Personal Introduction",
+      "title": "个人介绍",
+      "copy": ""
+    },
+    "experience": {
+      "nav": "经历",
+      "kicker": "Experience & Education",
+      "title": "经历与学习",
+      "copy": ""
+    },
+    "projects": {
+      "nav": "作品",
+      "kicker": "Selected Work",
+      "title": "个人作品",
+      "copy": ""
+    },
+    "research": {
+      "nav": "研究",
+      "kicker": "Research & Notes",
+      "title": "研究方向",
+      "copy": "把游玩经验、机制拆解和工程验证连接起来，形成可复用的设计判断。"
+    },
+    "contact": {
+      "nav": "联系",
+      "kicker": "Contact",
+      "title": "一起聊聊游戏设计与战斗系统",
+      "copy": ""
+    }
+  }
 }

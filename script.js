@@ -3,6 +3,13 @@ const DEV_MODE_KEY = "portfolio-dev-mode";
 
 const DEFAULT_SITE_DATA = {
   updatedAt: "2026-05-30T00:00:00.000Z",
+  sections: {
+    about: { nav: "介绍", kicker: "Personal Introduction", title: "个人介绍", copy: "" },
+    experience: { nav: "经历", kicker: "Experience & Education", title: "经历与学习", copy: "" },
+    projects: { nav: "作品", kicker: "Selected Work", title: "个人作品", copy: "" },
+    research: { nav: "研究", kicker: "Research & Notes", title: "研究方向", copy: "把游玩经验、机制拆解和工程验证连接起来，形成可复用的设计判断。" },
+    contact: { nav: "联系", kicker: "Contact", title: "一起聊聊游戏设计与战斗系统", copy: "" }
+  },
   profile: {
     name: "你的名字",
     initials: "YY",
@@ -405,11 +412,31 @@ function getTimelineEntries(type) {
   );
 }
 
+function normalizeSections(value) {
+  const fallback = cloneData(DEFAULT_SITE_DATA.sections || {});
+  const source = value && typeof value === "object" ? value : {};
+  const result = {};
+
+  baseNavItems.forEach((item) => {
+    const base = fallback[item.id] || {};
+    const custom = source[item.id] || {};
+    result[item.id] = {
+      nav: String(custom.nav || base.nav || item.label || item.id).trim(),
+      kicker: String(custom.kicker || base.kicker || "").trim(),
+      title: String(custom.title || base.title || "").trim(),
+      copy: String(custom.copy || base.copy || "").trim()
+    };
+  });
+
+  return result;
+}
+
 function normalizeData(data) {
   const fallback = cloneData(DEFAULT_SITE_DATA);
   const source = data && typeof data === "object" ? data : {};
   return {
     updatedAt: source.updatedAt || fallback.updatedAt,
+    sections: normalizeSections(source.sections || fallback.sections),
     profile: {
       ...fallback.profile,
       ...(source.profile || {}),
@@ -487,6 +514,7 @@ function setText(selector, value) {
 
 function renderAll() {
   renderNav();
+  renderSectionMeta();
   renderProfile();
   renderTimeline();
   renderFilters(activeProjectFilter);
@@ -497,12 +525,29 @@ function renderAll() {
   observeReveals();
 }
 
+function getSectionConfig(id) {
+  return siteData.sections?.[id] || DEFAULT_SITE_DATA.sections?.[id] || baseNavItems.find((item) => item.id === id) || {};
+}
+
+function renderSectionMeta() {
+  baseNavItems.forEach((item) => {
+    const section = getSectionConfig(item.id);
+    setText(`[data-section-kicker="${item.id}"]`, section.kicker || "");
+    setText(`[data-section-title="${item.id}"]`, section.title || "");
+    setText(`[data-section-copy="${item.id}"]`, section.copy || "");
+  });
+}
+
 function renderNav() {
+  const baseItems = baseNavItems.map((item) => ({
+    ...item,
+    label: getSectionConfig(item.id).nav || item.label
+  }));
   const customItems = siteData.customSections.map((section) => ({
     id: section.id,
     label: section.navTitle || section.title || "新页签"
   }));
-  const navItems = [...baseNavItems.slice(0, 4), ...customItems, baseNavItems[4]];
+  const navItems = [...baseItems.slice(0, 4), ...customItems, baseItems[4]];
 
   document.querySelector(".site-nav").innerHTML = navItems
     .map((item) => `<a href="#${attr(item.id)}">${escapeHtml(item.label)}</a>`)
@@ -1357,6 +1402,15 @@ function renderSectionsEditor() {
   return `
     <div class="dev-section-head">
       <div>
+        <h3>固定栏目标题</h3>
+        <p>这里可以修改导航文字、小标题、大标题和说明文字，比如 Selected Work。</p>
+      </div>
+    </div>
+    <div class="dev-list">
+      ${baseNavItems.map((item) => renderBaseSectionEditor(item)).join("")}
+    </div>
+    <div class="dev-section-head">
+      <div>
         <h3>自定义标题页签</h3>
         <p>这里创建的页签会自动出现在顶部导航里，并在网站底部生成新章节。</p>
       </div>
@@ -1365,6 +1419,23 @@ function renderSectionsEditor() {
     <div class="dev-list">
       ${siteData.customSections.map((section, index) => renderSectionEditor(section, index)).join("")}
     </div>
+  `;
+}
+
+function renderBaseSectionEditor(item) {
+  const section = getSectionConfig(item.id);
+  return `
+    <article class="dev-item" data-base-section-id="${attr(item.id)}">
+      <div class="dev-item-head">
+        <strong>${escapeHtml(section.title || item.label || item.id)}</strong>
+      </div>
+      <div class="dev-form-grid compact">
+        ${field("导航文字", `base-section-nav-${item.id}`, section.nav, `data-base-section-field="nav"`)}
+        ${field("小标题", `base-section-kicker-${item.id}`, section.kicker, `data-base-section-field="kicker"`)}
+        ${field("大标题", `base-section-title-${item.id}`, section.title, `data-base-section-field="title"`)}
+        ${textarea("说明文字", `base-section-copy-${item.id}`, section.copy, 3, `data-base-section-field="copy"`)}
+      </div>
+    </article>
   `;
 }
 
@@ -1612,6 +1683,18 @@ function collectEditorData() {
   }
 
 
+  if (document.querySelector("[data-base-section-id]")) {
+    next.sections = { ...next.sections };
+    Array.from(document.querySelectorAll("[data-base-section-id]")).forEach((row) => {
+      const id = row.dataset.baseSectionId;
+      next.sections[id] = {
+        nav: row.querySelector("[data-base-section-field='nav']").value.trim(),
+        kicker: row.querySelector("[data-base-section-field='kicker']").value.trim(),
+        title: row.querySelector("[data-base-section-field='title']").value.trim(),
+        copy: row.querySelector("[data-base-section-field='copy']").value.trim()
+      };
+    });
+  }
 
   if (document.querySelector("[data-timeline-panel]")) {
     const panel = document.querySelector("[data-timeline-panel]");
