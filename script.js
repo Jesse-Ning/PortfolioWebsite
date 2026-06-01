@@ -536,7 +536,7 @@ function getSoftwareIcon(item) {
 
   return {
     label,
-    src: "https://cdn.simpleicons.org/" + match.slug
+    src: "assets/software-icons/" + match.slug + ".svg"
   };
 }
 
@@ -577,7 +577,7 @@ function renderSoftwareIconItem(item) {
       <span class="software-icon-mark" aria-hidden="true">
         ${
           iconData
-            ? `<img src="${attr(iconData.src)}" alt="" loading="lazy" onerror="this.remove();" />`
+            ? `<img src="${attr(iconData.src)}" alt="" loading="lazy" onerror="this.hidden=true; this.nextElementSibling.hidden=false;" /><span hidden>${escapeHtml(fallback)}</span>`
             : `<span>${escapeHtml(fallback)}</span>`
         }
       </span>
