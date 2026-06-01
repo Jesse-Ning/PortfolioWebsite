@@ -286,12 +286,6 @@
       "title": "游戏库",
       "copy": "这些游戏记录了我的游玩兴趣、类型偏好和长期体验积累。"
     },
-    "research": {
-      "nav": "研究",
-      "kicker": "Research & Notes",
-      "title": "研究方向",
-      "copy": "把游玩经验、机制拆解和工程验证连接起来，形成可复用的设计判断。"
-    },
     "contact": {
       "nav": "联系",
       "kicker": "Contact",

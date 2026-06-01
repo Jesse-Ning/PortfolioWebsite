@@ -8,7 +8,6 @@ const DEFAULT_SITE_DATA = {
     experience: { nav: "经历", kicker: "Experience & Education", title: "经历与学习", copy: "" },
     projects: { nav: "作品", kicker: "Selected Work", title: "个人作品", copy: "" },
     steam: { nav: "游戏库", kicker: "Steam Library", title: "游戏库", copy: "这些游戏记录了我的游玩兴趣、类型偏好和长期体验积累。" },
-    research: { nav: "研究", kicker: "Research & Notes", title: "研究方向", copy: "把游玩经验、机制拆解和工程验证连接起来，形成可复用的设计判断。" },
     contact: { nav: "联系", kicker: "Contact", title: "一起聊聊游戏设计与战斗系统", copy: "" }
   },
   profile: {
@@ -184,7 +183,6 @@ const baseNavItems = [
   { id: "experience", label: "经历" },
   { id: "projects", label: "作品" },
   { id: "steam", label: "游戏库" },
-  { id: "research", label: "研究" },
   { id: "contact", label: "联系" }
 ];
 
@@ -627,7 +625,6 @@ function renderAll() {
   renderFilters(activeProjectFilter);
   renderProjects(activeProjectFilter);
   renderSteamLibrary();
-  renderResearch();
   renderCustomSections();
   setupScrollSpy();
   observeReveals();
@@ -980,7 +977,10 @@ function renderSteamGameCard(game) {
 }
 
 function renderResearch() {
-  document.getElementById("research-notes").innerHTML = siteData.research
+  const host = document.getElementById("research-notes");
+  if (!host) return;
+
+  host.innerHTML = siteData.research
     .map(
       (note) => `
         <article class="note-item reveal">
