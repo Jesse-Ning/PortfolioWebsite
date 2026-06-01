@@ -826,6 +826,15 @@ h2 {
   font-weight: 900;
 }
 
+.timeline-points.is-plain {
+  padding-left: 0;
+  list-style: none;
+}
+
+.timeline-points.is-plain li {
+  padding-left: 0;
+}
+
 .tag-row {
   display: flex;
   flex-wrap: wrap;

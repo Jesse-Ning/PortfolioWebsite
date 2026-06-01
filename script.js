@@ -434,14 +434,17 @@ function splitTimelineItems(value) {
   return lines.length ? lines : [text];
 }
 
-function renderTimelineDescription(value) {
+function renderTimelineDescription(value, options = {}) {
   const items = splitTimelineItems(value);
   if (!items.length) return "";
 
+  const listTag = options.numbered === false ? "ul" : "ol";
+  const className = `timeline-points${options.plain ? " is-plain" : ""}`;
+
   return `
-    <ol class="timeline-points">
+    <${listTag} class="${className}">
       ${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
-    </ol>
+    </${listTag}>
   `;
 }
 function normalizeTimelineType(value) {
@@ -834,7 +837,7 @@ function renderTimelineItem(item, compact = false) {
       <div class="timeline-date">${escapeHtml(item.date)}</div>
       <div class="timeline-card">
         <h3>${escapeHtml(item.title)}</h3>
-        ${renderTimelineDescription(item.description)}
+        ${renderTimelineDescription(item.description, { numbered: !compact, plain: compact })}
         <div class="tag-row">${toTags(item.tags).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}</div>
       </div>
     </article>
