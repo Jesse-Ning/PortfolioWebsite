@@ -313,6 +313,36 @@ function getOrderedProjects(active = "all") {
   );
 }
 
+function splitTimelineItems(value) {
+  const text = String(value || "").trim();
+  if (!text) return [];
+
+  const numberedParts = text
+    .replace(/\r\n/g, "\n")
+    .split(/(?:^|\s+)(?:\d+|[一二三四五六七八九十]+)[.．、)]\s*/g)
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  if (numberedParts.length > 1) return numberedParts;
+
+  const lines = text
+    .split(/\n+/g)
+    .map((item) => item.replace(/^(?:[-*•]|(?:\d+|[一二三四五六七八九十]+)[.．、)])\s*/, "").trim())
+    .filter(Boolean);
+
+  return lines.length ? lines : [text];
+}
+
+function renderTimelineDescription(value) {
+  const items = splitTimelineItems(value);
+  if (!items.length) return "";
+
+  return `
+    <ol class="timeline-points">
+      ${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+    </ol>
+  `;
+}
 function normalizeTimelineType(value) {
   return value === "education" ? "education" : "work";
 }
@@ -541,7 +571,7 @@ function renderTimeline() {
                     <div class="timeline-date">${escapeHtml(item.date)}</div>
                     <div class="timeline-card">
                       <h3>${escapeHtml(item.title)}</h3>
-                      <p>${escapeHtml(item.description)}</p>
+                      ${renderTimelineDescription(item.description)}
                       <div class="tag-row">${toTags(item.tags).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}</div>
                     </div>
                   </article>
@@ -1114,7 +1144,7 @@ function renderTimelineEditor() {
     <div class="dev-section-head">
       <div>
         <h3>经历与学习</h3>
-        <p>把经历拆成教育和工作两个分类，前台会显示成两个可切换的子页签。</p>
+        <p>把经历拆成教育和工作两个分类；内容条目可以每行写一条，也可以写成 1. 2. 3.。</p>
       </div>
     </div>
     <div class="dev-subtabs" role="tablist" aria-label="经历分类">
@@ -1156,7 +1186,7 @@ function renderTimelineItemEditor(item, index) {
         ${field("排序", "timeline-order", orderValue(item, index), `data-timeline-field="order"`)}
         ${field("年份 / 时间", "timeline-date", item.date, `data-timeline-field="date"`)}
         ${field("标题", "timeline-title", item.title, `data-timeline-field="title"`)}
-        ${textarea("描述", "timeline-description", item.description, 4, `data-timeline-field="description"`)}
+        ${textarea("内容条目", "timeline-description", item.description, 6, `data-timeline-field="description"`)}
         ${field("标签", "timeline-tags", toTags(item.tags).join(", "), `data-timeline-field="tags"`)}
       </div>
     </article>
@@ -1345,7 +1375,7 @@ function handleEditorButton(button) {
     siteData.timeline.unshift({
       date: String(new Date().getFullYear()),
       title: `新${label}经历`,
-      description: `在这里写${label}经历描述。`,
+      description: `1. 在这里写${label}经历的第一条内容。\n2. 在这里写第二条内容。`,
       tags: [label],
       type,
       order: getNextOrder(siteData.timeline.filter((item) => normalizeTimelineType(item.type) === type))

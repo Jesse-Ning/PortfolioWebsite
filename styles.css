@@ -603,6 +603,24 @@ h2 {
   color: var(--muted);
 }
 
+.timeline-points {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding-left: 24px;
+  color: var(--muted);
+}
+
+.timeline-points li {
+  padding-left: 4px;
+  line-height: 1.75;
+}
+
+.timeline-points li::marker {
+  color: var(--jade);
+  font-weight: 900;
+}
+
 .tag-row {
   display: flex;
   flex-wrap: wrap;
@@ -683,7 +701,7 @@ body[data-theme="dark"] .filter-button.is-active {
 }
 
 .project-card.is-featured {
-  grid-column: span 2;
+  grid-column: 1 / -1;
   display: grid;
   grid-template-columns: minmax(0, 1.06fr) minmax(0, 0.94fr);
   border-width: 2px;
