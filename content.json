@@ -49,6 +49,35 @@
         "href": "https://steamcommunity.com/",
         "icon": "gamepad"
       }
+    ],
+    "keywords": [
+      {
+        "label": "技能",
+        "items": [
+          "战斗系统",
+          "玩法原型",
+          "镜头反馈",
+          "Boss AI"
+        ]
+      },
+      {
+        "label": "语言",
+        "items": [
+          "C++",
+          "Blueprint",
+          "C#",
+          "JavaScript"
+        ]
+      },
+      {
+        "label": "软件",
+        "items": [
+          "Unreal Engine 5",
+          "Unity",
+          "Blender",
+          "Git"
+        ]
+      }
     ]
   },
   "timeline": [
@@ -61,7 +90,8 @@
         "C++",
         "Action Combat"
       ],
-      "type": "work"
+      "type": "work",
+      "order": 1
     },
     {
       "date": "2026",
@@ -72,7 +102,8 @@
         "Camera",
         "UI Feedback"
       ],
-      "type": "work"
+      "type": "work",
+      "order": 2
     },
     {
       "date": "2025",
@@ -83,7 +114,8 @@
         "Design Notes",
         "Prototyping"
       ],
-      "type": "work"
+      "type": "work",
+      "order": 3
     }
   ],
   "projects": [
@@ -96,24 +128,32 @@
       "image": "assets/slash-preview.png",
       "description": "以阴阳资源、近战攻防和高反馈动作为核心的第三人称动作游戏原型。",
       "tags": [
-        "Action",
-        "Combat",
-        "Boss"
-      ]
+        "Action Combat",
+        "Boss",
+        "Prototype"
+      ],
+      "order": 1,
+      "responsibility": "战斗系统设计与玩法实现",
+      "language": "C++ / Blueprint",
+      "gameType": "第三人称动作 / 战斗原型"
     },
     {
       "title": "完美闪避与反击窗口",
       "year": "2026",
       "role": "Gameplay Programmer",
       "category": "systems",
-      "engine": "C++",
+      "engine": "UE5",
       "image": "assets/recovery-preview.png",
       "description": "用通知窗口、状态约束和镜头反馈组合出更清晰的闪避收益与反击节奏。",
       "tags": [
         "Dodge",
         "Timing",
         "Feedback"
-      ]
+      ],
+      "order": 2,
+      "responsibility": "闪避窗口与反击反馈实现",
+      "language": "C++",
+      "gameType": "战斗系统模块"
     },
     {
       "title": "Boss 行为树战斗循环",
@@ -127,35 +167,47 @@
         "Boss AI",
         "Behavior Tree",
         "Balance"
-      ]
+      ],
+      "order": 3,
+      "responsibility": "Boss 行为树与阶段节奏设计",
+      "language": "Blueprint / C++",
+      "gameType": "Boss AI / 战斗循环"
     },
     {
       "title": "动作镜头反馈库",
       "year": "2026",
       "role": "Tools / Feel",
       "category": "design",
-      "engine": "Data Assets",
+      "engine": "UE5",
       "image": "assets/slash-preview.png",
       "description": "把攻击、处决和完美动作的镜头表现拆成可复用配置，方便快速调手感。",
       "tags": [
         "Camera",
         "Data Asset",
         "Game Feel"
-      ]
+      ],
+      "order": 4,
+      "responsibility": "镜头反馈配置与工具化",
+      "language": "Blueprint / Data Assets",
+      "gameType": "镜头与手感工具"
     },
     {
       "title": "生命值与受击表现",
       "year": "2026",
       "role": "UI / VFX",
       "category": "design",
-      "engine": "UMG",
+      "engine": "UE5",
       "image": "assets/blood-veins-preview.png",
       "description": "探索伤痕、回血流动、屏幕边缘压迫等反馈，让战斗状态更容易被玩家感知。",
       "tags": [
         "HUD",
         "VFX",
         "Readability"
-      ]
+      ],
+      "order": 5,
+      "responsibility": "战斗状态 UI 与反馈表现",
+      "language": "UMG / Blueprint",
+      "gameType": "HUD / 受击反馈"
     },
     {
       "title": "机制拆解笔记",
@@ -169,7 +221,11 @@
         "Research",
         "Design",
         "Analysis"
-      ]
+      ],
+      "order": 6,
+      "responsibility": "玩法分析与设计拆解",
+      "language": "Markdown",
+      "gameType": "机制研究"
     }
   ],
   "research": [

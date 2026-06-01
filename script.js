@@ -20,6 +20,11 @@ const DEFAULT_SITE_DATA = {
       { value: "Combat", label: "设计方向" },
       { value: "Prototype", label: "当前阶段" }
     ],
+    keywords: [
+      { label: "技能", items: ["战斗系统", "玩法原型", "镜头反馈", "Boss AI"] },
+      { label: "语言", items: ["C++", "Blueprint", "C#", "JavaScript"] },
+      { label: "软件", items: ["Unreal Engine 5", "Unity", "Blender", "Git"] }
+    ],
     links: [
       { label: "Email", href: "mailto:yourname@example.com", icon: "mail", primary: true },
       { label: "GitHub", href: "https://github.com/", icon: "github" },
@@ -228,6 +233,86 @@ function toTags(value) {
     .filter(Boolean);
 }
 
+function toOrder(value, fallback = 999) {
+  const numeric = Number.parseInt(value, 10);
+  return Number.isFinite(numeric) && numeric > 0 ? numeric : fallback;
+}
+
+function orderValue(item, index = 0) {
+  return toOrder(item?.order, index + 1);
+}
+
+function sortByOrder(items) {
+  return [...items].sort((left, right) => {
+    const leftOrder = orderValue(left, left.index ?? 0);
+    const rightOrder = orderValue(right, right.index ?? 0);
+    return leftOrder === rightOrder ? (left.index ?? 0) - (right.index ?? 0) : leftOrder - rightOrder;
+  });
+}
+
+function getNextOrder(items) {
+  return Math.max(0, ...items.map((item, index) => orderValue(item, index))) + 1;
+}
+
+function isFeatured(item, index = 0) {
+  return orderValue(item, index) === 1;
+}
+
+function normalizeKeywordGroups(groups) {
+  return (Array.isArray(groups) ? groups : [])
+    .map((group) => ({
+      label: String(group?.label || "关键词").trim(),
+      items: toTags(group?.items)
+    }))
+    .filter((group) => group.label || group.items.length);
+}
+
+function inferProjectLanguage(project) {
+  const text = `${project.language || ""} ${project.engine || ""} ${toTags(project.tags).join(" ")}`;
+  const languages = [];
+  if (/C\+\+/i.test(text)) languages.push("C++");
+  if (/Blueprint|蓝图|UE5|Unreal/i.test(text)) languages.push("Blueprint");
+  if (/C#|Unity/i.test(text)) languages.push("C#");
+  return languages.join(" / ") || String(project.language || "").trim();
+}
+
+function inferProjectGameType(project) {
+  const tags = toTags(project.tags);
+  return String(project.gameType || tags[0] || categoryLabels[project.category] || "").trim();
+}
+
+function normalizeProject(project, index = 0) {
+  const item = project && typeof project === "object" ? project : {};
+  const responsibility = String(item.responsibility || item.role || "Designer / Developer").trim();
+  return {
+    ...item,
+    title: String(item.title || "未命名作品").trim(),
+    year: String(item.year || "").trim(),
+    role: String(item.role || responsibility).trim(),
+    responsibility,
+    category: String(item.category || "design").trim(),
+    engine: String(item.engine || "").trim(),
+    language: String(item.language || inferProjectLanguage(item)).trim(),
+    gameType: inferProjectGameType(item),
+    image: String(item.image || "assets/slash-preview.png").trim(),
+    description: String(item.description || "").trim(),
+    tags: toTags(item.tags),
+    order: orderValue(item, index)
+  };
+}
+
+function normalizeProjects(projects) {
+  return (Array.isArray(projects) ? projects : []).map((project, index) => normalizeProject(project, index));
+}
+
+function getOrderedProjects(active = "all") {
+  return sortByOrder(
+    siteData.projects
+      .map((project, index) => ({ ...project, index }))
+      .filter((project) => active === "all" || project.category === active)
+  );
+}
+
 function normalizeTimelineType(value) {
   return value === "education" ? "education" : "work";
 }
@@ -238,23 +323,26 @@ function getTimelineGroupConfig(type) {
 }
 
 function normalizeTimeline(items) {
-  return (Array.isArray(items) ? items : []).map((entry) => {
+  return (Array.isArray(items) ? items : []).map((entry, index) => {
     const item = entry && typeof entry === "object" ? entry : {};
     return {
       date: item.date || "",
       title: item.title || "",
       description: item.description || "",
       tags: toTags(item.tags),
-      type: normalizeTimelineType(item.type)
+      type: normalizeTimelineType(item.type),
+      order: orderValue(item, index)
     };
   });
 }
 
 function getTimelineEntries(type) {
   const normalizedType = normalizeTimelineType(type);
-  return siteData.timeline
-    .map((item, index) => ({ ...item, index, type: normalizeTimelineType(item.type) }))
-    .filter((item) => item.type === normalizedType);
+  return sortByOrder(
+    siteData.timeline
+      .map((item, index) => ({ ...item, index, type: normalizeTimelineType(item.type) }))
+      .filter((item) => item.type === normalizedType)
+  );
 }
 
 function normalizeData(data) {
@@ -267,10 +355,11 @@ function normalizeData(data) {
       ...(source.profile || {}),
       about: toParagraphs(source.profile?.about || fallback.profile.about),
       facts: Array.isArray(source.profile?.facts) ? source.profile.facts : fallback.profile.facts,
+      keywords: normalizeKeywordGroups(source.profile?.keywords || fallback.profile.keywords),
       links: Array.isArray(source.profile?.links) ? source.profile.links : fallback.profile.links
     },
     timeline: normalizeTimeline(Array.isArray(source.timeline) ? source.timeline : fallback.timeline),
-    projects: Array.isArray(source.projects) ? source.projects : fallback.projects,
+    projects: normalizeProjects(Array.isArray(source.projects) ? source.projects : fallback.projects),
     research: Array.isArray(source.research) ? source.research : fallback.research,
     customSections: Array.isArray(source.customSections) ? source.customSections : []
   };
@@ -385,6 +474,19 @@ function renderProfile() {
     )
     .join("");
 
+  document.getElementById("profile-keywords").innerHTML = profile.keywords
+    .map(
+      (group) => `
+        <article class="keyword-group reveal">
+          <h3>${escapeHtml(group.label)}</h3>
+          <div class="keyword-list">
+            ${toTags(group.items).map((item) => `<span class="keyword-chip">${escapeHtml(item)}</span>`).join("")}
+          </div>
+        </article>
+      `
+    )
+    .join("");
+
   const links = profile.links
     .map(
       (link) => `
@@ -409,7 +511,11 @@ function renderTimeline() {
     counts[normalizeTimelineType(item.type)] += 1;
   });
 
-  const visibleItems = siteData.timeline.filter((item) => normalizeTimelineType(item.type) === activeGroup);
+  const visibleItems = sortByOrder(
+    siteData.timeline
+      .map((item, index) => ({ ...item, index }))
+      .filter((item) => normalizeTimelineType(item.type) === activeGroup)
+  );
   const activeConfig = getTimelineGroupConfig(activeGroup);
 
   container.innerHTML = `
@@ -431,7 +537,7 @@ function renderTimeline() {
           ? visibleItems
               .map(
                 (item) => `
-                  <article class="timeline-item reveal">
+                  <article class="timeline-item reveal${isFeatured(item, item.index) ? " is-featured" : ""}">
                     <div class="timeline-date">${escapeHtml(item.date)}</div>
                     <div class="timeline-card">
                       <h3>${escapeHtml(item.title)}</h3>
@@ -488,31 +594,50 @@ function renderFilters(active = "all") {
 }
 
 function renderProjects(active = "all") {
-  const projects =
-    active === "all"
-      ? siteData.projects
-      : siteData.projects.filter((project) => project.category === active);
+  const projects = getOrderedProjects(active);
 
   document.getElementById("project-grid").innerHTML = projects
     .map(
       (project) => `
-        <article class="project-card reveal">
+        <article class="project-card reveal${isFeatured(project, project.index) ? " is-featured" : ""}">
           <div class="project-media">
             <img src="${attr(project.image)}" alt="${attr(project.title)}" loading="lazy" />
           </div>
           <div class="project-body">
             <div class="project-meta">
               <span>${escapeHtml(project.year)}</span>
-              <span>${escapeHtml(project.engine)}</span>
+              <span>排序 ${escapeHtml(orderValue(project, project.index))}</span>
             </div>
             <h3>${escapeHtml(project.title)}</h3>
             <p>${escapeHtml(project.description)}</p>
-            <div class="tag-row">${toTags(project.tags).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}</div>
+            <div class="project-keywords">
+              ${renderProjectKeyword("引擎", project.engine, true)}
+              ${renderProjectKeyword("职责", project.responsibility || project.role, true)}
+              ${renderProjectKeyword("语言", project.language, false)}
+              ${renderProjectKeyword("类型", project.gameType, false)}
+            </div>
+            ${renderProjectTags(project)}
           </div>
         </article>
       `
     )
     .join("");
+}
+
+function renderProjectKeyword(label, value, primary = false) {
+  if (!String(value || "").trim()) return "";
+  return `
+    <div class="project-keyword${primary ? " is-primary" : ""}">
+      <span class="project-keyword-label">${escapeHtml(label)}</span>
+      <strong>${escapeHtml(value)}</strong>
+    </div>
+  `;
+}
+
+function renderProjectTags(project) {
+  const tags = toTags(project.tags);
+  if (!tags.length) return "";
+  return `<div class="tag-row project-extra-tags">${tags.map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}</div>`;
 }
 
 function renderResearch() {
@@ -942,6 +1067,16 @@ function renderProfileEditor() {
     <div class="dev-list" data-fact-list>
       ${profile.facts.map((fact, index) => renderFactEditor(fact, index)).join("")}
     </div>
+    <div class="dev-section-head">
+      <div>
+        <h3>关键词分组</h3>
+        <p>可以写技能、语言、软件等。每组关键词用逗号或换行分隔。</p>
+      </div>
+      <button class="dev-small-button" type="button" data-add-keyword-group>${icon("plus")}添加分组</button>
+    </div>
+    <div class="dev-list">
+      ${profile.keywords.map((group, index) => renderKeywordGroupEditor(group, index)).join("")}
+    </div>
   `;
 }
 
@@ -952,6 +1087,21 @@ function renderFactEditor(fact, index) {
       <input aria-label="亮点说明" data-fact-field="label" value="${attr(fact.label)}" />
       <button class="dev-icon-button danger" type="button" data-delete-fact="${index}" aria-label="删除亮点">${icon("trash")}</button>
     </div>
+  `;
+}
+
+function renderKeywordGroupEditor(group, index) {
+  return `
+    <article class="dev-item" data-keyword-index="${index}">
+      <div class="dev-item-head">
+        <strong>${escapeHtml(group.label || "关键词分组")}</strong>
+        <button class="dev-icon-button danger" type="button" data-delete-keyword-group="${index}" aria-label="删除关键词分组">${icon("trash")}</button>
+      </div>
+      <div class="dev-form-grid compact">
+        ${field("分组标题", "keyword-label", group.label, `data-keyword-field="label"`)}
+        ${textarea("关键词", "keyword-items", toTags(group.items).join(", "), 3, `data-keyword-field="items"`)}
+      </div>
+    </article>
   `;
 }
 
@@ -1003,6 +1153,7 @@ function renderTimelineItemEditor(item, index) {
         <button class="dev-icon-button danger" type="button" data-delete-timeline="${index}" aria-label="删除经历">${icon("trash")}</button>
       </div>
       <div class="dev-form-grid compact">
+        ${field("排序", "timeline-order", orderValue(item, index), `data-timeline-field="order"`)}
         ${field("年份 / 时间", "timeline-date", item.date, `data-timeline-field="date"`)}
         ${field("标题", "timeline-title", item.title, `data-timeline-field="title"`)}
         ${textarea("描述", "timeline-description", item.description, 4, `data-timeline-field="description"`)}
@@ -1017,12 +1168,12 @@ function renderProjectsEditor() {
     <div class="dev-section-head">
       <div>
         <h3>作品卡片</h3>
-        <p>可以添加文字、标签和图片。图片可填 assets 路径，也可以直接选择本地图片。</p>
+        <p>排序数字越小越靠前；排序为 1 的作品会自动变大。引擎和职责会作为主关键词显示。</p>
       </div>
       <button class="dev-small-button" type="button" data-add-project>${icon("plus")}添加作品</button>
     </div>
     <div class="dev-list">
-      ${siteData.projects.map((project, index) => renderProjectEditor(project, index)).join("")}
+      ${getOrderedProjects("all").map((project) => renderProjectEditor(project, project.index)).join("")}
     </div>
   `;
 }
@@ -1035,12 +1186,15 @@ function renderProjectEditor(project, index) {
         <button class="dev-icon-button danger" type="button" data-delete-project="${index}" aria-label="删除作品">${icon("trash")}</button>
       </div>
       <div class="dev-form-grid compact">
+        ${field("排序", "project-order", orderValue(project, index), `data-project-field="order"`)}
         ${field("标题", "project-title", project.title, `data-project-field="title"`)}
         ${field("年份", "project-year", project.year, `data-project-field="year"`)}
-        ${field("职责", "project-role", project.role, `data-project-field="role"`)}
         ${selectField("分类", "project-category", project.category, `data-project-field="category"`)}
-        ${field("引擎 / 技术", "project-engine", project.engine, `data-project-field="engine"`)}
-        ${field("标签", "project-tags", toTags(project.tags).join(", "), `data-project-field="tags"`)}
+        ${field("引擎", "project-engine", project.engine, `data-project-field="engine"`)}
+        ${field("我的职责", "project-responsibility", project.responsibility || project.role, `data-project-field="responsibility"`)}
+        ${field("编程语言", "project-language", project.language, `data-project-field="language"`)}
+        ${field("游戏类型", "project-game-type", project.gameType, `data-project-field="gameType"`)}
+        ${field("补充标签", "project-tags", toTags(project.tags).join(", "), `data-project-field="tags"`)}
         ${textarea("简介", "project-description", project.description, 4, `data-project-field="description"`)}
         ${imageField("图片", project.image, `data-project-field="image"`, "project", index)}
       </div>
@@ -1171,6 +1325,14 @@ function handleEditorButton(button) {
     syncFromEditor();
     siteData.profile.facts.splice(Number(button.dataset.deleteFact), 1);
     renderEditor();
+  } else if (button.matches("[data-add-keyword-group]")) {
+    syncFromEditor();
+    siteData.profile.keywords.push({ label: "新分组", items: ["关键词"] });
+    renderEditor();
+  } else if (button.matches("[data-delete-keyword-group]")) {
+    syncFromEditor();
+    siteData.profile.keywords.splice(Number(button.dataset.deleteKeywordGroup), 1);
+    renderEditor();
   } else if (button.matches("[data-timeline-editor-tab]")) {
     syncFromEditor();
     currentTimelineEditorGroup = normalizeTimelineType(button.dataset.timelineEditorTab);
@@ -1185,7 +1347,8 @@ function handleEditorButton(button) {
       title: `新${label}经历`,
       description: `在这里写${label}经历描述。`,
       tags: [label],
-      type
+      type,
+      order: getNextOrder(siteData.timeline.filter((item) => normalizeTimelineType(item.type) === type))
     });
     renderEditor();
   } else if (button.matches("[data-delete-timeline]")) {
@@ -1198,8 +1361,12 @@ function handleEditorButton(button) {
       title: "新作品",
       year: String(new Date().getFullYear()),
       role: "Designer / Developer",
+      responsibility: "Designer / Developer",
       category: "design",
       engine: "UE5",
+      language: "C++ / Blueprint",
+      gameType: "Prototype",
+      order: getNextOrder(siteData.projects),
       image: "assets/slash-preview.png",
       description: "在这里写作品简介。",
       tags: ["Prototype"]
@@ -1270,6 +1437,10 @@ function collectEditorData() {
       value: row.querySelector("[data-fact-field='value']").value.trim(),
       label: row.querySelector("[data-fact-field='label']").value.trim()
     }));
+    next.profile.keywords = Array.from(document.querySelectorAll("[data-keyword-index]")).map((row) => ({
+      label: row.querySelector("[data-keyword-field='label']").value.trim() || "关键词",
+      items: toTags(row.querySelector("[data-keyword-field='items']").value)
+    }));
   }
 
 
@@ -1277,30 +1448,42 @@ function collectEditorData() {
   if (document.querySelector("[data-timeline-panel]")) {
     const panel = document.querySelector("[data-timeline-panel]");
     const editedType = normalizeTimelineType(panel.dataset.timelinePanel || currentTimelineEditorGroup);
-    const editedTimeline = Array.from(document.querySelectorAll("[data-timeline-index]")).map((row) => ({
-      date: row.querySelector("[data-timeline-field='date']").value.trim(),
-      title: row.querySelector("[data-timeline-field='title']").value.trim() || `未命名${timelineGroupLabels[editedType]}经历`,
-      description: row.querySelector("[data-timeline-field='description']").value.trim(),
-      tags: toTags(row.querySelector("[data-timeline-field='tags']").value),
-      type: editedType
-    }));
-    next.timeline = [
-      ...editedTimeline,
-      ...next.timeline.filter((item) => normalizeTimelineType(item.type) !== editedType)
-    ];
+    const updatedTimeline = [...next.timeline];
+    Array.from(document.querySelectorAll("[data-timeline-index]")).forEach((row) => {
+      const index = Number(row.dataset.timelineIndex);
+      updatedTimeline[index] = {
+        order: toOrder(row.querySelector("[data-timeline-field='order']")?.value, index + 1),
+        date: row.querySelector("[data-timeline-field='date']").value.trim(),
+        title: row.querySelector("[data-timeline-field='title']").value.trim() || `未命名${timelineGroupLabels[editedType]}经历`,
+        description: row.querySelector("[data-timeline-field='description']").value.trim(),
+        tags: toTags(row.querySelector("[data-timeline-field='tags']").value),
+        type: editedType
+      };
+    });
+    next.timeline = updatedTimeline.filter(Boolean);
   }
 
   if (document.querySelector("[data-project-index]")) {
-    next.projects = Array.from(document.querySelectorAll("[data-project-index]")).map((row) => ({
-      title: row.querySelector("[data-project-field='title']").value.trim() || "未命名作品",
-      year: row.querySelector("[data-project-field='year']").value.trim(),
-      role: row.querySelector("[data-project-field='role']").value.trim(),
-      category: row.querySelector("[data-project-field='category']").value,
-      engine: row.querySelector("[data-project-field='engine']").value.trim(),
-      image: row.querySelector("[data-project-field='image']").value.trim(),
-      description: row.querySelector("[data-project-field='description']").value.trim(),
-      tags: toTags(row.querySelector("[data-project-field='tags']").value)
-    }));
+    const updatedProjects = [...next.projects];
+    Array.from(document.querySelectorAll("[data-project-index]")).forEach((row) => {
+      const index = Number(row.dataset.projectIndex);
+      const responsibility = row.querySelector("[data-project-field='responsibility']").value.trim();
+      updatedProjects[index] = {
+        order: toOrder(row.querySelector("[data-project-field='order']")?.value, index + 1),
+        title: row.querySelector("[data-project-field='title']").value.trim() || "未命名作品",
+        year: row.querySelector("[data-project-field='year']").value.trim(),
+        role: responsibility,
+        responsibility,
+        category: row.querySelector("[data-project-field='category']").value,
+        engine: row.querySelector("[data-project-field='engine']").value.trim(),
+        language: row.querySelector("[data-project-field='language']").value.trim(),
+        gameType: row.querySelector("[data-project-field='gameType']").value.trim(),
+        image: row.querySelector("[data-project-field='image']").value.trim(),
+        description: row.querySelector("[data-project-field='description']").value.trim(),
+        tags: toTags(row.querySelector("[data-project-field='tags']").value)
+      };
+    });
+    next.projects = updatedProjects.filter(Boolean);
   }
 
   if (document.querySelector("[data-section-index]")) {
