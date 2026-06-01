@@ -834,6 +834,7 @@ function renderEditor() {
 
   const renderers = {
     profile: renderProfileEditor,
+    experience: renderTimelineEditor,
     projects: renderProjectsEditor,
     sections: renderSectionsEditor,
     data: renderDataEditor

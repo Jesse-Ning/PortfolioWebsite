@@ -3,7 +3,7 @@ cd /d "%~dp0"
 
 echo Portfolio publish helper
 echo.
-echo This will commit all changes in this standalone portfolio repository and push to GitHub.
+echo Step 1/3: checking local changes...
 echo.
 
 git remote get-url origin >nul 2>nul
@@ -11,18 +11,35 @@ if errorlevel 1 (
   git remote add origin https://github.com/Jesse-Ning/PortfolioWebsite.git
 )
 
+git status --short
+if errorlevel 1 goto end
+
+echo.
 set /p msg=Commit message [Update portfolio]: 
 if "%msg%"=="" set msg=Update portfolio
 
+echo.
+echo Step 2/3: committing changes if there are any...
 git add .
-git commit -m "%msg%"
+git diff --cached --quiet
 if errorlevel 1 (
-  echo.
-  echo Nothing committed, or commit failed.
+  git commit -m "%msg%"
+) else (
+  echo Nothing new to commit. Existing local commits will still be pushed.
 )
 
+echo.
+echo Step 3/3: pushing to GitHub...
 git push -u origin main
+if errorlevel 1 (
+  echo.
+  echo Push failed. Check the error above.
+  goto end
+)
 
 echo.
-echo If push succeeds, GitHub Pages will publish automatically after Actions finishes.
+echo Done. GitHub Actions will publish the site automatically.
+
+:end
+echo.
 pause
