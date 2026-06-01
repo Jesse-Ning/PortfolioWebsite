@@ -761,6 +761,7 @@ function createEditorShell() {
         </div>
         <div class="dev-tabs" role="tablist">
           <button class="dev-tab is-active" type="button" data-editor-tab="profile">个人</button>
+          <button class="dev-tab" type="button" data-editor-tab="experience">经历</button>
           <button class="dev-tab" type="button" data-editor-tab="projects">作品</button>
           <button class="dev-tab" type="button" data-editor-tab="sections">页签</button>
           <button class="dev-tab" type="button" data-editor-tab="data">数据</button>
@@ -868,6 +869,38 @@ function renderFactEditor(fact, index) {
       <input aria-label="亮点说明" data-fact-field="label" value="${attr(fact.label)}" />
       <button class="dev-icon-button danger" type="button" data-delete-fact="${index}" aria-label="删除亮点">${icon("trash")}</button>
     </div>
+  `;
+}
+
+function renderTimelineEditor() {
+  return `
+    <div class="dev-section-head">
+      <div>
+        <h3>经历与学习</h3>
+        <p>这里编辑首页上的时间线卡片：年份、标题、描述和标签。</p>
+      </div>
+      <button class="dev-small-button" type="button" data-add-timeline>${icon("plus")}添加经历</button>
+    </div>
+    <div class="dev-list">
+      ${siteData.timeline.map((item, index) => renderTimelineItemEditor(item, index)).join("")}
+    </div>
+  `;
+}
+
+function renderTimelineItemEditor(item, index) {
+  return `
+    <article class="dev-item" data-timeline-index="${index}">
+      <div class="dev-item-head">
+        <strong>${escapeHtml(item.title || "未命名经历")}</strong>
+        <button class="dev-icon-button danger" type="button" data-delete-timeline="${index}" aria-label="删除经历">${icon("trash")}</button>
+      </div>
+      <div class="dev-form-grid compact">
+        ${field("年份 / 时间", "timeline-date", item.date, `data-timeline-field="date"`)}
+        ${field("标题", "timeline-title", item.title, `data-timeline-field="title"`)}
+        ${textarea("描述", "timeline-description", item.description, 4, `data-timeline-field="description"`)}
+        ${field("标签", "timeline-tags", toTags(item.tags).join(", "), `data-timeline-field="tags"`)}
+      </div>
+    </article>
   `;
 }
 
@@ -1030,6 +1063,19 @@ function handleEditorButton(button) {
     syncFromEditor();
     siteData.profile.facts.splice(Number(button.dataset.deleteFact), 1);
     renderEditor();
+  } else if (button.matches("[data-add-timeline]")) {
+    syncFromEditor();
+    siteData.timeline.unshift({
+      date: String(new Date().getFullYear()),
+      title: "新经历",
+      description: "在这里写经历描述。",
+      tags: ["Portfolio"]
+    });
+    renderEditor();
+  } else if (button.matches("[data-delete-timeline]")) {
+    syncFromEditor();
+    siteData.timeline.splice(Number(button.dataset.deleteTimeline), 1);
+    renderEditor();
   } else if (button.matches("[data-add-project]")) {
     syncFromEditor();
     siteData.projects.unshift({
@@ -1107,6 +1153,17 @@ function collectEditorData() {
     next.profile.facts = Array.from(document.querySelectorAll("[data-fact-index]")).map((row) => ({
       value: row.querySelector("[data-fact-field='value']").value.trim(),
       label: row.querySelector("[data-fact-field='label']").value.trim()
+    }));
+  }
+
+
+
+  if (document.querySelector("[data-timeline-index]")) {
+    next.timeline = Array.from(document.querySelectorAll("[data-timeline-index]")).map((row) => ({
+      date: row.querySelector("[data-timeline-field='date']").value.trim(),
+      title: row.querySelector("[data-timeline-field='title']").value.trim() || "未命名经历",
+      description: row.querySelector("[data-timeline-field='description']").value.trim(),
+      tags: toTags(row.querySelector("[data-timeline-field='tags']").value)
     }));
   }
 

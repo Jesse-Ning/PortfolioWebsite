@@ -843,7 +843,7 @@ body[data-theme="dark"] .filter-button.is-active {
 
 .dev-tabs {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 8px;
   padding: 12px 14px;
   border-bottom: 1px solid var(--line);
