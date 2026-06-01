@@ -60,7 +60,8 @@
         "Unreal Engine",
         "C++",
         "Action Combat"
-      ]
+      ],
+      "type": "work"
     },
     {
       "date": "2026",
@@ -70,7 +71,8 @@
         "Game Feel",
         "Camera",
         "UI Feedback"
-      ]
+      ],
+      "type": "work"
     },
     {
       "date": "2025",
@@ -80,7 +82,8 @@
         "Gameplay Research",
         "Design Notes",
         "Prototyping"
-      ]
+      ],
+      "type": "work"
     }
   ],
   "projects": [

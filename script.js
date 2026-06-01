@@ -169,11 +169,23 @@ const categoryLabels = {
   research: "研究"
 };
 
+const timelineGroups = [
+  { id: "education", label: "教育", empty: "还没有添加教育经历。" },
+  { id: "work", label: "工作", empty: "还没有添加工作经历。" }
+];
+
+const timelineGroupLabels = {
+  education: "教育",
+  work: "工作"
+};
+
 let siteData = cloneData(DEFAULT_SITE_DATA);
 let activeProjectFilter = "all";
+let activeTimelineGroup = "work";
 let revealObserver;
 let scrollSpy;
 let currentEditorTab = "profile";
+let currentTimelineEditorGroup = "work";
 
 function cloneData(data) {
   return JSON.parse(JSON.stringify(data));
@@ -216,6 +228,35 @@ function toTags(value) {
     .filter(Boolean);
 }
 
+function normalizeTimelineType(value) {
+  return value === "education" ? "education" : "work";
+}
+
+function getTimelineGroupConfig(type) {
+  const normalizedType = normalizeTimelineType(type);
+  return timelineGroups.find((group) => group.id === normalizedType) || timelineGroups[1];
+}
+
+function normalizeTimeline(items) {
+  return (Array.isArray(items) ? items : []).map((entry) => {
+    const item = entry && typeof entry === "object" ? entry : {};
+    return {
+      date: item.date || "",
+      title: item.title || "",
+      description: item.description || "",
+      tags: toTags(item.tags),
+      type: normalizeTimelineType(item.type)
+    };
+  });
+}
+
+function getTimelineEntries(type) {
+  const normalizedType = normalizeTimelineType(type);
+  return siteData.timeline
+    .map((item, index) => ({ ...item, index, type: normalizeTimelineType(item.type) }))
+    .filter((item) => item.type === normalizedType);
+}
+
 function normalizeData(data) {
   const fallback = cloneData(DEFAULT_SITE_DATA);
   const source = data && typeof data === "object" ? data : {};
@@ -228,7 +269,7 @@ function normalizeData(data) {
       facts: Array.isArray(source.profile?.facts) ? source.profile.facts : fallback.profile.facts,
       links: Array.isArray(source.profile?.links) ? source.profile.links : fallback.profile.links
     },
-    timeline: Array.isArray(source.timeline) ? source.timeline : fallback.timeline,
+    timeline: normalizeTimeline(Array.isArray(source.timeline) ? source.timeline : fallback.timeline),
     projects: Array.isArray(source.projects) ? source.projects : fallback.projects,
     research: Array.isArray(source.research) ? source.research : fallback.research,
     customSections: Array.isArray(source.customSections) ? source.customSections : []
@@ -360,20 +401,51 @@ function renderProfile() {
 }
 
 function renderTimeline() {
-  document.getElementById("timeline").innerHTML = siteData.timeline
-    .map(
-      (item) => `
-        <article class="timeline-item reveal">
-          <div class="timeline-date">${escapeHtml(item.date)}</div>
-          <div class="timeline-card">
-            <h3>${escapeHtml(item.title)}</h3>
-            <p>${escapeHtml(item.description)}</p>
-            <div class="tag-row">${toTags(item.tags).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}</div>
-          </div>
-        </article>
-      `
-    )
-    .join("");
+  const container = document.getElementById("timeline");
+  const activeGroup = normalizeTimelineType(activeTimelineGroup);
+  const counts = timelineGroups.reduce((result, group) => ({ ...result, [group.id]: 0 }), {});
+
+  siteData.timeline.forEach((item) => {
+    counts[normalizeTimelineType(item.type)] += 1;
+  });
+
+  const visibleItems = siteData.timeline.filter((item) => normalizeTimelineType(item.type) === activeGroup);
+  const activeConfig = getTimelineGroupConfig(activeGroup);
+
+  container.innerHTML = `
+    <div class="timeline-tabs" role="tablist" aria-label="经历分类">
+      ${timelineGroups
+        .map(
+          (group) => `
+            <button class="filter-button timeline-tab${group.id === activeGroup ? " is-active" : ""}" type="button" data-timeline-tab="${attr(group.id)}">
+              <span>${escapeHtml(group.label)}</span>
+              <span class="count">${counts[group.id] || 0}</span>
+            </button>
+          `
+        )
+        .join("")}
+    </div>
+    <div class="timeline-list${visibleItems.length ? "" : " is-empty"}">
+      ${
+        visibleItems.length
+          ? visibleItems
+              .map(
+                (item) => `
+                  <article class="timeline-item reveal">
+                    <div class="timeline-date">${escapeHtml(item.date)}</div>
+                    <div class="timeline-card">
+                      <h3>${escapeHtml(item.title)}</h3>
+                      <p>${escapeHtml(item.description)}</p>
+                      <div class="tag-row">${toTags(item.tags).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}</div>
+                    </div>
+                  </article>
+                `
+              )
+              .join("")
+          : `<div class="timeline-empty reveal">${escapeHtml(activeConfig.empty)}</div>`
+      }
+    </div>
+  `;
 }
 
 function getProjectCounts() {
@@ -506,6 +578,16 @@ function setupFilters() {
     activeProjectFilter = button.dataset.filter;
     renderFilters(activeProjectFilter);
     renderProjects(activeProjectFilter);
+    observeReveals();
+  });
+}
+
+function setupTimelineTabs() {
+  document.getElementById("timeline").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-timeline-tab]");
+    if (!button) return;
+    activeTimelineGroup = normalizeTimelineType(button.dataset.timelineTab);
+    renderTimeline();
     observeReveals();
   });
 }
@@ -874,25 +956,50 @@ function renderFactEditor(fact, index) {
 }
 
 function renderTimelineEditor() {
+  currentTimelineEditorGroup = normalizeTimelineType(currentTimelineEditorGroup);
+  const activeConfig = getTimelineGroupConfig(currentTimelineEditorGroup);
+  const entries = getTimelineEntries(currentTimelineEditorGroup);
+
   return `
     <div class="dev-section-head">
       <div>
         <h3>经历与学习</h3>
-        <p>这里编辑首页上的时间线卡片：年份、标题、描述和标签。</p>
+        <p>把经历拆成教育和工作两个分类，前台会显示成两个可切换的子页签。</p>
       </div>
-      <button class="dev-small-button" type="button" data-add-timeline>${icon("plus")}添加经历</button>
     </div>
-    <div class="dev-list">
-      ${siteData.timeline.map((item, index) => renderTimelineItemEditor(item, index)).join("")}
+    <div class="dev-subtabs" role="tablist" aria-label="经历分类">
+      ${timelineGroups
+        .map(
+          (group) => `
+            <button class="dev-subtab${group.id === currentTimelineEditorGroup ? " is-active" : ""}" type="button" data-timeline-editor-tab="${attr(group.id)}">
+              ${escapeHtml(group.label)}
+            </button>
+          `
+        )
+        .join("")}
+    </div>
+    <div class="dev-section-head nested">
+      <h4>${escapeHtml(activeConfig.label)}经历</h4>
+      <button class="dev-small-button" type="button" data-add-timeline="${attr(activeConfig.id)}">${icon("plus")}添加${escapeHtml(activeConfig.label)}</button>
+    </div>
+    <div class="dev-list" data-timeline-panel="${attr(activeConfig.id)}">
+      ${
+        entries.length
+          ? entries.map((entry) => renderTimelineItemEditor(entry, entry.index)).join("")
+          : `<div class="dev-empty">还没有${escapeHtml(activeConfig.label)}经历，点击上方按钮添加。</div>`
+      }
     </div>
   `;
 }
 
 function renderTimelineItemEditor(item, index) {
+  const type = normalizeTimelineType(item.type);
+  const label = timelineGroupLabels[type];
+
   return `
-    <article class="dev-item" data-timeline-index="${index}">
+    <article class="dev-item" data-timeline-index="${index}" data-timeline-type="${attr(type)}">
       <div class="dev-item-head">
-        <strong>${escapeHtml(item.title || "未命名经历")}</strong>
+        <strong>${escapeHtml(item.title || `未命名${label}经历`)}</strong>
         <button class="dev-icon-button danger" type="button" data-delete-timeline="${index}" aria-label="删除经历">${icon("trash")}</button>
       </div>
       <div class="dev-form-grid compact">
@@ -1064,13 +1171,21 @@ function handleEditorButton(button) {
     syncFromEditor();
     siteData.profile.facts.splice(Number(button.dataset.deleteFact), 1);
     renderEditor();
+  } else if (button.matches("[data-timeline-editor-tab]")) {
+    syncFromEditor();
+    currentTimelineEditorGroup = normalizeTimelineType(button.dataset.timelineEditorTab);
+    renderEditor();
   } else if (button.matches("[data-add-timeline]")) {
     syncFromEditor();
+    const type = normalizeTimelineType(button.dataset.addTimeline || currentTimelineEditorGroup);
+    const label = timelineGroupLabels[type];
+    currentTimelineEditorGroup = type;
     siteData.timeline.unshift({
       date: String(new Date().getFullYear()),
-      title: "新经历",
-      description: "在这里写经历描述。",
-      tags: ["Portfolio"]
+      title: `新${label}经历`,
+      description: `在这里写${label}经历描述。`,
+      tags: [label],
+      type
     });
     renderEditor();
   } else if (button.matches("[data-delete-timeline]")) {
@@ -1159,13 +1274,20 @@ function collectEditorData() {
 
 
 
-  if (document.querySelector("[data-timeline-index]")) {
-    next.timeline = Array.from(document.querySelectorAll("[data-timeline-index]")).map((row) => ({
+  if (document.querySelector("[data-timeline-panel]")) {
+    const panel = document.querySelector("[data-timeline-panel]");
+    const editedType = normalizeTimelineType(panel.dataset.timelinePanel || currentTimelineEditorGroup);
+    const editedTimeline = Array.from(document.querySelectorAll("[data-timeline-index]")).map((row) => ({
       date: row.querySelector("[data-timeline-field='date']").value.trim(),
-      title: row.querySelector("[data-timeline-field='title']").value.trim() || "未命名经历",
+      title: row.querySelector("[data-timeline-field='title']").value.trim() || `未命名${timelineGroupLabels[editedType]}经历`,
       description: row.querySelector("[data-timeline-field='description']").value.trim(),
-      tags: toTags(row.querySelector("[data-timeline-field='tags']").value)
+      tags: toTags(row.querySelector("[data-timeline-field='tags']").value),
+      type: editedType
     }));
+    next.timeline = [
+      ...editedTimeline,
+      ...next.timeline.filter((item) => normalizeTimelineType(item.type) !== editedType)
+    ];
   }
 
   if (document.querySelector("[data-project-index]")) {
@@ -1313,6 +1435,7 @@ async function init() {
   siteData = await loadInitialData();
   renderAll();
   setupFilters();
+  setupTimelineTabs();
   setupTheme();
   setupDevMode();
   observeReveals();

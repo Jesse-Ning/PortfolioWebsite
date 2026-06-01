@@ -442,14 +442,30 @@ h2 {
 }
 
 .timeline {
-  position: relative;
   display: grid;
   gap: 18px;
   max-width: 860px;
   margin: 0 auto;
 }
 
-.timeline::before {
+.timeline-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.timeline-tab {
+  min-width: 118px;
+}
+
+.timeline-list {
+  position: relative;
+  display: grid;
+  gap: 18px;
+}
+
+.timeline-list::before {
   position: absolute;
   top: 8px;
   bottom: 8px;
@@ -457,6 +473,20 @@ h2 {
   width: 1px;
   content: "";
   background: var(--line);
+}
+
+.timeline-list.is-empty::before {
+  display: none;
+}
+
+.timeline-empty {
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  text-align: center;
+  background: var(--surface);
+  box-shadow: var(--shadow);
 }
 
 .timeline-item {
@@ -850,6 +880,7 @@ body[data-theme="dark"] .filter-button.is-active {
 }
 
 .dev-tab,
+.dev-subtab,
 .dev-action,
 .dev-small-button,
 .dev-icon-button {
@@ -869,6 +900,7 @@ body[data-theme="dark"] .filter-button.is-active {
 }
 
 .dev-tab.is-active,
+.dev-subtab.is-active,
 .dev-action.primary {
   color: #ffffff;
   background: #111318;
@@ -876,6 +908,7 @@ body[data-theme="dark"] .filter-button.is-active {
 }
 
 body[data-theme="dark"] .dev-tab.is-active,
+body[data-theme="dark"] .dev-subtab.is-active,
 body[data-theme="dark"] .dev-action.primary {
   color: #111318;
   background: #f4f6f4;
@@ -886,6 +919,22 @@ body[data-theme="dark"] .dev-action.primary {
   flex: 1 1 auto;
   overflow: auto;
   padding: 18px 20px 110px;
+}
+
+.dev-subtabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.dev-empty {
+  padding: 18px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  text-align: center;
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
 }
 
 .dev-panel-footer {
@@ -1171,7 +1220,7 @@ body[data-theme="dark"] .dev-action.primary {
     grid-template-columns: 1fr;
   }
 
-  .timeline::before {
+  .timeline-list::before {
     left: 9px;
   }
 
