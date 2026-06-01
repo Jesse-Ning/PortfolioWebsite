@@ -31,7 +31,8 @@ const DEFAULT_SITE_DATA = {
       { label: "技能", items: ["战斗系统", "玩法原型", "镜头反馈", "Boss AI"] },
       { label: "编程语言", items: ["C++", "Blueprint", "C#", "JavaScript"] },
       { label: "语言", items: ["中文", "英语", "日语"] },
-      { label: "软件", items: ["Unreal Engine 5", "Unity", "Blender", "Git"] }
+      { label: "软件", items: ["Unreal Engine 5", "Unity", "Blender", "Git"] },
+      { label: "AI", items: ["Claude", "Codex", "Gemini"] }
     ],
     links: [
       { label: "Email", href: "mailto:yourname@example.com", icon: "mail", primary: true },
@@ -677,32 +678,49 @@ const softwareIconMap = [
   { pattern: /powerpoint|power point|ppt/i, slug: "microsoftpowerpoint" }
 ];
 
+const aiIconMap = [
+  { pattern: /claude|anthropic/i, slug: "claude" },
+  { pattern: /codex|openai/i, slug: "codex" },
+  { pattern: /gemini|google/i, slug: "gemini" }
+];
+
 function isSoftwareKeywordGroup(group) {
   const label = String(group?.label || "").trim();
   return label === "软件" || /software/i.test(label);
 }
 
-function getSoftwareIcon(item) {
+function isAiKeywordGroup(group) {
+  const label = String(group?.label || "").trim();
+  return label === "AI" || label === "人工智能" || /artificial intelligence/i.test(label);
+}
+
+function isIconKeywordGroup(group) {
+  return isSoftwareKeywordGroup(group) || isAiKeywordGroup(group);
+}
+
+function getKeywordIcon(item, group) {
   const label = String(item || "").trim();
   if (!label) return null;
 
-  const match = softwareIconMap.find((entry) => entry.pattern.test(label));
+  const aiGroup = isAiKeywordGroup(group);
+  const iconMap = aiGroup ? aiIconMap : softwareIconMap;
+  const match = iconMap.find((entry) => entry.pattern.test(label));
   if (!match) return null;
 
   return {
     label,
-    src: "assets/software-icons/" + match.slug + ".svg"
+    src: "assets/" + (aiGroup ? "ai-icons/" : "software-icons/") + match.slug + ".svg"
   };
 }
 
 function renderProfileKeywordGroup(group) {
   const items = toTags(group.items);
-  const softwareGroup = isSoftwareKeywordGroup(group);
+  const iconGroup = isIconKeywordGroup(group);
 
   return `
-    <article class="keyword-group${softwareGroup ? " is-software" : ""} reveal">
+    <article class="keyword-group${iconGroup ? " is-software" : ""} reveal">
       <h3>${escapeHtml(group.label)}</h3>
-      ${softwareGroup ? renderSoftwareIconList(items) : renderKeywordChipList(items)}
+      ${iconGroup ? renderSoftwareIconList(items, group) : renderKeywordChipList(items)}
     </article>
   `;
 }
@@ -715,16 +733,16 @@ function renderKeywordChipList(items) {
   `;
 }
 
-function renderSoftwareIconList(items) {
+function renderSoftwareIconList(items, group) {
   return `
     <div class="software-icon-list">
-      ${items.map(renderSoftwareIconItem).join("")}
+      ${items.map((item) => renderSoftwareIconItem(item, group)).join("")}
     </div>
   `;
 }
 
-function renderSoftwareIconItem(item) {
-  const iconData = getSoftwareIcon(item);
+function renderSoftwareIconItem(item, group) {
+  const iconData = getKeywordIcon(item, group);
   const fallback = String(item || "").trim().slice(0, 2).toUpperCase();
 
   return `

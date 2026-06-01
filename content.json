@@ -95,6 +95,14 @@
           "Blender",
           "Git"
         ]
+      },
+      {
+        "label": "AI",
+        "items": [
+          "Claude",
+          "Codex",
+          "Gemini"
+        ]
       }
     ]
   },
