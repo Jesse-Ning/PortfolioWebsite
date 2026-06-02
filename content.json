@@ -1,38 +1,57 @@
 {
-  "updatedAt": "2026-05-30T09:11:48.883Z",
+  "updatedAt": "2026-06-02T08:19:32.913Z",
   "profile": {
-    "name": "你的名字",
-    "initials": "YY",
-    "kicker": "Game Designer / Gameplay Programmer",
-    "title": "游戏设计师 & 战斗系统程序员",
-    "summary": "我关注动作游戏中的时机、反馈、节奏和玩家决策，喜欢把设计想法落到可玩的系统里。",
+    "name": "Jesse Ning",
+    "initials": "JN",
+    "kicker": "Game Designer / Gameplay Designer",
+    "title": "游戏设计师",
+    "summary": "专注战斗系统、关卡节奏、镜头反馈和可玩的玩法原型。",
     "about": [
-      "我是一名偏设计实现型的游戏创作者，工作重点放在战斗系统、镜头反馈、角色状态机和关卡节奏上。比起只写一个功能，我更在意玩家按下按钮之后，画面、声音、动画和数值是否形成清楚的回应。\\n\\n目前主要使用 Unreal Engine 和 C++ 做动作游戏原型，围绕完美闪避、弹反、处决、Boss 行为树、战斗镜头和 UI 反馈建立可迭代的玩法模块。\\n\\n我喜欢用研究的方式做设计：拆解优秀游戏，记录机制意图，再把假设做成小原型验证。这个网站可以作为个人介绍、作品归档和开发日志入口。"
+      "我是一名偏设计实现型的游戏创作者，工作重点放在战斗系统、镜头反馈、角色状态机和关卡节奏上。比起只写一个功能，我更在意玩家按下按钮之后，画面、声音、动画和数值是否形成清楚的回应。目前主要使用 Unreal Engine 的蓝图和 C++ 做动作游戏原型，围绕角色基础运动包括闪避、弹反、处决和 Boss 行为树、战斗镜头和 UI 反馈建立可迭代的玩法模块。我喜欢用研究的方式做设计：拆解优秀游戏，记录机制意图，再把假设做成小原型验证。"
     ],
     "facts": [
+      {
+        "value": "战斗设计",
+        "label": "设计方向"
+      },
       {
         "value": "UE5",
         "label": "主要引擎"
       },
       {
-        "value": "C++",
-        "label": "核心实现"
-      },
-      {
-        "value": "Combat",
-        "label": "设计方向"
+        "value": "蓝图&C++",
+        "label": "代码实现"
       },
       {
         "value": "Prototype",
-        "label": "当前阶段"
+        "label": "玩法验证"
+      },
+      {
+        "value": "GAS",
+        "label": "引擎框架"
       }
     ],
     "links": [
       {
         "label": "Email",
-        "href": "mailto:yourname@example.com",
+        "href": "mailto:13345193297a@gmail.com",
         "icon": "mail",
         "primary": true
+      },
+      {
+        "label": "GitHub",
+        "href": "https://github.com/Jesse-Ning",
+        "icon": "github"
+      },
+      {
+        "label": "Bilibili",
+        "href": "https://space.bilibili.com/",
+        "icon": "video"
+      },
+      {
+        "label": "Steam",
+        "href": "https://steamcommunity.com/profiles/76561198819812464/",
+        "icon": "gamepad"
       },
       {
         "label": "微信",
@@ -43,31 +62,19 @@
         "label": "电话",
         "href": "tel:+86-000-0000-0000",
         "icon": "phone"
-      },
-      {
-        "label": "GitHub",
-        "href": "https://github.com/",
-        "icon": "github"
-      },
-      {
-        "label": "Bilibili",
-        "href": "https://space.bilibili.com/",
-        "icon": "video"
-      },
-      {
-        "label": "Steam",
-        "href": "https://steamcommunity.com/",
-        "icon": "gamepad"
       }
     ],
     "keywords": [
       {
         "label": "技能",
         "items": [
-          "战斗系统",
-          "玩法原型",
-          "镜头反馈",
-          "Boss AI"
+          "游戏设计",
+          "战斗设计",
+          "关卡设计",
+          "原型制作",
+          "UE蓝图",
+          "GAS",
+          "团队沟通"
         ]
       },
       {
@@ -75,8 +82,21 @@
         "items": [
           "C++",
           "Blueprint",
-          "C#",
-          "JavaScript"
+          "C#"
+        ]
+      },
+      {
+        "label": "软件",
+        "items": [
+          "Unreal Engine 5",
+          "Unity",
+          "Git",
+          "GitHub",
+          "SketchUP",
+          "PhotoShop",
+          "Word",
+          "Excel",
+          "PowerPoint"
         ]
       },
       {
@@ -85,15 +105,6 @@
           "中文",
           "英语",
           "日语"
-        ]
-      },
-      {
-        "label": "软件",
-        "items": [
-          "Unreal Engine 5",
-          "Unity",
-          "Blender",
-          "Git"
         ]
       },
       {
@@ -108,150 +119,150 @@
   },
   "timeline": [
     {
-      "date": "2026-现在",
-      "title": "阴阳之力 | UE5 动作战斗项目",
-      "description": "搭建玩家战斗、Boss AI、完美闪避、弹反处决、镜头反馈和 HUD 表现等核心模块。",
+      "date": "2024-现在",
+      "title": "Void Interactive",
+      "description": "负责 UE5 项目《莲》的战斗体验设计方案。\n根据项目要求和设计大纲进行 3C 设计与 MVP 演示。\n制作富有乐趣且具有挑战性的 Boss 战斗与敌人 AI 架构。\n撰写和迭代战斗系统的开发文档、需求文档与相关 debug 调试工具。\n依靠 UE5 的内置功能快速搭建玩法与白盒、灰盒展示。\n装配、维护引擎内和战斗相关的资产。\n与程序和美术合作将设计方案落地。",
       "tags": [
-        "Unreal Engine",
-        "C++",
-        "Action Combat"
+        "战斗策划"
       ],
       "type": "work",
       "order": 1
     },
     {
-      "date": "2026",
-      "title": "战斗反馈系统迭代",
-      "description": "围绕命中停顿、镜头冲击、受击反馈、血量表现和状态窗口设计可调参数，提升可读性和手感。",
+      "date": "2021-2023",
+      "title": "上海冰风网络",
+      "description": "负责游戏《绝世仙王》《混沌起源》的产品运营工作。\n搜集与分析社群反馈。\n协调研发和发行团队，助力游戏的节日活动高质量上线。\n构建游戏的关键数据自动化运行与检测系统。\n负责运营日常工作。",
       "tags": [
-        "Game Feel",
-        "Camera",
-        "UI Feedback"
+        "产品运营"
       ],
       "type": "work",
       "order": 2
     },
     {
-      "date": "2025",
-      "title": "游戏机制研究与原型练习",
-      "description": "持续拆解动作、解谜和 Roguelike 游戏中的风险回报、节奏曲线与玩家学习路径。",
+      "date": "2023-2024",
+      "title": "上海大学温哥华电影学院",
+      "description": "主要课程《游戏设计》《关卡设计》《项目管理》\n系统学习 UE Engine、Unity、蓝图以及 C# 代码",
       "tags": [
-        "Gameplay Research",
-        "Design Notes",
-        "Prototyping"
+        "教育"
       ],
-      "type": "work",
+      "type": "education",
       "order": 3
+    },
+    {
+      "date": "2015-2019",
+      "title": "苏州大学文正学院",
+      "description": "主要课程《日本语言文学》《日语翻译》",
+      "tags": [
+        "教育"
+      ],
+      "type": "education",
+      "order": 4
     }
   ],
   "projects": [
     {
       "title": "阴阳之力",
       "year": "2026",
-      "role": "Solo Developer",
+      "role": "Gameplay Designer",
       "category": "games",
       "engine": "UE5",
       "image": "assets/slash-preview.png",
-      "description": "以阴阳资源、近战攻防和高反馈动作为核心的第三人称动作游戏原型。",
+      "description": "凡所有相，皆是虚妄，若见诸相非相，即见如来。遇见危险不要恐惧，静下心来去直面恐惧才是取胜之道。专注于自己的呼吸，让自己慢下来就能无往不利。",
       "tags": [
-        "Action Combat",
-        "Boss",
-        "Prototype"
+        "GAS"
       ],
       "order": 1,
-      "responsibility": "战斗系统设计与玩法实现",
+      "responsibility": "战斗策划",
       "language": "C++ / Blueprint",
-      "gameType": "第三人称动作 / 战斗原型"
+      "gameType": "原型"
     },
     {
-      "title": "完美闪避与反击窗口",
-      "year": "2026",
-      "role": "Gameplay Programmer",
-      "category": "systems",
+      "title": "莲_Lotus",
+      "year": "2025",
+      "role": "Combat Designer",
+      "category": "games",
       "engine": "UE5",
-      "image": "assets/recovery-preview.png",
-      "description": "用通知窗口、状态约束和镜头反馈组合出更清晰的闪避收益与反击节奏。",
+      "image": "assets/blood-veins-preview.png",
+      "description": "所有人都将错误和苦难归结到你的身上，认为你的存在是带给他们苦厄的根源。他们以为把你杀死就能换取和平？但他们没想到正是他们的叫嚣逼人给世界带来了灭顶之灾。复仇吧，化作愤怒的火焰；复仇吧，将世界的恶洗刷殆尽。",
       "tags": [
-        "Dodge",
-        "Timing",
-        "Feedback"
+        "ARPG"
       ],
       "order": 2,
-      "responsibility": "闪避窗口与反击反馈实现",
-      "language": "C++",
-      "gameType": "战斗系统模块"
+      "responsibility": "战斗设计",
+      "language": "Blueprint",
+      "gameType": "ARPG"
     },
     {
-      "title": "Boss 行为树战斗循环",
-      "year": "2026",
-      "role": "AI / Combat",
-      "category": "systems",
+      "title": "Illegally Assembly",
+      "year": "2024",
+      "role": "System Designer",
+      "category": "games",
       "engine": "UE5",
-      "image": "assets/blood-veins-preview.png",
-      "description": "处理近远距离攻击、受击恢复、压迫感参数和阶段切换，让敌人行为更稳定。",
+      "image": "assets/recovery-preview.png",
+      "description": "你被发配到了一颗荒芜但充满矿产资源的星球上，你唯一的出路就是挖掘这里矿物并将其换成金钱来换取赎罪的机会！但是一切都有时间限制，否则面对的将是永久监禁！搜集、传输、配方、金钱、未知的危险！来不遗余力去寻找最优解决方案吧！",
       "tags": [
-        "Boss AI",
-        "Behavior Tree",
-        "Balance"
+        "UE蓝图",
+        "模拟经营",
+        "项目管理",
+        "数值设计"
       ],
       "order": 3,
-      "responsibility": "Boss 行为树与阶段节奏设计",
-      "language": "Blueprint / C++",
-      "gameType": "Boss AI / 战斗循环"
+      "responsibility": "项目管理 / 数值设计",
+      "language": "Blueprint",
+      "gameType": "3D 自动化 / 模拟经营"
     },
     {
-      "title": "动作镜头反馈库",
-      "year": "2026",
-      "role": "Tools / Feel",
-      "category": "design",
-      "engine": "UE5",
-      "image": "assets/slash-preview.png",
-      "description": "把攻击、处决和完美动作的镜头表现拆成可复用配置，方便快速调手感。",
+      "title": "夏日烟火祭",
+      "year": "2024",
+      "role": "Interaction Designer",
+      "category": "games",
+      "engine": "Unity",
+      "image": "assets/recovery-preview.png",
+      "description": "在这款游戏中玩家将会置身于日本的烟火大会，在传统的金鱼游戏中捞起金鱼获得分数，从而获得强大的道具来帮助自己的捞取效率。你的最终目标是一个大大漂亮的烟花！",
       "tags": [
-        "Camera",
-        "Data Asset",
-        "Game Feel"
+        "C#",
+        "VR"
       ],
       "order": 4,
-      "responsibility": "镜头反馈配置与工具化",
-      "language": "Blueprint / Data Assets",
-      "gameType": "镜头与手感工具"
+      "responsibility": "交互设计 / 玩法原型",
+      "language": "C#",
+      "gameType": "VR 休闲体验"
     },
     {
-      "title": "生命值与受击表现",
+      "title": "博物馆潜行",
+      "year": "2024",
+      "role": "Level Designer",
+      "category": "design",
+      "engine": "Unity",
+      "image": "assets/blood-veins-preview.png",
+      "description": "目标是巨大宝藏！但是博物馆里戒备森严，危险！玩家将会体验“双主角”配合去躲避博物馆保安，应对警备器械并在最后成功偷取宝物。",
+      "tags": [
+        "C#",
+        "潜行",
+        "双主角"
+      ],
+      "order": 5,
+      "responsibility": "关卡与潜行规则设计",
+      "language": "C#",
+      "gameType": "潜行 / 双主角"
+    },
+    {
+      "title": "战斗反馈系统设计",
       "year": "2026",
-      "role": "UI / VFX",
+      "role": "Game Designer",
       "category": "design",
       "engine": "UE5",
       "image": "assets/blood-veins-preview.png",
-      "description": "探索伤痕、回血流动、屏幕边缘压迫等反馈，让战斗状态更容易被玩家感知。",
+      "description": "围绕命中停顿、镜头冲击、受击反馈、血量表现和状态窗口设计可调参数，提升动作战斗的可读性和手感。",
       "tags": [
-        "HUD",
-        "VFX",
-        "Readability"
-      ],
-      "order": 5,
-      "responsibility": "战斗状态 UI 与反馈表现",
-      "language": "UMG / Blueprint",
-      "gameType": "HUD / 受击反馈"
-    },
-    {
-      "title": "机制拆解笔记",
-      "year": "2025",
-      "role": "Research",
-      "category": "research",
-      "engine": "Notes",
-      "image": "assets/recovery-preview.png",
-      "description": "记录动作游戏中的风险回报、节奏设计、技能引导和玩家成长曲线。",
-      "tags": [
-        "Research",
-        "Design",
-        "Analysis"
+        "Game Feel",
+        "Camera",
+        "UI Feedback"
       ],
       "order": 6,
-      "responsibility": "玩法分析与设计拆解",
-      "language": "Markdown",
-      "gameType": "机制研究"
+      "responsibility": "反馈规则与参数设计",
+      "language": "Blueprint",
+      "gameType": "战斗系统模块"
     }
   ],
   "research": [
@@ -304,7 +315,3067 @@
   "steamLibrary": {
     "steamId": "76561198819812464",
     "profileUrl": "https://steamcommunity.com/profiles/76561198819812464/",
-    "updatedAt": "",
-    "games": []
+    "updatedAt": "2026-06-02T08:14:40.656Z",
+    "games": [
+      {
+        "appid": 1454400,
+        "name": "Cookie Clicker",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1454400/header.jpg?t=1776734110",
+        "genres": [
+          "休闲",
+          "独立",
+          "模拟",
+          "策略"
+        ],
+        "playtimeMinutes": 49611,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 826.9,
+        "storeUrl": "https://store.steampowered.com/app/1454400/"
+      },
+      {
+        "appid": 1245620,
+        "name": "艾尔登法环",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1245620/header.jpg?t=1767883716",
+        "genres": [
+          "动作",
+          "角色扮演"
+        ],
+        "playtimeMinutes": 16029,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 267.2,
+        "storeUrl": "https://store.steampowered.com/app/1245620/"
+      },
+      {
+        "appid": 2195250,
+        "name": "EA SPORTS FC™ 24",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2195250/header.jpg?t=1752167366",
+        "genres": [
+          "模拟",
+          "体育"
+        ],
+        "playtimeMinutes": 15873,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 264.6,
+        "storeUrl": "https://store.steampowered.com/app/2195250/"
+      },
+      {
+        "appid": 289070,
+        "name": "Sid Meier’s Civilization® VI",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/289070/header.jpg?t=1740607040",
+        "genres": [
+          "策略"
+        ],
+        "playtimeMinutes": 14656,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 244.3,
+        "storeUrl": "https://store.steampowered.com/app/289070/"
+      },
+      {
+        "appid": 1086940,
+        "name": "博德之门3",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1086940/48a2fcbda8565bb45025e98fd8ebde8a7203f6a0/header.jpg?t=1777363040",
+        "genres": [
+          "冒险",
+          "角色扮演",
+          "策略"
+        ],
+        "playtimeMinutes": 14654,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 244.2,
+        "storeUrl": "https://store.steampowered.com/app/1086940/"
+      },
+      {
+        "appid": 2669320,
+        "name": "《EA SPORTS FC™ 25》",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2669320/ec3fb7747fd8080ef53d7686e0d98c5abe1f51f1/header.jpg?t=1777395910",
+        "genres": [
+          "模拟",
+          "体育"
+        ],
+        "playtimeMinutes": 10617,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 177,
+        "storeUrl": "https://store.steampowered.com/app/2669320/"
+      },
+      {
+        "appid": 1794680,
+        "name": "Vampire Survivors - 吸血鬼幸存者",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1794680/header_schinese.jpg?t=1778864981",
+        "genres": [
+          "动作",
+          "休闲",
+          "独立",
+          "角色扮演"
+        ],
+        "playtimeMinutes": 5845,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 97.4,
+        "storeUrl": "https://store.steampowered.com/app/1794680/"
+      },
+      {
+        "appid": 1282730,
+        "name": "循环勇士",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1282730/header.jpg?t=1751489185",
+        "genres": [
+          "独立",
+          "角色扮演",
+          "策略"
+        ],
+        "playtimeMinutes": 5753,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 95.9,
+        "storeUrl": "https://store.steampowered.com/app/1282730/"
+      },
+      {
+        "appid": 435150,
+        "name": "神界：原罪2 - 终极版",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/435150/3f6ee788cb01bd65097c52399d536eb424b4876f/header.jpg?t=1765811123",
+        "genres": [
+          "冒险",
+          "角色扮演",
+          "策略"
+        ],
+        "playtimeMinutes": 5451,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 90.9,
+        "storeUrl": "https://store.steampowered.com/app/435150/"
+      },
+      {
+        "appid": 2358720,
+        "name": "黑神话：悟空",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2358720/header_schinese.jpg?t=1760601605",
+        "genres": [
+          "动作",
+          "冒险",
+          "角色扮演"
+        ],
+        "playtimeMinutes": 4675,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 77.9,
+        "storeUrl": "https://store.steampowered.com/app/2358720/"
+      },
+      {
+        "appid": 578080,
+        "name": "PUBG: BATTLEGROUNDS",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/578080/841ea38bc58cabb70aef65365cf50bc2d79329d9/header.jpg?t=1778634253",
+        "genres": [
+          "动作",
+          "冒险",
+          "大型多人在线",
+          "免费游玩"
+        ],
+        "playtimeMinutes": 4346,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 72.4,
+        "storeUrl": "https://store.steampowered.com/app/578080/"
+      },
+      {
+        "appid": 1145350,
+        "name": "Hades II",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1145350/91ac334a2c137d08968ccc0bc474a02579602100/header.jpg?t=1779901265",
+        "genres": [
+          "动作",
+          "独立",
+          "角色扮演"
+        ],
+        "playtimeMinutes": 4329,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 72.2,
+        "storeUrl": "https://store.steampowered.com/app/1145350/"
+      },
+      {
+        "appid": 1229240,
+        "name": "宿命残响（Chained Echoes）",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1229240/header_schinese.jpg?t=1780041365",
+        "genres": [
+          "独立",
+          "角色扮演"
+        ],
+        "playtimeMinutes": 3602,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 60,
+        "storeUrl": "https://store.steampowered.com/app/1229240/"
+      },
+      {
+        "appid": 268500,
+        "name": "XCOM® 2",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/268500/header.jpg?t=1772813016",
+        "genres": [
+          "策略"
+        ],
+        "playtimeMinutes": 2846,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 47.4,
+        "storeUrl": "https://store.steampowered.com/app/268500/"
+      },
+      {
+        "appid": 1366540,
+        "name": "戴森球计划",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1366540/header_schinese.jpg?t=1776523171",
+        "genres": [
+          "独立",
+          "模拟",
+          "策略",
+          "抢先体验"
+        ],
+        "playtimeMinutes": 2735,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 45.6,
+        "storeUrl": "https://store.steampowered.com/app/1366540/"
+      },
+      {
+        "appid": 1488200,
+        "name": "战争交响曲：尼菲林传奇",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1488200/header_schinese.jpg?t=1769642928",
+        "genres": [
+          "冒险",
+          "独立",
+          "角色扮演",
+          "策略"
+        ],
+        "playtimeMinutes": 2096,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 34.9,
+        "storeUrl": "https://store.steampowered.com/app/1488200/"
+      },
+      {
+        "appid": 431730,
+        "name": "Aseprite",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/431730/header.jpg?t=1749680273",
+        "genres": [
+          "动画制作和建模",
+          "设计和插画",
+          "游戏开发"
+        ],
+        "playtimeMinutes": 1872,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 31.2,
+        "storeUrl": "https://store.steampowered.com/app/431730/"
+      },
+      {
+        "appid": 590380,
+        "name": "Into the Breach",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/590380/header.jpg?t=1755610784",
+        "genres": [
+          "独立",
+          "角色扮演",
+          "模拟",
+          "策略"
+        ],
+        "playtimeMinutes": 1680,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 28,
+        "storeUrl": "https://store.steampowered.com/app/590380/"
+      },
+      {
+        "appid": 814380,
+        "name": "Sekiro™: Shadows Die Twice - GOTY Edition",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/814380/header.jpg?t=1762888662",
+        "genres": [
+          "动作",
+          "冒险"
+        ],
+        "playtimeMinutes": 1470,
+        "playtimeRecentMinutes": 2,
+        "playtimeHours": 24.5,
+        "storeUrl": "https://store.steampowered.com/app/814380/"
+      },
+      {
+        "appid": 368260,
+        "name": "漫威暗夜之子",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/368260/header.jpg?t=1732138093",
+        "genres": [
+          "角色扮演",
+          "策略"
+        ],
+        "playtimeMinutes": 1429,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 23.8,
+        "storeUrl": "https://store.steampowered.com/app/368260/"
+      },
+      {
+        "appid": 1276790,
+        "name": "破败之王：英雄联盟外传",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1276790/header.jpg?t=1709574331",
+        "genres": [
+          "独立",
+          "角色扮演"
+        ],
+        "playtimeMinutes": 1415,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 23.6,
+        "storeUrl": "https://store.steampowered.com/app/1276790/"
+      },
+      {
+        "appid": 431960,
+        "name": "Wallpaper Engine：壁纸引擎",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/431960/header_schinese.jpg?t=1779452230",
+        "genres": [
+          "休闲",
+          "独立",
+          "动画制作和建模",
+          "设计和插画",
+          "照片编辑",
+          "实用工具"
+        ],
+        "playtimeMinutes": 1390,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 23.2,
+        "storeUrl": "https://store.steampowered.com/app/431960/"
+      },
+      {
+        "appid": 1868140,
+        "name": "潜水员戴夫 DAVE THE DIVER",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1868140/81bdb3bce15d27ca1b4554a642d91096e89be229/header.jpg?t=1776394908",
+        "genres": [
+          "冒险",
+          "休闲",
+          "角色扮演",
+          "模拟"
+        ],
+        "playtimeMinutes": 1327,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 22.1,
+        "storeUrl": "https://store.steampowered.com/app/1868140/"
+      },
+      {
+        "appid": 730,
+        "name": "Counter-Strike 2",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/730/header_schinese.jpg?t=1749053861",
+        "genres": [
+          "动作",
+          "免费游玩"
+        ],
+        "playtimeMinutes": 1237,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 20.6,
+        "storeUrl": "https://store.steampowered.com/app/730/"
+      },
+      {
+        "appid": 1331210,
+        "name": "迅狼疾步",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1331210/header_schinese.jpg?t=1764611389",
+        "genres": [
+          "动作",
+          "冒险",
+          "独立",
+          "角色扮演",
+          "策略"
+        ],
+        "playtimeMinutes": 1111,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 18.5,
+        "storeUrl": "https://store.steampowered.com/app/1331210/"
+      },
+      {
+        "appid": 1455840,
+        "name": "Dorfromantik",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1455840/header_schinese.jpg?t=1779809243",
+        "genres": [
+          "休闲",
+          "独立",
+          "模拟",
+          "策略"
+        ],
+        "playtimeMinutes": 1087,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 18.1,
+        "storeUrl": "https://store.steampowered.com/app/1455840/"
+      },
+      {
+        "appid": 1127500,
+        "name": "Mini Motorways",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1127500/cb2bf5e828d15bf9c2fc46effd248badfccb3df2/header.jpg?t=1779250336",
+        "genres": [
+          "休闲",
+          "模拟",
+          "策略"
+        ],
+        "playtimeMinutes": 1038,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 17.3,
+        "storeUrl": "https://store.steampowered.com/app/1127500/"
+      },
+      {
+        "appid": 391540,
+        "name": "Undertale",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/391540/header.jpg?t=1757349115",
+        "genres": [
+          "独立",
+          "角色扮演"
+        ],
+        "playtimeMinutes": 1036,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 17.3,
+        "storeUrl": "https://store.steampowered.com/app/391540/"
+      },
+      {
+        "appid": 560130,
+        "name": "Pillars of Eternity II: Deadfire",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/560130/header.jpg?t=1776350012",
+        "genres": [
+          "角色扮演"
+        ],
+        "playtimeMinutes": 983,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 16.4,
+        "storeUrl": "https://store.steampowered.com/app/560130/"
+      },
+      {
+        "appid": 1862520,
+        "name": "棋弈无限：围棋",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1862520/header.jpg?t=1770244554",
+        "genres": [
+          "休闲",
+          "独立",
+          "模拟",
+          "策略"
+        ],
+        "playtimeMinutes": 813,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 13.6,
+        "storeUrl": "https://store.steampowered.com/app/1862520/"
+      },
+      {
+        "appid": 1551360,
+        "name": "极限竞速：地平线 5",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1551360/header.jpg?t=1746471508",
+        "genres": [
+          "动作",
+          "冒险",
+          "竞速",
+          "模拟",
+          "体育"
+        ],
+        "playtimeMinutes": 807,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 13.5,
+        "storeUrl": "https://store.steampowered.com/app/1551360/"
+      },
+      {
+        "appid": 1227280,
+        "name": "Despot's Game 暴君的游戏",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1227280/header.jpg?t=1774541964",
+        "genres": [
+          "独立",
+          "角色扮演",
+          "策略"
+        ],
+        "playtimeMinutes": 778,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 13,
+        "storeUrl": "https://store.steampowered.com/app/1227280/"
+      },
+      {
+        "appid": 2379780,
+        "name": "Balatro",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2379780/7a85430784e4d613cdb0547414d8cf16ffa45747/header.jpg?t=1779304872",
+        "genres": [
+          "休闲",
+          "独立",
+          "策略"
+        ],
+        "playtimeMinutes": 766,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 12.8,
+        "storeUrl": "https://store.steampowered.com/app/2379780/"
+      },
+      {
+        "appid": 1637320,
+        "name": "Dome Keeper 穹顶守护者",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1637320/1ebdc10a01b4d0cf0999ae6021ca171a6f816c50/header_schinese.jpg?t=1777541947",
+        "genres": [
+          "动作",
+          "冒险",
+          "独立",
+          "模拟"
+        ],
+        "playtimeMinutes": 755,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 12.6,
+        "storeUrl": "https://store.steampowered.com/app/1637320/"
+      },
+      {
+        "appid": 620,
+        "name": "Portal 2",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/620/header.jpg?t=1745363004",
+        "genres": [
+          "动作",
+          "冒险"
+        ],
+        "playtimeMinutes": 698,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 11.6,
+        "storeUrl": "https://store.steampowered.com/app/620/"
+      },
+      {
+        "appid": 1296830,
+        "name": "暖雪 Warm Snow",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1296830/header_schinese.jpg?t=1773940169",
+        "genres": [
+          "动作",
+          "冒险",
+          "独立",
+          "角色扮演"
+        ],
+        "playtimeMinutes": 657,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 11,
+        "storeUrl": "https://store.steampowered.com/app/1296830/"
+      },
+      {
+        "appid": 1283410,
+        "name": "Tails of Iron",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1283410/header.jpg?t=1737877432",
+        "genres": [
+          "动作",
+          "冒险",
+          "独立"
+        ],
+        "playtimeMinutes": 651,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 10.9,
+        "storeUrl": "https://store.steampowered.com/app/1283410/"
+      },
+      {
+        "appid": 1291010,
+        "name": "小兵大战 - Warpips",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1291010/header_schinese.jpg?t=1770912777",
+        "genres": [
+          "动作",
+          "独立",
+          "策略"
+        ],
+        "playtimeMinutes": 625,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 10.4,
+        "storeUrl": "https://store.steampowered.com/app/1291010/"
+      },
+      {
+        "appid": 281990,
+        "name": "Stellaris",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/281990/header.jpg?t=1779090735",
+        "genres": [
+          "模拟",
+          "策略"
+        ],
+        "playtimeMinutes": 591,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 9.9,
+        "storeUrl": "https://store.steampowered.com/app/281990/"
+      },
+      {
+        "appid": 1147550,
+        "name": "不予播出 ( Not For Broadcast )",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1147550/header_schinese.jpg?t=1775228781",
+        "genres": [
+          "冒险",
+          "独立",
+          "模拟"
+        ],
+        "playtimeMinutes": 589,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 9.8,
+        "storeUrl": "https://store.steampowered.com/app/1147550/"
+      },
+      {
+        "appid": 736190,
+        "name": "中国式家长",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/736190/header_schinese.jpg?t=1770347043",
+        "genres": [
+          "休闲",
+          "独立",
+          "角色扮演",
+          "模拟"
+        ],
+        "playtimeMinutes": 558,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 9.3,
+        "storeUrl": "https://store.steampowered.com/app/736190/"
+      },
+      {
+        "appid": 619150,
+        "name": "while True: learn()",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/619150/header.jpg?t=1776757817",
+        "genres": [
+          "独立",
+          "模拟"
+        ],
+        "playtimeMinutes": 554,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 9.2,
+        "storeUrl": "https://store.steampowered.com/app/619150/"
+      },
+      {
+        "appid": 1948280,
+        "name": "Stacklands",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1948280/header.jpg?t=1769357052",
+        "genres": [
+          "休闲",
+          "独立",
+          "模拟"
+        ],
+        "playtimeMinutes": 549,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 9.2,
+        "storeUrl": "https://store.steampowered.com/app/1948280/"
+      },
+      {
+        "appid": 752590,
+        "name": "A Plague Tale: Innocence",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/752590/header_schinese.jpg?t=1727793332",
+        "genres": [
+          "动作",
+          "冒险"
+        ],
+        "playtimeMinutes": 536,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 8.9,
+        "storeUrl": "https://store.steampowered.com/app/752590/"
+      },
+      {
+        "appid": 1265820,
+        "name": "Fights in Tight Spaces",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1265820/header.jpg?t=1774909410",
+        "genres": [
+          "动作",
+          "策略"
+        ],
+        "playtimeMinutes": 517,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 8.6,
+        "storeUrl": "https://store.steampowered.com/app/1265820/"
+      },
+      {
+        "appid": 1097200,
+        "name": "Twelve Minutes",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1097200/header.jpg?t=1763720997",
+        "genres": [
+          "冒险",
+          "独立"
+        ],
+        "playtimeMinutes": 509,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 8.5,
+        "storeUrl": "https://store.steampowered.com/app/1097200/"
+      },
+      {
+        "appid": 1527950,
+        "name": "Wartales",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1527950/header.jpg?t=1779375249",
+        "genres": [
+          "冒险",
+          "独立",
+          "角色扮演",
+          "策略"
+        ],
+        "playtimeMinutes": 504,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 8.4,
+        "storeUrl": "https://store.steampowered.com/app/1527950/"
+      },
+      {
+        "appid": 1172450,
+        "name": "Carto",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1172450/header_schinese.jpg?t=1773690780",
+        "genres": [
+          "冒险",
+          "休闲",
+          "独立",
+          "角色扮演"
+        ],
+        "playtimeMinutes": 461,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 7.7,
+        "storeUrl": "https://store.steampowered.com/app/1172450/"
+      },
+      {
+        "appid": 1967510,
+        "name": "轨道连结 - Railbound",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1967510/header_schinese.jpg?t=1762941385",
+        "genres": [
+          "休闲",
+          "独立"
+        ],
+        "playtimeMinutes": 451,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 7.5,
+        "storeUrl": "https://store.steampowered.com/app/1967510/"
+      },
+      {
+        "appid": 1644500,
+        "name": "规划大师（Masterplan Tycoon)",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1644500/header_schinese.jpg?t=1724410460",
+        "genres": [
+          "独立",
+          "模拟",
+          "策略"
+        ],
+        "playtimeMinutes": 448,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 7.5,
+        "storeUrl": "https://store.steampowered.com/app/1644500/"
+      },
+      {
+        "appid": 1593030,
+        "name": "伊始之地",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1593030/f40cfb25de3cf47121558c6ad1cec938ec9058f8/header_schinese.jpg?t=1776447714",
+        "genres": [
+          "休闲",
+          "独立",
+          "策略"
+        ],
+        "playtimeMinutes": 446,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 7.4,
+        "storeUrl": "https://store.steampowered.com/app/1593030/"
+      },
+      {
+        "appid": 239030,
+        "name": "Papers, Please",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/239030/header.jpg?t=1678266428",
+        "genres": [
+          "冒险",
+          "独立"
+        ],
+        "playtimeMinutes": 425,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 7.1,
+        "storeUrl": "https://store.steampowered.com/app/239030/"
+      },
+      {
+        "appid": 1668690,
+        "name": "斗技场的阿利娜 Alina of the Arena",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1668690/header.jpg?t=1759815687",
+        "genres": [
+          "独立",
+          "策略"
+        ],
+        "playtimeMinutes": 413,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 6.9,
+        "storeUrl": "https://store.steampowered.com/app/1668690/"
+      },
+      {
+        "appid": 1040200,
+        "name": "Crime Scene Cleaner",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1040200/header.jpg?t=1779960785",
+        "genres": [
+          "动作",
+          "模拟"
+        ],
+        "playtimeMinutes": 410,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 6.8,
+        "storeUrl": "https://store.steampowered.com/app/1040200/"
+      },
+      {
+        "appid": 1364100,
+        "name": "Lacuna – 黑暗科幻冒险",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1364100/7b89d0b204497cebecc60022f72945b6472f2175/header_alt_assets_5.jpg?t=1779296611",
+        "genres": [
+          "冒险",
+          "独立"
+        ],
+        "playtimeMinutes": 399,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 6.7,
+        "storeUrl": "https://store.steampowered.com/app/1364100/"
+      },
+      {
+        "appid": 686200,
+        "name": "破门而入：行动小队",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/686200/header_schinese.jpg?t=1725308354",
+        "genres": [
+          "动作",
+          "休闲",
+          "独立",
+          "模拟",
+          "策略"
+        ],
+        "playtimeMinutes": 347,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 5.8,
+        "storeUrl": "https://store.steampowered.com/app/686200/"
+      },
+      {
+        "appid": 460950,
+        "name": "武士 零",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/460950/header.jpg?t=1761066027",
+        "genres": [
+          "动作",
+          "独立"
+        ],
+        "playtimeMinutes": 343,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 5.7,
+        "storeUrl": "https://store.steampowered.com/app/460950/"
+      },
+      {
+        "appid": 1135690,
+        "name": "Unpacking",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1135690/header.jpg?t=1773703120",
+        "genres": [
+          "休闲",
+          "独立",
+          "模拟"
+        ],
+        "playtimeMinutes": 332,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 5.5,
+        "storeUrl": "https://store.steampowered.com/app/1135690/"
+      },
+      {
+        "appid": 2272400,
+        "name": "站点连连 Station to Station",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2272400/96cc7d9b8ebcae40f407f4cbbe228e8586092a75/header_alt_assets_8.jpg?t=1779879894",
+        "genres": [
+          "休闲",
+          "独立",
+          "模拟",
+          "策略"
+        ],
+        "playtimeMinutes": 310,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 5.2,
+        "storeUrl": "https://store.steampowered.com/app/2272400/"
+      },
+      {
+        "appid": 1092790,
+        "name": "邪恶冥刻",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1092790/header.jpg?t=1777572925",
+        "genres": [
+          "冒险",
+          "独立",
+          "策略"
+        ],
+        "playtimeMinutes": 301,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 5,
+        "storeUrl": "https://store.steampowered.com/app/1092790/"
+      },
+      {
+        "appid": 2290180,
+        "name": "极限国度",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2290180/4bf0e15f5747031aaac2a9f3a3bcbc183454669b/header_schinese.jpg?t=1779821675",
+        "genres": [
+          "大型多人在线",
+          "体育"
+        ],
+        "playtimeMinutes": 273,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 4.6,
+        "storeUrl": "https://store.steampowered.com/app/2290180/"
+      },
+      {
+        "appid": 504230,
+        "name": "Celeste",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/504230/header.jpg?t=1714089525",
+        "genres": [
+          "动作",
+          "冒险",
+          "独立"
+        ],
+        "playtimeMinutes": 254,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 4.2,
+        "storeUrl": "https://store.steampowered.com/app/504230/"
+      },
+      {
+        "appid": 1718570,
+        "name": "神之天平（ASTLIBRA Revision）",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1718570/header_schinese.jpg?t=1770740786",
+        "genres": [
+          "动作",
+          "冒险",
+          "角色扮演"
+        ],
+        "playtimeMinutes": 250,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 4.2,
+        "storeUrl": "https://store.steampowered.com/app/1718570/"
+      },
+      {
+        "appid": 546430,
+        "name": "Pathway",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/546430/8e89285c4f252259230614a8bfb091a3d1f03d26/header.jpg?t=1768820094",
+        "genres": [
+          "冒险",
+          "独立",
+          "角色扮演",
+          "策略"
+        ],
+        "playtimeMinutes": 244,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 4.1,
+        "storeUrl": "https://store.steampowered.com/app/546430/"
+      },
+      {
+        "appid": 893180,
+        "name": "Catherine Classic",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/893180/header.jpg?t=1763531355",
+        "genres": [
+          "冒险"
+        ],
+        "playtimeMinutes": 238,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 4,
+        "storeUrl": "https://store.steampowered.com/app/893180/"
+      },
+      {
+        "appid": 584980,
+        "name": "Late Shift",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/584980/header.jpg?t=1727963993",
+        "genres": [
+          "冒险",
+          "独立"
+        ],
+        "playtimeMinutes": 233,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 3.9,
+        "storeUrl": "https://store.steampowered.com/app/584980/"
+      },
+      {
+        "appid": 632470,
+        "name": "Disco Elysium - The Final Cut",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/632470/header.jpg?t=1779877985",
+        "genres": [
+          "角色扮演"
+        ],
+        "playtimeMinutes": 230,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 3.8,
+        "storeUrl": "https://store.steampowered.com/app/632470/"
+      },
+      {
+        "appid": 2357570,
+        "name": "《守望先锋®》",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2357570/1f84e73b8095ab9f40b1bc2c81845330979afc09/header_alt_assets_20.jpg?t=1778610036",
+        "genres": [
+          "动作",
+          "免费游玩"
+        ],
+        "playtimeMinutes": 229,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 3.8,
+        "storeUrl": "https://store.steampowered.com/app/2357570/"
+      },
+      {
+        "appid": 1457080,
+        "name": "《搜魔人：英雄联盟传奇™》",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1457080/header_schinese.jpg?t=1720737340",
+        "genres": [
+          "动作",
+          "独立",
+          "角色扮演"
+        ],
+        "playtimeMinutes": 212,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 3.5,
+        "storeUrl": "https://store.steampowered.com/app/1457080/"
+      },
+      {
+        "appid": 1966900,
+        "name": "黎明前20分钟",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1966900/header.jpg?t=1779189556",
+        "genres": [
+          "动作",
+          "冒险",
+          "休闲",
+          "独立",
+          "策略"
+        ],
+        "playtimeMinutes": 206,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 3.4,
+        "storeUrl": "https://store.steampowered.com/app/1966900/"
+      },
+      {
+        "appid": 942970,
+        "name": "疑案追声",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/942970/header_schinese.jpg?t=1728551840",
+        "genres": [
+          "独立",
+          "角色扮演",
+          "模拟"
+        ],
+        "playtimeMinutes": 200,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 3.3,
+        "storeUrl": "https://store.steampowered.com/app/942970/"
+      },
+      {
+        "appid": 2501600,
+        "name": "骰子浪游者",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2501600/header_schinese.jpg?t=1778075971",
+        "genres": [
+          "休闲",
+          "独立",
+          "策略"
+        ],
+        "playtimeMinutes": 198,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 3.3,
+        "storeUrl": "https://store.steampowered.com/app/2501600/"
+      },
+      {
+        "appid": 601150,
+        "name": "Devil May Cry 5",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/601150/header.jpg?t=1768869803",
+        "genres": [
+          "动作"
+        ],
+        "playtimeMinutes": 193,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 3.2,
+        "storeUrl": "https://store.steampowered.com/app/601150/"
+      },
+      {
+        "appid": 1508400,
+        "name": "Kaiju Wars",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1508400/header.jpg?t=1778726531",
+        "genres": [
+          "独立",
+          "策略"
+        ],
+        "playtimeMinutes": 183,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 3.1,
+        "storeUrl": "https://store.steampowered.com/app/1508400/"
+      },
+      {
+        "appid": 1145360,
+        "name": "Hades",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1145360/header.jpg?t=1758127023",
+        "genres": [
+          "动作",
+          "独立",
+          "角色扮演"
+        ],
+        "playtimeMinutes": 180,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 3,
+        "storeUrl": "https://store.steampowered.com/app/1145360/"
+      },
+      {
+        "appid": 760060,
+        "name": "Mutant Year Zero: Road to Eden",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/760060/header.jpg?t=1764698075",
+        "genres": [
+          "角色扮演",
+          "策略"
+        ],
+        "playtimeMinutes": 179,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 3,
+        "storeUrl": "https://store.steampowered.com/app/760060/"
+      },
+      {
+        "appid": 2062430,
+        "name": "BALL x PIT — 球比伦战记",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2062430/5c292c181ce583c651a61600b7695aff5ae0396e/header_alt_assets_1.jpg?t=1777370284",
+        "genres": [
+          "动作",
+          "独立"
+        ],
+        "playtimeMinutes": 178,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 3,
+        "storeUrl": "https://store.steampowered.com/app/2062430/"
+      },
+      {
+        "appid": 1332010,
+        "name": "Stray",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1332010/71daca1910d664d31240b9623a495e0c0828807f/header.jpg?t=1779927784",
+        "genres": [
+          "冒险",
+          "独立"
+        ],
+        "playtimeMinutes": 177,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 3,
+        "storeUrl": "https://store.steampowered.com/app/1332010/"
+      },
+      {
+        "appid": 1361510,
+        "name": "忍者龟：施莱德的复仇",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1361510/header.jpg?t=1744957985",
+        "genres": [
+          "动作",
+          "冒险",
+          "休闲",
+          "独立"
+        ],
+        "playtimeMinutes": 177,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 3,
+        "storeUrl": "https://store.steampowered.com/app/1361510/"
+      },
+      {
+        "appid": 1066780,
+        "name": "Transport Fever 2",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1066780/header.jpg?t=1727104059",
+        "genres": [
+          "休闲",
+          "独立",
+          "模拟",
+          "策略"
+        ],
+        "playtimeMinutes": 171,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 2.9,
+        "storeUrl": "https://store.steampowered.com/app/1066780/"
+      },
+      {
+        "appid": 373420,
+        "name": "神界：原罪增强版",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/373420/header.jpg?t=1765505119",
+        "genres": [
+          "冒险",
+          "独立",
+          "角色扮演",
+          "策略"
+        ],
+        "playtimeMinutes": 169,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 2.8,
+        "storeUrl": "https://store.steampowered.com/app/373420/"
+      },
+      {
+        "appid": 1253920,
+        "name": "Rogue Legacy 2",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1253920/header.jpg?t=1710829748",
+        "genres": [
+          "动作",
+          "冒险",
+          "独立",
+          "角色扮演"
+        ],
+        "playtimeMinutes": 165,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 2.8,
+        "storeUrl": "https://store.steampowered.com/app/1253920/"
+      },
+      {
+        "appid": 2076580,
+        "name": "电钻少女",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2076580/header.jpg?t=1752168250",
+        "genres": [
+          "动作",
+          "独立"
+        ],
+        "playtimeMinutes": 162,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 2.7,
+        "storeUrl": "https://store.steampowered.com/app/2076580/"
+      },
+      {
+        "appid": 1195290,
+        "name": "笼中窥梦 Moncage",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1195290/header_schinese.jpg?t=1729065898",
+        "genres": [
+          "冒险",
+          "休闲",
+          "独立",
+          "模拟",
+          "策略"
+        ],
+        "playtimeMinutes": 160,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 2.7,
+        "storeUrl": "https://store.steampowered.com/app/1195290/"
+      },
+      {
+        "appid": 870780,
+        "name": "控制 - 终极合辑 / Control Ultimate Edition",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/870780/ec621653454cdad232187af4eb79f23c05aceca5/header.jpg?t=1775822834",
+        "genres": [
+          "动作",
+          "冒险"
+        ],
+        "playtimeMinutes": 159,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 2.7,
+        "storeUrl": "https://store.steampowered.com/app/870780/"
+      },
+      {
+        "appid": 1972440,
+        "name": "Shotgun King: The Final Checkmate",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1972440/header.jpg?t=1779871580",
+        "genres": [
+          "动作",
+          "独立",
+          "策略"
+        ],
+        "playtimeMinutes": 157,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 2.6,
+        "storeUrl": "https://store.steampowered.com/app/1972440/"
+      },
+      {
+        "appid": 268910,
+        "name": "Cuphead",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/268910/header.jpg?t=1709068852",
+        "genres": [
+          "动作",
+          "独立"
+        ],
+        "playtimeMinutes": 153,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 2.6,
+        "storeUrl": "https://store.steampowered.com/app/268910/"
+      },
+      {
+        "appid": 413150,
+        "name": "Stardew Valley",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/413150/header.jpg?t=1754692865",
+        "genres": [
+          "独立",
+          "角色扮演",
+          "模拟"
+        ],
+        "playtimeMinutes": 153,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 2.6,
+        "storeUrl": "https://store.steampowered.com/app/413150/"
+      },
+      {
+        "appid": 1909420,
+        "name": "Tinyfolks",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1909420/header.jpg?t=1667311256",
+        "genres": [
+          "独立",
+          "角色扮演",
+          "策略"
+        ],
+        "playtimeMinutes": 151,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 2.5,
+        "storeUrl": "https://store.steampowered.com/app/1909420/"
+      },
+      {
+        "appid": 322450,
+        "name": "FRAMED Collection",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/322450/header.jpg?t=1757944393",
+        "genres": [
+          "冒险",
+          "休闲",
+          "独立"
+        ],
+        "playtimeMinutes": 139,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 2.3,
+        "storeUrl": "https://store.steampowered.com/app/322450/"
+      },
+      {
+        "appid": 1370050,
+        "name": "黄泉之路",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1370050/header.jpg?t=1728950386",
+        "genres": [
+          "动作",
+          "冒险"
+        ],
+        "playtimeMinutes": 133,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 2.2,
+        "storeUrl": "https://store.steampowered.com/app/1370050/"
+      },
+      {
+        "appid": 359550,
+        "name": "彩虹六号：围攻",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/359550/9a04254d1c9deb433ff2ffeeda1fce8aa74e4312/header_alt_assets_22_schinese.jpg?t=1779889357",
+        "genres": [
+          "动作",
+          "免费游玩"
+        ],
+        "playtimeMinutes": 132,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 2.2,
+        "storeUrl": "https://store.steampowered.com/app/359550/"
+      },
+      {
+        "appid": 1318740,
+        "name": "Farlanders",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1318740/header.jpg?t=1733255309",
+        "genres": [
+          "独立",
+          "模拟",
+          "策略"
+        ],
+        "playtimeMinutes": 132,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 2.2,
+        "storeUrl": "https://store.steampowered.com/app/1318740/"
+      },
+      {
+        "appid": 882100,
+        "name": "XCOM®: Chimera Squad",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/882100/header.jpg?t=1603903072",
+        "genres": [
+          "策略"
+        ],
+        "playtimeMinutes": 128,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 2.1,
+        "storeUrl": "https://store.steampowered.com/app/882100/"
+      },
+      {
+        "appid": 3527290,
+        "name": "PEAK",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3527290/31bac6b2eccf09b368f5e95ce510bae2baf3cfcd/header.jpg?t=1775581133",
+        "genres": [
+          "动作",
+          "冒险",
+          "独立"
+        ],
+        "playtimeMinutes": 124,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 2.1,
+        "storeUrl": "https://store.steampowered.com/app/3527290/"
+      },
+      {
+        "appid": 1709900,
+        "name": "Tower Tactics: Liberation",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1709900/header.jpg?t=1762941429",
+        "genres": [
+          "独立",
+          "策略"
+        ],
+        "playtimeMinutes": 120,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 2,
+        "storeUrl": "https://store.steampowered.com/app/1709900/"
+      },
+      {
+        "appid": 1588550,
+        "name": "孤山独影",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1588550/header_schinese.jpg?t=1770987275",
+        "genres": [
+          "动作",
+          "冒险",
+          "独立",
+          "模拟",
+          "体育"
+        ],
+        "playtimeMinutes": 115,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 1.9,
+        "storeUrl": "https://store.steampowered.com/app/1588550/"
+      },
+      {
+        "appid": 2114740,
+        "name": "神之亵渎2",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2114740/header_schinese.jpg?t=1779468084",
+        "genres": [
+          "动作",
+          "冒险",
+          "独立"
+        ],
+        "playtimeMinutes": 115,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 1.9,
+        "storeUrl": "https://store.steampowered.com/app/2114740/"
+      },
+      {
+        "appid": 1244800,
+        "name": "焕然异星 Terraformers",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1244800/header.jpg?t=1776675906",
+        "genres": [
+          "策略"
+        ],
+        "playtimeMinutes": 113,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 1.9,
+        "storeUrl": "https://store.steampowered.com/app/1244800/"
+      },
+      {
+        "appid": 1608270,
+        "name": "FILMECHANISM",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1608270/header.jpg?t=1770822141",
+        "genres": [
+          "动作",
+          "休闲",
+          "独立"
+        ],
+        "playtimeMinutes": 108,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 1.8,
+        "storeUrl": "https://store.steampowered.com/app/1608270/"
+      },
+      {
+        "appid": 704850,
+        "name": "Thief Simulator",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/704850/header.jpg?t=1779971992",
+        "genres": [
+          "动作",
+          "冒险",
+          "独立",
+          "模拟"
+        ],
+        "playtimeMinutes": 107,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 1.8,
+        "storeUrl": "https://store.steampowered.com/app/704850/"
+      },
+      {
+        "appid": 553420,
+        "name": "TUNIC",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/553420/header.jpg?t=1773852235",
+        "genres": [
+          "动作",
+          "冒险",
+          "角色扮演"
+        ],
+        "playtimeMinutes": 103,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 1.7,
+        "storeUrl": "https://store.steampowered.com/app/553420/"
+      },
+      {
+        "appid": 1122680,
+        "name": "The Artful Escape",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1122680/header.jpg?t=1729099300",
+        "genres": [
+          "动作",
+          "冒险",
+          "独立"
+        ],
+        "playtimeMinutes": 91,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 1.5,
+        "storeUrl": "https://store.steampowered.com/app/1122680/"
+      },
+      {
+        "appid": 2532300,
+        "name": "异幻之梦",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2532300/header_schinese.jpg?t=1744006540",
+        "genres": [
+          "动作",
+          "冒险"
+        ],
+        "playtimeMinutes": 86,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 1.4,
+        "storeUrl": "https://store.steampowered.com/app/2532300/"
+      },
+      {
+        "appid": 1601740,
+        "name": "死亡教堂",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1601740/header_schinese.jpg?t=1726282158",
+        "genres": [
+          "动作",
+          "冒险",
+          "独立",
+          "角色扮演",
+          "策略"
+        ],
+        "playtimeMinutes": 76,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 1.3,
+        "storeUrl": "https://store.steampowered.com/app/1601740/"
+      },
+      {
+        "appid": 1175460,
+        "name": "轮回塔 (Revita)",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1175460/header.jpg?t=1744981718",
+        "genres": [
+          "动作",
+          "冒险",
+          "独立",
+          "角色扮演"
+        ],
+        "playtimeMinutes": 72,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 1.2,
+        "storeUrl": "https://store.steampowered.com/app/1175460/"
+      },
+      {
+        "appid": 1497440,
+        "name": "COCOON",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1497440/header.jpg?t=1763721043",
+        "genres": [
+          "冒险",
+          "独立"
+        ],
+        "playtimeMinutes": 72,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 1.2,
+        "storeUrl": "https://store.steampowered.com/app/1497440/"
+      },
+      {
+        "appid": 960170,
+        "name": "DJMAX RESPECT V",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/960170/header.jpg?t=1772009068",
+        "genres": [
+          "动作",
+          "休闲",
+          "体育"
+        ],
+        "playtimeMinutes": 71,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 1.2,
+        "storeUrl": "https://store.steampowered.com/app/960170/"
+      },
+      {
+        "appid": 1082430,
+        "name": "历历在目",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1082430/header.jpg?t=1729701897",
+        "genres": [
+          "冒险",
+          "独立"
+        ],
+        "playtimeMinutes": 69,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 1.2,
+        "storeUrl": "https://store.steampowered.com/app/1082430/"
+      },
+      {
+        "appid": 1123050,
+        "name": "GRIME",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1123050/header.jpg?t=1772213577",
+        "genres": [
+          "动作",
+          "独立",
+          "角色扮演"
+        ],
+        "playtimeMinutes": 68,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 1.1,
+        "storeUrl": "https://store.steampowered.com/app/1123050/"
+      },
+      {
+        "appid": 297130,
+        "name": "Titan Souls",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/297130/header.jpg?t=1751460426",
+        "genres": [
+          "动作",
+          "冒险",
+          "独立"
+        ],
+        "playtimeMinutes": 66,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 1.1,
+        "storeUrl": "https://store.steampowered.com/app/297130/"
+      },
+      {
+        "appid": 403640,
+        "name": "Dishonored 2",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/403640/header.jpg?t=1750785918",
+        "genres": [
+          "动作"
+        ],
+        "playtimeMinutes": 64,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 1.1,
+        "storeUrl": "https://store.steampowered.com/app/403640/"
+      },
+      {
+        "appid": 1124300,
+        "name": "人类",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1124300/header.jpg?t=1779433660",
+        "genres": [
+          "策略"
+        ],
+        "playtimeMinutes": 63,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 1.1,
+        "storeUrl": "https://store.steampowered.com/app/1124300/"
+      },
+      {
+        "appid": 240720,
+        "name": "Getting Over It with Bennett Foddy",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/240720/header.jpg?t=1666987027",
+        "genres": [
+          "动作"
+        ],
+        "playtimeMinutes": 61,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 1,
+        "storeUrl": "https://store.steampowered.com/app/240720/"
+      },
+      {
+        "appid": 1337920,
+        "name": "连环清道夫 (Serial Cleaners)",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1337920/header.jpg?t=1689098124",
+        "genres": [
+          "动作",
+          "冒险",
+          "独立",
+          "模拟",
+          "策略"
+        ],
+        "playtimeMinutes": 61,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 1,
+        "storeUrl": "https://store.steampowered.com/app/1337920/"
+      },
+      {
+        "appid": 1240210,
+        "name": "根本没有游戏",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1240210/header.jpg?t=1728289933",
+        "genres": [
+          "冒险",
+          "休闲",
+          "独立"
+        ],
+        "playtimeMinutes": 59,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 1,
+        "storeUrl": "https://store.steampowered.com/app/1240210/"
+      },
+      {
+        "appid": 1282410,
+        "name": "Hard West 2",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1282410/header.jpg?t=1750073661",
+        "genres": [
+          "动作",
+          "角色扮演",
+          "策略"
+        ],
+        "playtimeMinutes": 55,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.9,
+        "storeUrl": "https://store.steampowered.com/app/1282410/"
+      },
+      {
+        "appid": 729000,
+        "name": "Wytchwood",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/729000/header_schinese.jpg?t=1705693631",
+        "genres": [
+          "冒险",
+          "休闲",
+          "独立",
+          "角色扮演"
+        ],
+        "playtimeMinutes": 52,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.9,
+        "storeUrl": "https://store.steampowered.com/app/729000/"
+      },
+      {
+        "appid": 1210320,
+        "name": "药剂工艺：炼金模拟器",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1210320/header_schinese.jpg?t=1777565359",
+        "genres": [
+          "独立",
+          "模拟"
+        ],
+        "playtimeMinutes": 51,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.9,
+        "storeUrl": "https://store.steampowered.com/app/1210320/"
+      },
+      {
+        "appid": 239140,
+        "name": "Dying Light",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/239140/header_schinese.jpg?t=1779191279",
+        "genres": [
+          "动作",
+          "角色扮演"
+        ],
+        "playtimeMinutes": 50,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.8,
+        "storeUrl": "https://store.steampowered.com/app/239140/"
+      },
+      {
+        "appid": 113200,
+        "name": "The Binding of Isaac",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/113200/header.jpg?t=1643480517",
+        "genres": [
+          "动作",
+          "冒险",
+          "独立",
+          "角色扮演"
+        ],
+        "playtimeMinutes": 45,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.8,
+        "storeUrl": "https://store.steampowered.com/app/113200/"
+      },
+      {
+        "appid": 518790,
+        "name": "《猎人：荒野的召唤™》",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/518790/de78942e84203b532c5bd853d2ee8f6dd493ac01/header_schinese.jpg?t=1780384309",
+        "genres": [
+          "冒险",
+          "模拟",
+          "体育"
+        ],
+        "playtimeMinutes": 45,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.8,
+        "storeUrl": "https://store.steampowered.com/app/518790/"
+      },
+      {
+        "appid": 2009860,
+        "name": "高塔逃脱 Tower Escape",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2009860/header_schinese.jpg?t=1775496584",
+        "genres": [
+          "休闲",
+          "独立",
+          "策略"
+        ],
+        "playtimeMinutes": 44,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.7,
+        "storeUrl": "https://store.steampowered.com/app/2009860/"
+      },
+      {
+        "appid": 570,
+        "name": "Dota 2",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/570/header.jpg?t=1769535998",
+        "genres": [
+          "动作",
+          "策略",
+          "免费游玩"
+        ],
+        "playtimeMinutes": 43,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.7,
+        "storeUrl": "https://store.steampowered.com/app/570/"
+      },
+      {
+        "appid": 1970580,
+        "name": "背包英雄 Backpack Hero",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1970580/header_schinese.jpg?t=1771527569",
+        "genres": [
+          "冒险",
+          "休闲",
+          "独立",
+          "角色扮演",
+          "策略"
+        ],
+        "playtimeMinutes": 42,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.7,
+        "storeUrl": "https://store.steampowered.com/app/1970580/"
+      },
+      {
+        "appid": 1656780,
+        "name": "英雄之时",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1656780/header.jpg?t=1742571869",
+        "genres": [
+          "角色扮演",
+          "策略"
+        ],
+        "playtimeMinutes": 41,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.7,
+        "storeUrl": "https://store.steampowered.com/app/1656780/"
+      },
+      {
+        "appid": 1540350,
+        "name": "妙不可言的恐惧机器 (The Fabulous Fear Machine)",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1540350/header_schinese.jpg?t=1745506255",
+        "genres": [
+          "独立",
+          "模拟",
+          "策略"
+        ],
+        "playtimeMinutes": 40,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.7,
+        "storeUrl": "https://store.steampowered.com/app/1540350/"
+      },
+      {
+        "appid": 554620,
+        "name": "Life is Strange: Before the Storm",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/554620/header.jpg?t=1773409621",
+        "genres": [
+          "动作",
+          "冒险"
+        ],
+        "playtimeMinutes": 38,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.6,
+        "storeUrl": "https://store.steampowered.com/app/554620/"
+      },
+      {
+        "appid": 1102130,
+        "name": "Florence",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1102130/header.jpg?t=1729099629",
+        "genres": [
+          "冒险",
+          "休闲",
+          "独立"
+        ],
+        "playtimeMinutes": 38,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.6,
+        "storeUrl": "https://store.steampowered.com/app/1102130/"
+      },
+      {
+        "appid": 1218210,
+        "name": "Coromon",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1218210/6005d622740cc34589b36ab64eb2850c406b5432/header.jpg?t=1780141520",
+        "genres": [
+          "冒险",
+          "独立",
+          "角色扮演",
+          "策略"
+        ],
+        "playtimeMinutes": 35,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.6,
+        "storeUrl": "https://store.steampowered.com/app/1218210/"
+      },
+      {
+        "appid": 1347970,
+        "name": "拼贴冒险传 / Patch Quest",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1347970/header_schinese.jpg?t=1747735770",
+        "genres": [
+          "动作",
+          "冒险",
+          "独立"
+        ],
+        "playtimeMinutes": 35,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.6,
+        "storeUrl": "https://store.steampowered.com/app/1347970/"
+      },
+      {
+        "appid": 2193050,
+        "name": "荒绝之剑 DX",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2193050/header.jpg?t=1713270556",
+        "genres": [
+          "动作",
+          "冒险",
+          "独立"
+        ],
+        "playtimeMinutes": 33,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.6,
+        "storeUrl": "https://store.steampowered.com/app/2193050/"
+      },
+      {
+        "appid": 719040,
+        "name": "Wasteland 3",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/719040/header.jpg?t=1776379742",
+        "genres": [
+          "角色扮演",
+          "策略"
+        ],
+        "playtimeMinutes": 31,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.5,
+        "storeUrl": "https://store.steampowered.com/app/719040/"
+      },
+      {
+        "appid": 1628130,
+        "name": "Who Pressed Mute on Uncle Marcus?",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1628130/header_schinese.jpg?t=1727963477",
+        "genres": [
+          "冒险"
+        ],
+        "playtimeMinutes": 30,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.5,
+        "storeUrl": "https://store.steampowered.com/app/1628130/"
+      },
+      {
+        "appid": 1582680,
+        "name": "《电车难题公司》",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1582680/header_schinese.jpg?t=1772556733",
+        "genres": [
+          "休闲",
+          "独立",
+          "模拟"
+        ],
+        "playtimeMinutes": 29,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.5,
+        "storeUrl": "https://store.steampowered.com/app/1582680/"
+      },
+      {
+        "appid": 2657480,
+        "name": "Cricket Through the Ages",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2657480/header.jpg?t=1728952415",
+        "genres": [
+          "动作",
+          "休闲",
+          "体育"
+        ],
+        "playtimeMinutes": 29,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.5,
+        "storeUrl": "https://store.steampowered.com/app/2657480/"
+      },
+      {
+        "appid": 761620,
+        "name": "Beholder 2",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/761620/header.jpg?t=1762949587",
+        "genres": [
+          "冒险",
+          "独立",
+          "模拟",
+          "策略"
+        ],
+        "playtimeMinutes": 28,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.5,
+        "storeUrl": "https://store.steampowered.com/app/761620/"
+      },
+      {
+        "appid": 1559570,
+        "name": "Hellstuck: Rage With Your Friends",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1559570/header.jpg?t=1706992056",
+        "genres": [
+          "冒险",
+          "休闲",
+          "独立",
+          "策略"
+        ],
+        "playtimeMinutes": 28,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.5,
+        "storeUrl": "https://store.steampowered.com/app/1559570/"
+      },
+      {
+        "appid": 763890,
+        "name": "漫野奇谭",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/763890/header_schinese.jpg?t=1740520937",
+        "genres": [
+          "独立",
+          "角色扮演",
+          "策略"
+        ],
+        "playtimeMinutes": 27,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.5,
+        "storeUrl": "https://store.steampowered.com/app/763890/"
+      },
+      {
+        "appid": 894020,
+        "name": "死亡之门",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/894020/header_schinese.jpg?t=1732729764",
+        "genres": [
+          "动作",
+          "冒险",
+          "独立",
+          "角色扮演"
+        ],
+        "playtimeMinutes": 27,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.5,
+        "storeUrl": "https://store.steampowered.com/app/894020/"
+      },
+      {
+        "appid": 1383250,
+        "name": "Please Fix The Road",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1383250/header.jpg?t=1753962709",
+        "genres": [
+          "休闲",
+          "独立",
+          "模拟"
+        ],
+        "playtimeMinutes": 27,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.5,
+        "storeUrl": "https://store.steampowered.com/app/1383250/"
+      },
+      {
+        "appid": 2527660,
+        "name": "觉醒者：遗忘之誓",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2527660/header_schinese.jpg?t=1762504489",
+        "genres": [
+          "动作",
+          "角色扮演"
+        ],
+        "playtimeMinutes": 27,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.5,
+        "storeUrl": "https://store.steampowered.com/app/2527660/"
+      },
+      {
+        "appid": 1147560,
+        "name": "小骨：英雄杀手(Skul: The Hero Slayer)",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1147560/header.jpg?t=1774420210",
+        "genres": [
+          "动作",
+          "独立"
+        ],
+        "playtimeMinutes": 26,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.4,
+        "storeUrl": "https://store.steampowered.com/app/1147560/"
+      },
+      {
+        "appid": 1500800,
+        "name": "瓶子先生和他的梦想",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1500800/header_schinese.jpg?t=1745568431",
+        "genres": [
+          "冒险",
+          "休闲",
+          "独立"
+        ],
+        "playtimeMinutes": 25,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.4,
+        "storeUrl": "https://store.steampowered.com/app/1500800/"
+      },
+      {
+        "appid": 1620540,
+        "name": "Pixel Cup Soccer - Ultimate Edition",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1620540/header.jpg?t=1711814097",
+        "genres": [
+          "动作",
+          "休闲",
+          "独立",
+          "模拟",
+          "体育"
+        ],
+        "playtimeMinutes": 25,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.4,
+        "storeUrl": "https://store.steampowered.com/app/1620540/"
+      },
+      {
+        "appid": 1417880,
+        "name": "冬季余烬",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1417880/header_schinese.jpg?t=1726545420",
+        "genres": [
+          "动作",
+          "冒险",
+          "策略"
+        ],
+        "playtimeMinutes": 24,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.4,
+        "storeUrl": "https://store.steampowered.com/app/1417880/"
+      },
+      {
+        "appid": 1651960,
+        "name": "《海克斯炸欢天：英雄联盟外传》",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1651960/header.jpg?t=1655222718",
+        "genres": [
+          "动作",
+          "独立"
+        ],
+        "playtimeMinutes": 24,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.4,
+        "storeUrl": "https://store.steampowered.com/app/1651960/"
+      },
+      {
+        "appid": 2187290,
+        "name": "墙世界",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2187290/86c2a556bf12d3253f70832e5d4098b6f013c2b7/header_alt_assets_7.jpg?t=1776425388",
+        "genres": [
+          "动作",
+          "冒险",
+          "独立",
+          "策略"
+        ],
+        "playtimeMinutes": 24,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.4,
+        "storeUrl": "https://store.steampowered.com/app/2187290/"
+      },
+      {
+        "appid": 553540,
+        "name": "Phantom Brigade",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/553540/eec49dc9fea0d95e8e161bea0dca19eaba078649/header.jpg?t=1771447210",
+        "genres": [
+          "独立",
+          "模拟",
+          "策略"
+        ],
+        "playtimeMinutes": 22,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.4,
+        "storeUrl": "https://store.steampowered.com/app/553540/"
+      },
+      {
+        "appid": 814370,
+        "name": "怪物圣所",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/814370/header.jpg?t=1762774523",
+        "genres": [
+          "动作",
+          "冒险",
+          "独立",
+          "角色扮演",
+          "策略"
+        ],
+        "playtimeMinutes": 22,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.4,
+        "storeUrl": "https://store.steampowered.com/app/814370/"
+      },
+      {
+        "appid": 70,
+        "name": "Half-Life",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/70/header.jpg?t=1745368462",
+        "genres": [
+          "动作"
+        ],
+        "playtimeMinutes": 20,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.3,
+        "storeUrl": "https://store.steampowered.com/app/70/"
+      },
+      {
+        "appid": 358130,
+        "name": "奇妙探险队 Curious Expedition",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/358130/header_schinese.jpg?t=1773069922",
+        "genres": [
+          "独立",
+          "角色扮演",
+          "策略"
+        ],
+        "playtimeMinutes": 20,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.3,
+        "storeUrl": "https://store.steampowered.com/app/358130/"
+      },
+      {
+        "appid": 1094520,
+        "name": "部落与弯刀",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1094520/c5dea36eface731218fb6078a1751a8ccb083d79/header_alt_assets_1_schinese.jpg?t=1780021077",
+        "genres": [
+          "冒险",
+          "独立",
+          "角色扮演",
+          "策略"
+        ],
+        "playtimeMinutes": 19,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.3,
+        "storeUrl": "https://store.steampowered.com/app/1094520/"
+      },
+      {
+        "appid": 1108590,
+        "name": "上古之魂",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1108590/header.jpg?t=1728376679",
+        "genres": [
+          "动作",
+          "冒险",
+          "独立",
+          "角色扮演"
+        ],
+        "playtimeMinutes": 19,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.3,
+        "storeUrl": "https://store.steampowered.com/app/1108590/"
+      },
+      {
+        "appid": 214340,
+        "name": "Deponia",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/214340/header.jpg?t=1776937661",
+        "genres": [
+          "冒险",
+          "独立"
+        ],
+        "playtimeMinutes": 18,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.3,
+        "storeUrl": "https://store.steampowered.com/app/214340/"
+      },
+      {
+        "appid": 2201710,
+        "name": "赵云传：云汉腾龙",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2201710/header_schinese.jpg?t=1731049555",
+        "genres": [
+          "动作",
+          "冒险",
+          "角色扮演"
+        ],
+        "playtimeMinutes": 18,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.3,
+        "storeUrl": "https://store.steampowered.com/app/2201710/"
+      },
+      {
+        "appid": 651490,
+        "name": "昨日难留",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/651490/header.jpg?t=1767798347",
+        "genres": [
+          "冒险",
+          "休闲",
+          "独立"
+        ],
+        "playtimeMinutes": 17,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.3,
+        "storeUrl": "https://store.steampowered.com/app/651490/"
+      },
+      {
+        "appid": 1222730,
+        "name": "星球大战™：战机中队",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1222730/header_schinese.jpg?t=1779987596",
+        "genres": [
+          "动作",
+          "模拟"
+        ],
+        "playtimeMinutes": 17,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.3,
+        "storeUrl": "https://store.steampowered.com/app/1222730/"
+      },
+      {
+        "appid": 1483870,
+        "name": "Draw & Guess - 你画我猜",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1483870/header.jpg?t=1778528486",
+        "genres": [
+          "休闲",
+          "独立"
+        ],
+        "playtimeMinutes": 17,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.3,
+        "storeUrl": "https://store.steampowered.com/app/1483870/"
+      },
+      {
+        "appid": 1544360,
+        "name": "LEGO® Builder's Journey",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1544360/header.jpg?t=1768472865",
+        "genres": [
+          "冒险",
+          "休闲",
+          "独立"
+        ],
+        "playtimeMinutes": 17,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.3,
+        "storeUrl": "https://store.steampowered.com/app/1544360/"
+      },
+      {
+        "appid": 414340,
+        "name": "Hellblade: Senua's Sacrifice",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/414340/header.jpg?t=1776350290",
+        "genres": [
+          "动作",
+          "冒险",
+          "独立"
+        ],
+        "playtimeMinutes": 15,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.3,
+        "storeUrl": "https://store.steampowered.com/app/414340/"
+      },
+      {
+        "appid": 496300,
+        "name": "Kingdom: New Lands",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/496300/header.jpg?t=1730390952",
+        "genres": [
+          "独立",
+          "模拟",
+          "策略"
+        ],
+        "playtimeMinutes": 15,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.3,
+        "storeUrl": "https://store.steampowered.com/app/496300/"
+      },
+      {
+        "appid": 915310,
+        "name": "SNKRX",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/915310/header.jpg?t=1727913300",
+        "genres": [
+          "动作",
+          "休闲",
+          "独立"
+        ],
+        "playtimeMinutes": 15,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.3,
+        "storeUrl": "https://store.steampowered.com/app/915310/"
+      },
+      {
+        "appid": 576770,
+        "name": "低魔时代",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/576770/c32e4bd5cea5eebcc65074be0640150e6df04c07/header_schinese.jpg?t=1759574009",
+        "genres": [
+          "冒险",
+          "休闲",
+          "独立",
+          "角色扮演",
+          "策略",
+          "抢先体验"
+        ],
+        "playtimeMinutes": 14,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.2,
+        "storeUrl": "https://store.steampowered.com/app/576770/"
+      },
+      {
+        "appid": 1237970,
+        "name": "Titanfall® 2",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1237970/header.jpg?t=1779987598",
+        "genres": [
+          "动作"
+        ],
+        "playtimeMinutes": 14,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.2,
+        "storeUrl": "https://store.steampowered.com/app/1237970/"
+      },
+      {
+        "appid": 1432050,
+        "name": "小人物拯救世界 Nobody Saves the World",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1432050/2b1cd5b8629acfa75aa59b38fa07b94560f52f1c/header_schinese.jpg?t=1771966069",
+        "genres": [
+          "动作",
+          "冒险",
+          "独立",
+          "角色扮演"
+        ],
+        "playtimeMinutes": 13,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.2,
+        "storeUrl": "https://store.steampowered.com/app/1432050/"
+      },
+      {
+        "appid": 1132760,
+        "name": "战匠杜沃",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1132760/header_schinese.jpg?t=1739900841",
+        "genres": [
+          "动作",
+          "冒险",
+          "独立",
+          "角色扮演",
+          "策略"
+        ],
+        "playtimeMinutes": 12,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.2,
+        "storeUrl": "https://store.steampowered.com/app/1132760/"
+      },
+      {
+        "appid": 1341820,
+        "name": "As Dusk Falls",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1341820/header.jpg?t=1718812917",
+        "genres": [
+          "冒险"
+        ],
+        "playtimeMinutes": 11,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.2,
+        "storeUrl": "https://store.steampowered.com/app/1341820/"
+      },
+      {
+        "appid": 461950,
+        "name": "Beat Cop",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/461950/header.jpg?t=1701878616",
+        "genres": [
+          "冒险",
+          "独立",
+          "模拟"
+        ],
+        "playtimeMinutes": 10,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.2,
+        "storeUrl": "https://store.steampowered.com/app/461950/"
+      },
+      {
+        "appid": 1262350,
+        "name": "SIGNALIS",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1262350/header.jpg?t=1773697315",
+        "genres": [
+          "动作",
+          "冒险",
+          "独立"
+        ],
+        "playtimeMinutes": 10,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.2,
+        "storeUrl": "https://store.steampowered.com/app/1262350/"
+      },
+      {
+        "appid": 644830,
+        "name": "The Surge 2",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/644830/header_schinese.jpg?t=1727794351",
+        "genres": [
+          "动作",
+          "角色扮演"
+        ],
+        "playtimeMinutes": 9,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.2,
+        "storeUrl": "https://store.steampowered.com/app/644830/"
+      },
+      {
+        "appid": 898650,
+        "name": "The Shapeshifting Detective",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/898650/header.jpg?t=1727962647",
+        "genres": [
+          "冒险",
+          "独立"
+        ],
+        "playtimeMinutes": 9,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.2,
+        "storeUrl": "https://store.steampowered.com/app/898650/"
+      },
+      {
+        "appid": 1321440,
+        "name": "Cassette Beasts 磁带妖怪",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1321440/header_schinese.jpg?t=1779869947",
+        "genres": [
+          "独立",
+          "角色扮演"
+        ],
+        "playtimeMinutes": 9,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.2,
+        "storeUrl": "https://store.steampowered.com/app/1321440/"
+      },
+      {
+        "appid": 227300,
+        "name": "Euro Truck Simulator 2",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/227300/9a81dc3126c56637297b654f9dcac057cfd79b77/header.jpg?t=1773641450",
+        "genres": [
+          "独立",
+          "模拟"
+        ],
+        "playtimeMinutes": 8,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.1,
+        "storeUrl": "https://store.steampowered.com/app/227300/"
+      },
+      {
+        "appid": 1109570,
+        "name": "《文字游戏》",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1109570/ff1b4246258829fb070dcab985af23be04bbf947/header_schinese.jpg?t=1775638262",
+        "genres": [
+          "冒险",
+          "独立",
+          "角色扮演",
+          "策略"
+        ],
+        "playtimeMinutes": 8,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.1,
+        "storeUrl": "https://store.steampowered.com/app/1109570/"
+      },
+      {
+        "appid": 1335940,
+        "name": "满头大汗了吧，击球手！",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1335940/header_schinese.jpg?t=1778814273",
+        "genres": [
+          "动作",
+          "休闲",
+          "独立"
+        ],
+        "playtimeMinutes": 8,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.1,
+        "storeUrl": "https://store.steampowered.com/app/1335940/"
+      },
+      {
+        "appid": 1937750,
+        "name": "太古之火",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1937750/header_schinese.jpg?t=1731477543",
+        "genres": [
+          "冒险",
+          "独立",
+          "角色扮演",
+          "策略"
+        ],
+        "playtimeMinutes": 8,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.1,
+        "storeUrl": "https://store.steampowered.com/app/1937750/"
+      },
+      {
+        "appid": 212680,
+        "name": "FTL: Faster Than Light",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/212680/f21426ac9ad51338fa33becce88984758e07c38b/header.jpg?t=1748969356",
+        "genres": [
+          "独立",
+          "模拟",
+          "策略"
+        ],
+        "playtimeMinutes": 7,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.1,
+        "storeUrl": "https://store.steampowered.com/app/212680/"
+      },
+      {
+        "appid": 457140,
+        "name": "缺氧",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/457140/header_schinese.jpg?t=1777920664",
+        "genres": [
+          "独立",
+          "模拟"
+        ],
+        "playtimeMinutes": 7,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.1,
+        "storeUrl": "https://store.steampowered.com/app/457140/"
+      },
+      {
+        "appid": 651670,
+        "name": "Star Renegades",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/651670/header.jpg?t=1766091161",
+        "genres": [
+          "动作",
+          "独立",
+          "角色扮演",
+          "模拟",
+          "策略"
+        ],
+        "playtimeMinutes": 7,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.1,
+        "storeUrl": "https://store.steampowered.com/app/651670/"
+      },
+      {
+        "appid": 1795470,
+        "name": "巨浪滔天",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1795470/cf85511eb037e062b84c1b1010114798091ede59/header.jpg?t=1778768677",
+        "genres": [
+          "休闲",
+          "模拟",
+          "策略"
+        ],
+        "playtimeMinutes": 7,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.1,
+        "storeUrl": "https://store.steampowered.com/app/1795470/"
+      },
+      {
+        "appid": 699170,
+        "name": "Fell Seal: Arbiter's Mark",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/699170/header_schinese.jpg?t=1760104179",
+        "genres": [
+          "独立",
+          "角色扮演",
+          "策略"
+        ],
+        "playtimeMinutes": 6,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.1,
+        "storeUrl": "https://store.steampowered.com/app/699170/"
+      },
+      {
+        "appid": 1484720,
+        "name": "Dead Estate",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1484720/header.jpg?t=1730142843",
+        "genres": [
+          "动作",
+          "独立"
+        ],
+        "playtimeMinutes": 6,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.1,
+        "storeUrl": "https://store.steampowered.com/app/1484720/"
+      },
+      {
+        "appid": 1291340,
+        "name": "城镇叠叠乐",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1291340/header.jpg?t=1776072963",
+        "genres": [
+          "休闲",
+          "独立",
+          "模拟"
+        ],
+        "playtimeMinutes": 5,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.1,
+        "storeUrl": "https://store.steampowered.com/app/1291340/"
+      },
+      {
+        "appid": 1509960,
+        "name": "PICO PARK",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1509960/header.jpg?t=1740033204",
+        "genres": [
+          "动作",
+          "休闲",
+          "独立"
+        ],
+        "playtimeMinutes": 5,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.1,
+        "storeUrl": "https://store.steampowered.com/app/1509960/"
+      },
+      {
+        "appid": 1515900,
+        "name": "秘馆疑踪2 / Heaven Dust 2",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1515900/header_schinese.jpg?t=1729490892",
+        "genres": [
+          "动作",
+          "冒险",
+          "独立",
+          "角色扮演"
+        ],
+        "playtimeMinutes": 5,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.1,
+        "storeUrl": "https://store.steampowered.com/app/1515900/"
+      },
+      {
+        "appid": 219150,
+        "name": "火线迈阿密",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/219150/header.jpg?t=1686261983",
+        "genres": [
+          "动作",
+          "独立"
+        ],
+        "playtimeMinutes": 4,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.1,
+        "storeUrl": "https://store.steampowered.com/app/219150/"
+      },
+      {
+        "appid": 970500,
+        "name": "秦殇 (Prince of Qin)",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/970500/header.jpg?t=1641899772",
+        "genres": [
+          "动作",
+          "冒险",
+          "角色扮演"
+        ],
+        "playtimeMinutes": 4,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.1,
+        "storeUrl": "https://store.steampowered.com/app/970500/"
+      },
+      {
+        "appid": 1016920,
+        "name": "Unrailed!",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1016920/header_schinese.jpg?t=1773842519",
+        "genres": [
+          "动作",
+          "休闲",
+          "独立"
+        ],
+        "playtimeMinutes": 4,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.1,
+        "storeUrl": "https://store.steampowered.com/app/1016920/"
+      },
+      {
+        "appid": 1161170,
+        "name": "山海旅人",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1161170/header_schinese.jpg?t=1744993074",
+        "genres": [
+          "冒险",
+          "休闲",
+          "独立"
+        ],
+        "playtimeMinutes": 4,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.1,
+        "storeUrl": "https://store.steampowered.com/app/1161170/"
+      },
+      {
+        "appid": 1608640,
+        "name": "孤狼 OTXO",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1608640/header.jpg?t=1775071242",
+        "genres": [
+          "动作",
+          "模拟"
+        ],
+        "playtimeMinutes": 4,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.1,
+        "storeUrl": "https://store.steampowered.com/app/1608640/"
+      },
+      {
+        "appid": 376680,
+        "name": "Splendor",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/376680/header.jpg?t=1742483733",
+        "genres": [
+          "休闲",
+          "策略"
+        ],
+        "playtimeMinutes": 3,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.1,
+        "storeUrl": "https://store.steampowered.com/app/376680/"
+      },
+      {
+        "appid": 568220,
+        "name": "Lobotomy Corporation | Monster Management Simulation",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/568220/header.jpg?t=1636694188",
+        "genres": [
+          "独立",
+          "模拟"
+        ],
+        "playtimeMinutes": 3,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.1,
+        "storeUrl": "https://store.steampowered.com/app/568220/"
+      },
+      {
+        "appid": 1054490,
+        "name": "WINGSPAN (展翅翱翔)",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1054490/header_schinese.jpg?t=1779381591",
+        "genres": [
+          "独立",
+          "策略"
+        ],
+        "playtimeMinutes": 3,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.1,
+        "storeUrl": "https://store.steampowered.com/app/1054490/"
+      },
+      {
+        "appid": 1150690,
+        "name": "OMORI",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1150690/header.jpg?t=1671584768",
+        "genres": [
+          "冒险",
+          "独立",
+          "角色扮演"
+        ],
+        "playtimeMinutes": 3,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.1,
+        "storeUrl": "https://store.steampowered.com/app/1150690/"
+      },
+      {
+        "appid": 1205450,
+        "name": "Turnip Boy Commits Tax Evasion",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1205450/header.jpg?t=1758380512",
+        "genres": [
+          "动作",
+          "冒险",
+          "休闲",
+          "独立"
+        ],
+        "playtimeMinutes": 3,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.1,
+        "storeUrl": "https://store.steampowered.com/app/1205450/"
+      },
+      {
+        "appid": 2050590,
+        "name": "发糖模拟器",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2050590/header_schinese.jpg?t=1768543533",
+        "genres": [
+          "休闲",
+          "独立",
+          "模拟",
+          "策略"
+        ],
+        "playtimeMinutes": 3,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0.1,
+        "storeUrl": "https://store.steampowered.com/app/2050590/"
+      },
+      {
+        "appid": 600610,
+        "name": "梅林之手",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/600610/header.jpg?t=1725010019",
+        "genres": [
+          "独立",
+          "角色扮演",
+          "策略"
+        ],
+        "playtimeMinutes": 2,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0,
+        "storeUrl": "https://store.steampowered.com/app/600610/"
+      },
+      {
+        "appid": 658850,
+        "name": "Do Not Feed the Monkeys",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/658850/header_schinese.jpg?t=1779364676",
+        "genres": [
+          "独立",
+          "模拟",
+          "策略"
+        ],
+        "playtimeMinutes": 2,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0,
+        "storeUrl": "https://store.steampowered.com/app/658850/"
+      },
+      {
+        "appid": 1608450,
+        "name": "地狱仆从",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1608450/582beb8d816c07080228cdb2c67be0eacf0674e1/header_alt_assets_0.jpg?t=1756893030",
+        "genres": [
+          "冒险",
+          "独立",
+          "角色扮演",
+          "策略"
+        ],
+        "playtimeMinutes": 2,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0,
+        "storeUrl": "https://store.steampowered.com/app/1608450/"
+      },
+      {
+        "appid": 220,
+        "name": "Half-Life 2",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/220/header.jpg?t=1745368545",
+        "genres": [
+          "动作"
+        ],
+        "playtimeMinutes": 0,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0,
+        "storeUrl": "https://store.steampowered.com/app/220/"
+      },
+      {
+        "appid": 320,
+        "name": "Half-Life 2: Deathmatch",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/320/header.jpg?t=1749481506",
+        "genres": [
+          "动作"
+        ],
+        "playtimeMinutes": 0,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0,
+        "storeUrl": "https://store.steampowered.com/app/320/"
+      },
+      {
+        "appid": 360,
+        "name": "Half-Life Deathmatch: Source",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/360/header.jpg?t=1745368549",
+        "genres": [
+          "动作"
+        ],
+        "playtimeMinutes": 0,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0,
+        "storeUrl": "https://store.steampowered.com/app/360/"
+      },
+      {
+        "appid": 200510,
+        "name": "XCOM: Enemy Unknown",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/200510/header.jpg?t=1777585174",
+        "genres": [
+          "策略"
+        ],
+        "playtimeMinutes": 0,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0,
+        "storeUrl": "https://store.steampowered.com/app/200510/"
+      },
+      {
+        "appid": 214170,
+        "name": "Divine Divinity",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/214170/header.jpg?t=1765504834",
+        "genres": [
+          "角色扮演"
+        ],
+        "playtimeMinutes": 0,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0,
+        "storeUrl": "https://store.steampowered.com/app/214170/"
+      },
+      {
+        "appid": 219760,
+        "name": "Beyond Divinity",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/219760/header.jpg?t=1765504804",
+        "genres": [
+          "角色扮演"
+        ],
+        "playtimeMinutes": 0,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0,
+        "storeUrl": "https://store.steampowered.com/app/219760/"
+      },
+      {
+        "appid": 219780,
+        "name": "Divinity II: Developer's Cut",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/219780/header.jpg?t=1765504781",
+        "genres": [
+          "角色扮演"
+        ],
+        "playtimeMinutes": 0,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0,
+        "storeUrl": "https://store.steampowered.com/app/219780/"
+      },
+      {
+        "appid": 266310,
+        "name": "GameGuru Classic",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/266310/header.jpg?t=1749910805",
+        "genres": [
+          "游戏开发",
+          "软件"
+        ],
+        "playtimeMinutes": 0,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0,
+        "storeUrl": "https://store.steampowered.com/app/266310/"
+      },
+      {
+        "appid": 287980,
+        "name": "Mini Metro",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/287980/header_schinese.jpg?t=1724386220",
+        "genres": [
+          "独立",
+          "模拟",
+          "策略"
+        ],
+        "playtimeMinutes": 0,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0,
+        "storeUrl": "https://store.steampowered.com/app/287980/"
+      },
+      {
+        "appid": 311690,
+        "name": "Enter the Gungeon",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/311690/e86bb031048093d21e8bdbd842768457ea192051/header_schinese.jpg?t=1779733990",
+        "genres": [
+          "动作",
+          "冒险",
+          "独立"
+        ],
+        "playtimeMinutes": 0,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0,
+        "storeUrl": "https://store.steampowered.com/app/311690/"
+      },
+      {
+        "appid": 480490,
+        "name": "Prey",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/480490/header.jpg?t=1750785331",
+        "genres": [
+          "动作",
+          "冒险"
+        ],
+        "playtimeMinutes": 0,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0,
+        "storeUrl": "https://store.steampowered.com/app/480490/"
+      },
+      {
+        "appid": 522210,
+        "name": "Serial Cleaner",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/522210/3af8109b4dd7f2716f29fb4114b89d6347f7c674/header_schinese.jpg?t=1749737711",
+        "genres": [
+          "动作",
+          "独立"
+        ],
+        "playtimeMinutes": 0,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0,
+        "storeUrl": "https://store.steampowered.com/app/522210/"
+      },
+      {
+        "appid": 623990,
+        "name": "Tom Clancy's Rainbow Six Siege - Test Server",
+        "image": "https://cdn.cloudflare.steamstatic.com/steam/apps/623990/header.jpg",
+        "genres": [
+          "动作",
+          "射击"
+        ],
+        "playtimeMinutes": 0,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0,
+        "storeUrl": "https://store.steampowered.com/app/623990/"
+      },
+      {
+        "appid": 701160,
+        "name": "Kingdom Two Crowns",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/701160/08446e4e24cc72043629f54d6598d12db44afebc/header_schinese.jpg?t=1779781351",
+        "genres": [
+          "冒险",
+          "独立",
+          "模拟",
+          "策略"
+        ],
+        "playtimeMinutes": 0,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0,
+        "storeUrl": "https://store.steampowered.com/app/701160/"
+      },
+      {
+        "appid": 747350,
+        "name": "Hellblade: Senua's Sacrifice VR Edition",
+        "image": "https://cdn.cloudflare.steamstatic.com/steam/apps/747350/header.jpg",
+        "genres": [
+          "动作",
+          "冒险",
+          "独立"
+        ],
+        "playtimeMinutes": 0,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0,
+        "storeUrl": "https://store.steampowered.com/app/747350/"
+      },
+      {
+        "appid": 977880,
+        "name": "Eastward",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/977880/b64b640ef821adbf5fc3bd18080b22cfbed142d8/header_alt_assets_0.jpg?t=1780173512",
+        "genres": [
+          "动作",
+          "冒险",
+          "独立",
+          "角色扮演"
+        ],
+        "playtimeMinutes": 0,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0,
+        "storeUrl": "https://store.steampowered.com/app/977880/"
+      },
+      {
+        "appid": 1049280,
+        "name": "Pilgrims",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1049280/header_schinese.jpg?t=1779469374",
+        "genres": [
+          "冒险",
+          "休闲",
+          "独立"
+        ],
+        "playtimeMinutes": 0,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0,
+        "storeUrl": "https://store.steampowered.com/app/1049280/"
+      },
+      {
+        "appid": 1209490,
+        "name": "Exit the Gungeon",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1209490/header.jpg?t=1743602833",
+        "genres": [
+          "动作",
+          "冒险",
+          "独立"
+        ],
+        "playtimeMinutes": 0,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0,
+        "storeUrl": "https://store.steampowered.com/app/1209490/"
+      },
+      {
+        "appid": 1626890,
+        "name": "坏小孩",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1626890/header.jpg?t=1745569761",
+        "genres": [
+          "冒险",
+          "独立"
+        ],
+        "playtimeMinutes": 0,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0,
+        "storeUrl": "https://store.steampowered.com/app/1626890/"
+      },
+      {
+        "appid": 1933370,
+        "name": "Mark of the Deep",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1933370/d353e340086cd4d46263cfe02c25469b56c87862/header.jpg?t=1778105963",
+        "genres": [
+          "动作",
+          "冒险",
+          "独立"
+        ],
+        "playtimeMinutes": 0,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0,
+        "storeUrl": "https://store.steampowered.com/app/1933370/"
+      },
+      {
+        "appid": 1942280,
+        "name": "Brotato",
+        "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1942280/4f3467b7993c5c86a0bf789a646b800a808347d2/header_schinese.jpg?t=1779200971",
+        "genres": [
+          "动作",
+          "休闲",
+          "独立",
+          "角色扮演"
+        ],
+        "playtimeMinutes": 0,
+        "playtimeRecentMinutes": 0,
+        "playtimeHours": 0,
+        "storeUrl": "https://store.steampowered.com/app/1942280/"
+      }
+    ]
   }
 }

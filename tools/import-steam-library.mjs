@@ -3,13 +3,17 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import readline from "node:readline/promises";
+import { execFile as execFileCallback } from "node:child_process";
 import { stdin as input, stdout as output } from "node:process";
+import { promisify } from "node:util";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, "..");
 const contentPath = path.join(root, "content.json");
 const defaultSteamId = "76561198819812464";
 const storeDelayMs = 220;
+const requestTimeoutMs = 18000;
+const execFile = promisify(execFileCallback);
 
 function minutesToHours(minutes) {
   return Math.round((Number(minutes || 0) / 60) * 10) / 10;
@@ -28,16 +32,39 @@ async function ask(question, fallback = "") {
 }
 
 async function fetchJson(url, label) {
+  try {
+    return await fetchJsonWithNode(url, label);
+  } catch (nodeError) {
+    try {
+      return await fetchJsonWithPowerShell(url);
+    } catch (fallbackError) {
+      throw new Error(`${label} failed: ${nodeError.message}; PowerShell fallback: ${fallbackError.message}`);
+    }
+  }
+}
+
+async function fetchJsonWithNode(url, label) {
   const response = await fetch(url, {
+    signal: AbortSignal.timeout(requestTimeoutMs),
     headers: {
       "Accept": "application/json",
-      "User-Agent": "PortfolioSteamImporter/1.0"
+      "User-Agent": "Mozilla/5.0 PortfolioSteamImporter/1.1"
     }
   });
   if (!response.ok) {
-    throw new Error(`${label} failed: HTTP ${response.status} ${response.statusText}`);
+    throw new Error(`HTTP ${response.status} ${response.statusText}`);
   }
   return response.json();
+}
+
+async function fetchJsonWithPowerShell(url) {
+  const command = "$ProgressPreference='SilentlyContinue'; $url=[Environment]::GetEnvironmentVariable('STEAM_FETCH_URL'); (Invoke-WebRequest -UseBasicParsing -Uri $url -TimeoutSec 18).Content";
+  const { stdout } = await execFile("powershell.exe", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", command], {
+    env: { ...process.env, STEAM_FETCH_URL: url },
+    windowsHide: true,
+    maxBuffer: 24 * 1024 * 1024
+  });
+  return JSON.parse(stdout);
 }
 
 async function getOwnedGames(apiKey, steamId) {
@@ -64,6 +91,12 @@ async function getStoreDetails(appid) {
   return item?.success ? item.data : null;
 }
 
+async function writeJsonAtomic(targetPath, value) {
+  const tempPath = `${targetPath}.${Date.now()}.tmp`;
+  await fs.writeFile(tempPath, value, "utf8");
+  await fs.rename(tempPath, targetPath);
+}
+
 function compactGame(game, details) {
   const genres = Array.isArray(details?.genres) ? details.genres.map((genre) => genre.description).filter(Boolean) : [];
   return {
@@ -81,7 +114,7 @@ function compactGame(game, details) {
 async function main() {
   const existing = JSON.parse(await fs.readFile(contentPath, "utf8"));
   const currentSteamId = existing?.steamLibrary?.steamId || defaultSteamId;
-  const steamId = await ask("SteamID64", process.env.STEAM_ID || currentSteamId);
+  const steamId = process.env.STEAM_ID || await ask("SteamID64", currentSteamId);
   const apiKey = process.env.STEAM_API_KEY || await ask("Steam Web API Key");
   if (!apiKey) {
     throw new Error("Steam Web API Key is required.");
@@ -125,7 +158,7 @@ async function main() {
   };
   existing.updatedAt = new Date().toISOString();
 
-  await fs.writeFile(contentPath, JSON.stringify(existing, null, 2) + "\n", "utf8");
+  await writeJsonAtomic(contentPath, JSON.stringify(existing, null, 2) + "\n");
   console.log(`\nDone. Imported ${imported.length} games into content.json.`);
   console.log("Next: run PublishToGitHub.bat to publish the updated library.");
 }
