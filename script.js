@@ -195,6 +195,31 @@ const categoryLabels = {
   research: "研究"
 };
 
+const steamGenreFilters = [
+  { id: "all", label: "全部", aliases: [] },
+  { id: "role-playing", label: "角色扮演", aliases: ["角色扮演", "RPG"] },
+  { id: "action", label: "动作", aliases: ["动作", "Action"] },
+  { id: "indie", label: "独立游戏", aliases: ["独立", "Indie"] },
+  { id: "strategy", label: "策略", aliases: ["策略", "Strategy"] }
+];
+
+const gamePlatformDefaults = [
+  {
+    id: "playstation",
+    label: "PlayStation",
+    logo: "playstation",
+    description: "这里预留给 PlayStation 游戏。你可以先添加名字、类型和游玩时间，封面后续再补。",
+    games: []
+  },
+  {
+    id: "nintendo",
+    label: "Nintendo",
+    logo: "nintendo",
+    description: "这里预留给 Nintendo 游戏。你可以先添加名字、类型和游玩时间，封面后续再补。",
+    games: []
+  }
+];
+
 const timelineGroups = [
   { id: "education", label: "教育", empty: "还没有添加教育经历。" },
   { id: "work", label: "工作", empty: "还没有添加工作经历。" }
@@ -207,6 +232,7 @@ const timelineGroupLabels = {
 
 let siteData = cloneData(DEFAULT_SITE_DATA);
 let activeProjectFilter = "all";
+let activeSteamGenreFilter = "all";
 let activeTimelineGroup = "work";
 let revealObserver;
 let scrollSpy;
@@ -355,6 +381,48 @@ function normalizeProjects(projects) {
   return (Array.isArray(projects) ? projects : []).map((project, index) => normalizeProject(project, index));
 }
 
+function normalizeGamePlatforms(platforms) {
+  const sourcePlatforms = Array.isArray(platforms) ? platforms : [];
+  const byId = new Map(sourcePlatforms.map((platform) => [String(platform?.id || "").trim(), platform]));
+
+  const defaults = gamePlatformDefaults.map((platform) => {
+    const source = byId.get(platform.id) || {};
+    byId.delete(platform.id);
+    return normalizeGamePlatform({ ...platform, ...source });
+  });
+
+  const custom = Array.from(byId.values()).map((platform) => normalizeGamePlatform(platform));
+  return [...defaults, ...custom].filter((platform) => platform.id && platform.label);
+}
+
+function normalizeGamePlatform(platform) {
+  const source = platform && typeof platform === "object" ? platform : {};
+  const id = slugify(source.id || source.label || "platform");
+  return {
+    id,
+    label: String(source.label || source.name || id).trim(),
+    logo: String(source.logo || id).trim(),
+    description: String(source.description || "").trim(),
+    games: (Array.isArray(source.games) ? source.games : []).map((game) => normalizeManualGame(game)).filter((game) => game.name)
+  };
+}
+
+function normalizeManualGame(game) {
+  const source = game && typeof game === "object" ? game : {};
+  const minutes = Number(source.playtimeMinutes ?? source.minutes ?? 0);
+  const hours = Number(source.playtimeHours ?? source.hours ?? 0);
+  const playtimeMinutes = Number.isFinite(minutes) && minutes > 0
+    ? Math.round(minutes)
+    : Math.max(0, Math.round((Number.isFinite(hours) ? hours : 0) * 60));
+
+  return {
+    name: String(source.name || "").trim(),
+    image: String(source.image || source.cover || "").trim(),
+    genres: toTags(source.genres || source.genre || source.type),
+    playtimeMinutes
+  };
+}
+
 function normalizeSteamLibrary(library) {
   const source = library && typeof library === "object" ? library : {};
   const games = Array.isArray(source.games) ? source.games : [];
@@ -405,6 +473,33 @@ function getOrderedSteamGames() {
     }
     return left.name.localeCompare(right.name);
   });
+}
+
+function steamGameMatchesFilter(game, filterId = activeSteamGenreFilter) {
+  if (filterId === "all") return true;
+  const filter = steamGenreFilters.find((item) => item.id === filterId);
+  if (!filter) return true;
+  const genres = toTags(game.genres).join(" ");
+  return filter.aliases.some((alias) => genres.toLowerCase().includes(alias.toLowerCase()));
+}
+
+function getFilteredSteamGames(games = getOrderedSteamGames()) {
+  return games.filter((game) => steamGameMatchesFilter(game));
+}
+
+function renderSteamGenreFilters(games) {
+  const host = document.getElementById("steam-library-filters");
+  if (!host) return;
+  host.innerHTML = steamGenreFilters
+    .map((filter) => {
+      const count = filter.id === "all" ? games.length : games.filter((game) => steamGameMatchesFilter(game, filter.id)).length;
+      return `
+        <button class="filter-button${activeSteamGenreFilter === filter.id ? " is-active" : ""}" type="button" data-steam-filter="${attr(filter.id)}">
+          ${escapeHtml(filter.label)} <span class="count">${escapeHtml(count)}</span>
+        </button>
+      `;
+    })
+    .join("");
 }
 
 function getOrderedProjects(active = "all") {
@@ -516,6 +611,7 @@ function normalizeData(data) {
     timeline: normalizeTimeline(Array.isArray(source.timeline) ? source.timeline : fallback.timeline),
     projects: normalizeProjects(Array.isArray(source.projects) ? source.projects : fallback.projects),
     steamLibrary: normalizeSteamLibrary(source.steamLibrary || fallback.steamLibrary),
+    gamePlatforms: normalizeGamePlatforms(source.gamePlatforms || fallback.gamePlatforms),
     research: Array.isArray(source.research) ? source.research : fallback.research,
     customSections: Array.isArray(source.customSections) ? source.customSections : []
   };
@@ -951,6 +1047,7 @@ function renderProjectTags(project) {
 function renderSteamLibrary() {
   const library = siteData.steamLibrary;
   const games = getOrderedSteamGames();
+  const filteredGames = getFilteredSteamGames(games);
   const summary = document.getElementById("steam-summary");
   const grid = document.getElementById("steam-library-grid");
   if (!summary || !grid) return;
@@ -959,7 +1056,7 @@ function renderSteamLibrary() {
   summary.innerHTML = `
     <article>
       <strong>${escapeHtml(games.length)}</strong>
-      <span>已导入游戏</span>
+      <span>已导入 Steam 游戏</span>
     </article>
     <article>
       <strong>${escapeHtml(formatPlaytime(totalMinutes))}</strong>
@@ -971,9 +1068,13 @@ function renderSteamLibrary() {
     </article>
   `;
 
-  grid.innerHTML = games.length
-    ? games.map(renderSteamGameCard).join("")
-    : `<div class="steam-empty reveal">还没有导入 Steam 游戏库。运行 ImportSteamLibrary.bat 后，这里会显示游戏名字、图片、类型和游玩时间。</div>`;
+  renderSteamGenreFilters(games);
+
+  grid.innerHTML = filteredGames.length
+    ? filteredGames.map(renderSteamGameCard).join("")
+    : `<div class="steam-empty reveal">这个分类下暂时没有游戏。</div>`;
+
+  renderGamePlatformModules();
 }
 
 function renderSteamGameCard(game) {
@@ -982,12 +1083,80 @@ function renderSteamGameCard(game) {
     <article class="steam-card reveal">
       <div class="steam-media">
         <img src="${attr(game.image)}" alt="${attr(game.name)}" loading="lazy" />
+        <div class="steam-platform-badge">${platformLogoMarkup("steam", "Steam")}<span>Steam</span></div>
       </div>
       <div class="steam-card-body">
         <h3>${escapeHtml(game.name)}</h3>
         <div class="steam-card-meta">
           <span>${escapeHtml(formatPlaytime(game.playtimeMinutes))}</span>
           ${game.playtimeRecentMinutes ? `<span>近两周 ${escapeHtml(formatPlaytime(game.playtimeRecentMinutes))}</span>` : ""}
+        </div>
+        <div class="tag-row steam-genre-row">
+          ${genres.length ? genres.map((genre) => `<span class="tag">${escapeHtml(genre)}</span>`).join("") : `<span class="tag">未分类</span>`}
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+function platformLogoMarkup(platform, label = platform) {
+  const id = String(platform || "platform").toLowerCase();
+  const text = String(label || platform || "").trim();
+  const initials = id.includes("playstation") ? "PS" : id.includes("nintendo") ? "N" : id.includes("steam") ? "S" : text.slice(0, 2).toUpperCase();
+  const steamMark = `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="8" cy="15.5" r="3.2" fill="none" stroke="currentColor" stroke-width="2"/>
+      <circle cx="16.3" cy="7.7" r="3.4" fill="none" stroke="currentColor" stroke-width="2"/>
+      <path d="M10.7 13.4 14 10M4 13.8l2.6 1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+  `;
+  return `<span class="platform-logo platform-logo-${attr(id)}" title="${attr(text)}">${id.includes("steam") ? steamMark : escapeHtml(initials)}</span>`;
+}
+
+function renderGamePlatformModules() {
+  const host = document.getElementById("platform-game-modules");
+  if (!host) return;
+  host.innerHTML = siteData.gamePlatforms.map(renderGamePlatformModule).join("");
+}
+
+function renderGamePlatformModule(platform) {
+  const games = [...platform.games].sort((left, right) => Number(right.playtimeMinutes || 0) - Number(left.playtimeMinutes || 0));
+  const totalMinutes = games.reduce((sum, game) => sum + Number(game.playtimeMinutes || 0), 0);
+  return `
+    <section class="platform-module reveal">
+      <div class="platform-module-head">
+        <div class="platform-title-row">
+          ${platformLogoMarkup(platform.logo || platform.id, platform.label)}
+          <div>
+            <h3>${escapeHtml(platform.label)}</h3>
+            <p>${escapeHtml(platform.description || "可以在开发者模式里添加游戏。")}</p>
+          </div>
+        </div>
+        <div class="platform-stats">
+          <span>${escapeHtml(games.length)} 款</span>
+          <span>${escapeHtml(formatPlaytime(totalMinutes))}</span>
+        </div>
+      </div>
+      <div class="platform-game-grid">
+        ${games.length ? games.map((game) => renderManualGameCard(game, platform)).join("") : `<div class="platform-empty">这里已经预留好了。打开开发者模式的“游戏库”页签，就能添加 ${escapeHtml(platform.label)} 游戏。</div>`}
+      </div>
+    </section>
+  `;
+}
+
+function renderManualGameCard(game, platform) {
+  const genres = toTags(game.genres);
+  const hasImage = String(game.image || "").trim();
+  return `
+    <article class="platform-game-card">
+      <div class="platform-game-media">
+        ${hasImage ? `<img src="${attr(game.image)}" alt="${attr(game.name)}" loading="lazy" />` : `<div class="platform-cover-placeholder">${platformLogoMarkup(platform.logo || platform.id, platform.label)}<span>封面待补</span></div>`}
+      </div>
+      <div class="platform-game-body">
+        <h4>${escapeHtml(game.name)}</h4>
+        <div class="steam-card-meta">
+          <span>${escapeHtml(formatPlaytime(game.playtimeMinutes))}</span>
+          <span>${escapeHtml(platform.label)}</span>
         </div>
         <div class="tag-row steam-genre-row">
           ${genres.length ? genres.map((genre) => `<span class="tag">${escapeHtml(genre)}</span>`).join("") : `<span class="tag">未分类</span>`}
@@ -1063,6 +1232,14 @@ function setupFilters() {
     activeProjectFilter = button.dataset.filter;
     renderFilters(activeProjectFilter);
     renderProjects(activeProjectFilter);
+    observeReveals();
+  });
+
+  document.getElementById("steam-library-filters")?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-steam-filter]");
+    if (!button) return;
+    activeSteamGenreFilter = button.dataset.steamFilter || "all";
+    renderSteamLibrary();
     observeReveals();
   });
 }
@@ -1330,6 +1507,7 @@ function createEditorShell() {
           <button class="dev-tab is-active" type="button" data-editor-tab="profile">个人</button>
           <button class="dev-tab" type="button" data-editor-tab="experience">经历</button>
           <button class="dev-tab" type="button" data-editor-tab="projects">作品</button>
+          <button class="dev-tab" type="button" data-editor-tab="games">游戏库</button>
           <button class="dev-tab" type="button" data-editor-tab="sections">页签</button>
           <button class="dev-tab" type="button" data-editor-tab="data">数据</button>
         </div>
@@ -1403,6 +1581,7 @@ function renderEditor() {
     profile: renderProfileEditor,
     experience: renderTimelineEditor,
     projects: renderProjectsEditor,
+    games: renderGameLibraryEditor,
     sections: renderSectionsEditor,
     data: renderDataEditor
   };
@@ -1689,6 +1868,65 @@ function renderSectionImageEditor(image, sectionIndex, imageIndex) {
   `;
 }
 
+function renderGameLibraryEditor() {
+  return `
+    <div class="dev-section-head">
+      <div>
+        <h3>主机游戏库</h3>
+        <p>这里可以手动添加 PlayStation 和 Nintendo 游戏。封面可以先空着，后续再统一补。</p>
+      </div>
+    </div>
+    <div class="dev-list">
+      ${siteData.gamePlatforms.map((platform, index) => renderGamePlatformEditor(platform, index)).join("")}
+    </div>
+  `;
+}
+
+function renderGamePlatformEditor(platform, index) {
+  return `
+    <article class="dev-item" data-platform-index="${index}">
+      <div class="dev-item-head">
+        <strong>${escapeHtml(platform.label || "游戏平台")}</strong>
+        <button class="dev-small-button" type="button" data-add-platform-game="${index}">${icon("plus")}添加游戏</button>
+      </div>
+      <div class="dev-form-grid compact">
+        ${field("平台 ID", "platform-id", platform.id, `data-platform-field="id"`)}
+        ${field("平台名称", "platform-label", platform.label, `data-platform-field="label"`)}
+        ${field("Logo 类型", "platform-logo", platform.logo, `data-platform-field="logo"`)}
+        ${textarea("模块说明", "platform-description", platform.description, 3, `data-platform-field="description"`)}
+      </div>
+      <div class="dev-section-head nested">
+        <h4>游戏</h4>
+      </div>
+      <div class="dev-list nested">
+        ${platform.games.length ? platform.games.map((game, gameIndex) => renderManualGameEditor(game, index, gameIndex)).join("") : `<div class="dev-empty compact">还没有游戏，点击“添加游戏”。</div>`}
+      </div>
+    </article>
+  `;
+}
+
+function renderManualGameEditor(game, platformIndex, gameIndex) {
+  return `
+    <div class="dev-image-row" data-platform-game-index="${gameIndex}">
+      <div class="dev-item-head">
+        <strong>${escapeHtml(game.name || "新游戏")}</strong>
+        <button class="dev-icon-button danger" type="button" data-delete-platform-game="${platformIndex}:${gameIndex}" aria-label="删除游戏">${icon("trash")}</button>
+      </div>
+      <div class="dev-form-grid compact">
+        ${field("游戏名称", "platform-game-name", game.name, `data-platform-game-field="name"`)}
+        ${field("类型", "platform-game-genres", toTags(game.genres).join("，"), `data-platform-game-field="genres"`)}
+        ${field("游戏时间（小时）", "platform-game-playtime", manualGameHours(game), `data-platform-game-field="playtimeHours"`)}
+        ${imageField("封面", game.image, `data-platform-game-field="image"`, "platform", platformIndex, gameIndex)}
+      </div>
+    </div>
+  `;
+}
+
+function manualGameHours(game) {
+  const hours = Number(game.playtimeMinutes || 0) / 60;
+  return hours ? Number(hours.toFixed(1)) : "";
+}
+
 function renderDataEditor() {
   return `
     <div class="dev-data-panel">
@@ -1858,6 +2096,18 @@ function handleEditorButton(button) {
       project.tags.splice(tagIndex, 1);
     }
     renderEditor();
+  } else if (button.matches("[data-add-platform-game]")) {
+    syncFromEditor();
+    const platform = siteData.gamePlatforms[Number(button.dataset.addPlatformGame)];
+    if (platform) {
+      platform.games.push({ name: "新游戏", genres: ["未分类"], playtimeMinutes: 0, image: "" });
+    }
+    renderEditor();
+  } else if (button.matches("[data-delete-platform-game]")) {
+    syncFromEditor();
+    const [platformIndex, gameIndex] = button.dataset.deletePlatformGame.split(":").map(Number);
+    siteData.gamePlatforms[platformIndex]?.games?.splice(gameIndex, 1);
+    renderEditor();
   } else if (button.matches("[data-add-section]")) {
     syncFromEditor();
     const nextNumber = siteData.customSections.length + 1;
@@ -1986,6 +2236,21 @@ function collectEditorData() {
       };
     });
     next.projects = updatedProjects.filter(Boolean);
+  }
+
+  if (document.querySelector("[data-platform-index]")) {
+    next.gamePlatforms = Array.from(document.querySelectorAll("[data-platform-index]")).map((row) => ({
+      id: slugify(row.querySelector("[data-platform-field='id']").value.trim() || row.querySelector("[data-platform-field='label']").value),
+      label: row.querySelector("[data-platform-field='label']").value.trim() || "游戏平台",
+      logo: row.querySelector("[data-platform-field='logo']").value.trim(),
+      description: row.querySelector("[data-platform-field='description']").value.trim(),
+      games: Array.from(row.querySelectorAll("[data-platform-game-index]")).map((gameRow) => ({
+        name: gameRow.querySelector("[data-platform-game-field='name']").value.trim(),
+        genres: toTags(gameRow.querySelector("[data-platform-game-field='genres']").value),
+        playtimeHours: Number.parseFloat(gameRow.querySelector("[data-platform-game-field='playtimeHours']").value) || 0,
+        image: gameRow.querySelector("[data-platform-game-field='image']").value.trim()
+      })).filter((game) => game.name)
+    }));
   }
 
   if (document.querySelector("[data-section-index]")) {
