@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-02T08:35:15.369Z",
+  "updatedAt": "2026-06-02T12:22:15.604Z",
   "sections": {
     "about": {
       "nav": "介绍",
@@ -2944,7 +2944,98 @@
       "label": "PlayStation",
       "logo": "playstation",
       "description": "这里预留给 PlayStation 游戏。你可以先添加名字、类型和游玩时间，封面后续再补。",
-      "games": []
+      "games": [
+        {
+          "name": "暗影火炬城 PS4",
+          "image": "https://image.api.playstation.com/gs2-sec/appkgo/prod/CUSA28373_00/2/i_fd3e18fc3f9adc9a28010c093da941433176a84668a744114300b557db81887d/i/icon0.png?w=54&thumb=true",
+          "genres": [],
+          "playtimeMinutes": 0
+        },
+        {
+          "name": "彩虹六号：异种 PS4",
+          "image": "https://image.api.playstation.com/gs2-sec/appkgo/prod/CUSA15442_00/2/i_4f01aeb387aafb126d7cceeafe228b35327b069684ad6704cfab4fa6203da021/i/icon0.png?w=54&thumb=true",
+          "genres": [],
+          "playtimeMinutes": 0
+        },
+        {
+          "name": "女神異聞錄５ 皇家版 PS4",
+          "image": "https://image.api.playstation.com/gs2-sec/appkgo/prod/CUSA17544_00/2/i_09977b3aac026d5a5b98a02f246dffc6a21636e1430afbb54a626b7190a0c911/i/icon0.png?w=54&thumb=true",
+          "genres": [],
+          "playtimeMinutes": 0
+        },
+        {
+          "name": "原神 PS4",
+          "image": "https://image.api.playstation.com/gs2-sec/appkgo/prod/CUSA23678_00/3/i_3342cff1cd406156aa486dee43e4c9ffc394acdcd25a1e80a9ade72f183256be/i/icon0.png?w=54&thumb=true",
+          "genres": [],
+          "playtimeMinutes": 0
+        },
+        {
+          "name": "Call of Duty®: Modern Warfare® PS4",
+          "image": "https://image.api.playstation.com/gs2-sec/appkgo/prod/CUSA15556_00/2/i_d7eb14dc412700fb47b955d7f8ae86f62e7d40df1aa8c485a46b297c738707cd/i/icon0.png?w=54&thumb=true",
+          "genres": [],
+          "playtimeMinutes": 0
+        },
+        {
+          "name": "DARK SOULS™: REMASTERED PS4",
+          "image": "https://image.api.playstation.com/gs2-sec/appkgo/prod/CUSA08526_00/3/i_18a7aa181491b600bff57bb22f226086efb88d51ba517ba642d573c60d2ab3e8/i/icon0.png?w=54&thumb=true",
+          "genres": [],
+          "playtimeMinutes": 0
+        },
+        {
+          "name": "Fall Guys: Ultimate Knockout PS4",
+          "image": "https://image.api.playstation.com/gs2-sec/appkgo/prod/CUSA29236_00/3/i_5b2384d35b68d0d257e12c07b018d7ceb8b07474b6b7794781e52c2965e89cd3/i/icon0.png?w=54&thumb=true",
+          "genres": [],
+          "playtimeMinutes": 0
+        },
+        {
+          "name": "Ghost of Tsushima PS4",
+          "image": "https://image.api.playstation.com/gs2-sec/appkgo/prod/CUSA16972_00/9/i_28f167f27255e23160ce35e7e686f05ba2bcbc5b52f1048d6c5348c7f7e3fd43/i/icon0.png?w=54&thumb=true",
+          "genres": [],
+          "playtimeMinutes": 0
+        },
+        {
+          "name": "JUMP FORCE PS4",
+          "image": "https://image.api.playstation.com/gs2-sec/appkgo/prod/CUSA11685_00/2/i_aba43a3eb19850dcc9c7706ef7e7a002170032a75d791cfb5728d8d8fd96d72d/i/icon0.png?w=54&thumb=true",
+          "genres": [],
+          "playtimeMinutes": 0
+        },
+        {
+          "name": "Kena: Bridge of Spirits PS4",
+          "image": "https://image.api.playstation.com/gs2-sec/appkgo/prod/CUSA24853_00/2/i_1783f65ab92a0b6e89517e6d51d917a7e8430039a9f8aab6cdbb0f3a48dfee36/i/icon0.png?w=54&thumb=true",
+          "genres": [],
+          "playtimeMinutes": 0
+        },
+        {
+          "name": "Marvel's Spider-Man: Miles Morales PS4",
+          "image": "https://image.api.playstation.com/gs2-sec/appkgo/prod/CUSA17839_00/4/i_5c2f810efcbfee957cfe598107f345f6e6b449e5c6124b215d7fb0f4fa0fa549/i/icon0.png?w=54&thumb=true",
+          "genres": [],
+          "playtimeMinutes": 0
+        },
+        {
+          "name": "Minecraft PS4",
+          "image": "https://image.api.playstation.com/gs2-sec/appkgo/prod/CUSA00265_00/8/i_1c2d1812f27ec71285072e191d1822134e4f9730141c88537d87837014a17295/i/icon0.png?w=54&thumb=true",
+          "genres": [],
+          "playtimeMinutes": 0
+        },
+        {
+          "name": "Ratchet & Clank™ PS4",
+          "image": "https://image.api.playstation.com/gs2-sec/appkgo/prod/CUSA02020_00/2/i_ae9242356b27f3249d2655858eecad6d891c23299a15275ae3a97552888b2a8f/i/icon0.png?w=54&thumb=true",
+          "genres": [],
+          "playtimeMinutes": 0
+        },
+        {
+          "name": "SIFU PS4",
+          "image": "https://image.api.playstation.com/gs2-sec/appkgo/prod/CUSA30202_00/6/i_17329ac698e91a3e5c11efa08052bee22f10246886ea07011c88ccf28fc52cef/i/icon0.png?w=54&thumb=true",
+          "genres": [],
+          "playtimeMinutes": 0
+        },
+        {
+          "name": "Untitled Goose Game PS4",
+          "image": "https://image.api.playstation.com/gs2-sec/appkgo/prod/CUSA23079_00/5/i_92b201327569550fac6ba444ee01c51e0a3bb789821f82762098305aac239227/i/icon0.png?w=54&thumb=true",
+          "genres": [],
+          "playtimeMinutes": 0
+        }
+      ]
     },
     {
       "id": "nintendo",
