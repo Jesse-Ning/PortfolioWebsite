@@ -289,6 +289,39 @@ function orderValue(item, index = 0) {
   return toOrder(item?.order, index + 1);
 }
 
+function cssSize(value) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  if (/^\d+(\.\d+)?$/.test(text)) return `${text}px`;
+  if (/^\d+(\.\d+)?(px|%|rem|em|vw|vh|vmin|vmax)$/i.test(text)) return text;
+  if (/^(min|max|clamp)\([\d\s.,/%a-z-]+\)$/i.test(text)) return text;
+  return "";
+}
+
+function cssAspect(value) {
+  const text = String(value || "").trim().replace(/\s+/g, " ");
+  if (!text) return "";
+  if (/^\d+(\.\d+)?\s*\/\s*\d+(\.\d+)?$/.test(text)) return text;
+  if (/^\d+(\.\d+)?$/.test(text)) return text;
+  return "";
+}
+
+function cssFit(value) {
+  const text = String(value || "").trim();
+  return ["cover", "contain", "fill", "scale-down"].includes(text) ? text : "";
+}
+
+function renderImageStyle(item) {
+  const declarations = [];
+  const width = cssSize(item?.imageWidth);
+  const aspect = cssAspect(item?.imageAspect);
+  const fit = cssFit(item?.imageFit);
+  if (width) declarations.push(`--project-image-width: ${width}`);
+  if (aspect) declarations.push(`--project-image-aspect: ${aspect}`);
+  if (fit) declarations.push(`--project-image-fit: ${fit}`);
+  return declarations.length ? ` style="${attr(declarations.join("; "))}"` : "";
+}
+
 function sortByOrder(items) {
   return [...items].sort((left, right) => {
     const leftOrder = orderValue(left, left.index ?? 0);
@@ -371,6 +404,9 @@ function normalizeProject(project, index = 0) {
     language: String(item.language || inferProjectLanguage(item)).trim(),
     gameType: inferProjectGameType(item),
     image: String(item.image || "assets/slash-preview.png").trim(),
+    imageWidth: String(item.imageWidth || "").trim(),
+    imageAspect: String(item.imageAspect || "").trim(),
+    imageFit: String(item.imageFit || "cover").trim(),
     description: String(item.description || "").trim(),
     tags: toTags(item.tags),
     order: orderValue(item, index)
@@ -421,6 +457,97 @@ function normalizeManualGame(game) {
     genres: toTags(source.genres || source.genre || source.type),
     playtimeMinutes
   };
+}
+
+function customCardSlug(card, index = 0) {
+  return slugify(card?.slug || card?.id || card?.title || `prototype-${index + 1}`);
+}
+
+function normalizeCustomCard(card, index = 0) {
+  const source = card && typeof card === "object" ? card : {};
+  return {
+    ...source,
+    title: String(source.title || `原型单元 ${index + 1}`).trim(),
+    slug: customCardSlug(source, index),
+    description: String(source.description || source.text || "").trim(),
+    details: String(source.details || source.detail || source.description || source.text || "").trim(),
+    order: orderValue(source, index),
+    image: String(source.image || source.src || "assets/recovery-preview.png").trim(),
+    tags: toTags(source.tags || "Prototype"),
+    imageWidth: String(source.imageWidth || "").trim(),
+    imageAspect: String(source.imageAspect || "").trim(),
+    imageFit: String(source.imageFit || "cover").trim()
+  };
+}
+
+function getOrderedCustomCards(section) {
+  return sortByOrder((section.cards || []).map((card, index) => ({ ...normalizeCustomCard(card, index), index })));
+}
+
+function normalizeCustomSection(section, index = 0) {
+  const source = section && typeof section === "object" ? section : {};
+  const body = toParagraphs(source.body);
+  const images = Array.isArray(source.images) ? source.images : [];
+  let cards = Array.isArray(source.cards) ? source.cards.map((card, cardIndex) => normalizeCustomCard(card, cardIndex)) : [];
+
+  if (!cards.length && images.length) {
+    cards = images.map((image, imageIndex) =>
+      normalizeCustomCard(
+        {
+          title: image.caption || source.title || source.navTitle || `原型单元 ${imageIndex + 1}`,
+          description: body[imageIndex] || body[0] || image.caption || "",
+          image: image.src || "assets/recovery-preview.png",
+          tags: image.tags || "Prototype",
+          imageWidth: image.imageWidth,
+          imageAspect: image.imageAspect,
+          imageFit: image.imageFit
+        },
+        imageIndex
+      )
+    );
+  }
+
+  const shouldUseCards =
+    String(source.layout || "").trim() === "cards" ||
+    source.id === "prototype" ||
+    source.navTitle === "原型设计" ||
+    source.title === "原型设计";
+
+  if (!cards.length && shouldUseCards) {
+    cards = [
+      normalizeCustomCard(
+        {
+          title: source.title || source.navTitle || "原型设计",
+          description: body[0] || "在这里写原型说明。",
+          image: "assets/recovery-preview.png",
+          imageAspect: "16 / 9",
+          imageFit: "cover",
+          tags: "Prototype"
+        },
+        0
+      )
+    ];
+  }
+
+  return {
+    ...source,
+    id: String(source.id || `custom-${index + 1}`).trim(),
+    navTitle: String(source.navTitle || source.title || "新页签").trim(),
+    kicker: String(source.kicker || "Custom").trim(),
+    title: String(source.title || source.navTitle || "新的标题页签").trim(),
+    body,
+    layout: String(source.layout || (cards.length ? "cards" : "")).trim(),
+    cards,
+    images: images.map((image) => ({
+      src: String(image?.src || "").trim(),
+      caption: String(image?.caption || "").trim(),
+      alt: String(image?.alt || "").trim()
+    }))
+  };
+}
+
+function normalizeCustomSections(sections) {
+  return (Array.isArray(sections) ? sections : []).map((section, index) => normalizeCustomSection(section, index));
 }
 
 function normalizeSteamLibrary(library) {
@@ -613,7 +740,7 @@ function normalizeData(data) {
     steamLibrary: normalizeSteamLibrary(source.steamLibrary || fallback.steamLibrary),
     gamePlatforms: normalizeGamePlatforms(source.gamePlatforms || fallback.gamePlatforms),
     research: Array.isArray(source.research) ? source.research : fallback.research,
-    customSections: Array.isArray(source.customSections) ? source.customSections : []
+    customSections: normalizeCustomSections(source.customSections)
   };
 }
 
@@ -726,6 +853,7 @@ function renderAll() {
   renderProjects(activeProjectFilter);
   renderSteamLibrary();
   renderCustomSections();
+  renderPrototypeDetailRoute();
   setupScrollSpy();
   observeReveals();
 }
@@ -1004,7 +1132,7 @@ function renderProjects(active = "all") {
     .map(
       (project) => `
         <article class="project-card reveal${isFeatured(project, project.index) ? " is-featured" : ""}">
-          <div class="project-media">
+          <div class="project-media"${renderImageStyle(project)}>
             <img src="${attr(project.image)}" alt="${attr(project.title)}" loading="lazy" />
           </div>
           <div class="project-body">
@@ -1184,24 +1312,227 @@ function renderResearch() {
 
 function renderCustomSections() {
   const host = document.getElementById("custom-sections");
-  host.innerHTML = siteData.customSections
-    .map(
-      (section, index) => `
-        <section class="section-band custom-section" id="${attr(section.id)}">
-          <div class="section-inner custom-section-grid">
-            <div>
-              <p class="section-kicker">${escapeHtml(section.kicker || "Custom Section")}</p>
-              <h2>${escapeHtml(section.title || section.navTitle || "新页签")}</h2>
-              <div class="copy-stack">
-                ${toParagraphs(section.body).map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join("")}
-              </div>
-            </div>
-            ${renderSectionImages(section.images || [], index)}
+  host.innerHTML = siteData.customSections.map((section, index) => renderCustomSection(section, index)).join("");
+}
+
+function renderCustomSection(section, index) {
+  if (section.layout === "cards" || section.cards?.length) {
+    return renderCustomCardSection(section, index);
+  }
+
+  return `
+    <section class="section-band custom-section" id="${attr(section.id)}">
+      <div class="section-inner custom-section-grid">
+        <div>
+          <p class="section-kicker">${escapeHtml(section.kicker || "Custom Section")}</p>
+          <h2>${escapeHtml(section.title || section.navTitle || "新页签")}</h2>
+          <div class="copy-stack">
+            ${toParagraphs(section.body).map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join("")}
           </div>
-        </section>
-      `
-    )
+        </div>
+        ${renderSectionImages(section.images || [], index)}
+      </div>
+    </section>
+  `;
+}
+
+function renderCustomCardSection(section) {
+  const cards = getOrderedCustomCards(section);
+  return `
+    <section class="section-band custom-section" id="${attr(section.id)}">
+      <div class="section-inner">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">${escapeHtml(section.kicker || "Custom Section")}</p>
+            <h2>${escapeHtml(section.title || section.navTitle || "新页签")}</h2>
+          </div>
+          <p>${escapeHtml(toParagraphs(section.body)[0] || "")}</p>
+        </div>
+        <div class="project-grid custom-card-grid">
+          ${cards.length ? cards.map((card) => renderCustomCard(card, section)).join("") : `<div class="platform-empty">还没有卡片。打开开发者模式的“标题页签”添加图片、标题、文本和标签。</div>`}
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function renderCustomCard(card, section) {
+  const image = card.image || "assets/recovery-preview.png";
+  const cardMarkup = `
+    <article class="project-card custom-card reveal">
+      <div class="project-media"${renderImageStyle(card)}>
+        <img src="${attr(image)}" alt="${attr(card.title)}" loading="lazy" />
+      </div>
+      <div class="project-body">
+        <div class="project-meta custom-card-meta">
+          <span>排序 ${escapeHtml(orderValue(card, card.index))}</span>
+          ${isPrototypeSection(section) ? "<span>查看详情</span>" : ""}
+        </div>
+        <h3>${escapeHtml(card.title)}</h3>
+        ${renderCustomCardDescription(card.description)}
+        <div class="tag-row project-extra-tags">
+          ${toTags(card.tags).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}
+        </div>
+      </div>
+    </article>
+  `;
+
+  if (!isPrototypeSection(section)) return cardMarkup;
+
+  return `
+    <a class="prototype-card-link" href="${attr(prototypeCardHref(card))}" aria-label="查看 ${attr(card.title)} 详情">
+      ${cardMarkup}
+    </a>
+  `;
+}
+
+function isPrototypeSection(section) {
+  return section?.id === "prototype" || section?.navTitle === "原型设计" || section?.title === "原型设计";
+}
+
+function prototypeCardHref(card) {
+  return `#prototype/${encodeURIComponent(card.slug || customCardSlug(card, card.index || 0))}`;
+}
+
+function renderCustomCardDescription(description) {
+  const lines = String(description || "")
+    .split(/\n+/g)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  if (!lines.length) return "";
+  if (lines.length === 1) return `<p>${escapeHtml(lines[0])}</p>`;
+
+  const firstIsPoint = isListPoint(lines[0]);
+  const restHasPoints = lines.slice(1).some(isListPoint);
+  const lead = !firstIsPoint && restHasPoints ? lines[0] : "";
+  const points = lead ? lines.slice(1) : lines;
+
+  return `
+    ${lead ? `<p class="project-points-lead">${escapeHtml(lead)}</p>` : ""}
+    <ol class="project-points">
+      ${points.map((point) => `<li>${escapeHtml(stripListMarker(point))}</li>`).join("")}
+    </ol>
+  `;
+}
+
+function isListPoint(value) {
+  return /^\s*(\d+[.、)]|[-*•])\s+/.test(String(value || ""));
+}
+
+function stripListMarker(value) {
+  return String(value || "").replace(/^\s*(\d+[.、)]|[-*•])\s+/, "").trim();
+}
+
+function getPrototypeSection() {
+  return siteData.customSections.find((section) => isPrototypeSection(section));
+}
+
+function getPrototypeHashSlug() {
+  const hash = window.location.hash.replace(/^#/, "");
+  if (!hash.startsWith("prototype/")) return "";
+  return decodeURIComponent(hash.slice("prototype/".length));
+}
+
+function getPrototypeCardBySlug(slug) {
+  const section = getPrototypeSection();
+  if (!section || !slug) return null;
+  return getOrderedCustomCards(section).find((card) => card.slug === slug || customCardSlug(card, card.index) === slug) || null;
+}
+
+function renderPrototypeDetailRoute(options = {}) {
+  const host = document.getElementById("prototype-detail-route");
+  if (!host) return;
+
+  const slug = getPrototypeHashSlug();
+  const section = getPrototypeSection();
+  const card = getPrototypeCardBySlug(slug);
+
+  if (!slug || !section || !card) {
+    document.body.removeAttribute("data-route");
+    host.innerHTML = "";
+    return;
+  }
+
+  document.body.dataset.route = "prototype-detail";
+  host.innerHTML = renderPrototypeDetailPage(section, card);
+  observeReveals();
+
+  if (options.scroll) {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+}
+
+function renderPrototypeDetailPage(section, card) {
+  const image = card.image || "assets/recovery-preview.png";
+  return `
+    <section class="section-band prototype-detail-page">
+      <div class="section-inner prototype-detail-inner">
+        <a class="detail-back-link" href="#${attr(section.id || "prototype")}">返回原型设计</a>
+        <div class="prototype-detail-hero reveal">
+          <div class="prototype-detail-copy">
+            <p class="section-kicker">${escapeHtml(section.kicker || "Prototype")}</p>
+            <h1>${escapeHtml(card.title)}</h1>
+            ${renderCustomCardDescription(card.description)}
+            <div class="tag-row project-extra-tags">
+              ${toTags(card.tags).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}
+            </div>
+          </div>
+          <div class="prototype-detail-media project-media"${renderImageStyle(card)}>
+            <img src="${attr(image)}" alt="${attr(card.title)}" loading="lazy" />
+          </div>
+        </div>
+        <div class="prototype-detail-content reveal">
+          ${renderPrototypeDetailContent(card)}
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function renderPrototypeDetailContent(card) {
+  const detailText = String(card.details || card.description || "").trim();
+  if (!detailText) {
+    return `<p class="prototype-detail-empty">这里还没有详情内容。打开开发者模式，在这张原型卡片里编辑“详情页内容”。</p>`;
+  }
+
+  return toParagraphs(detailText)
+    .map((block) => `<section class="prototype-detail-block">${renderPrototypeDetailBlock(block)}</section>`)
     .join("");
+}
+
+function renderPrototypeDetailBlock(block) {
+  const lines = String(block || "")
+    .split(/\n+/g)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  if (!lines.length) return "";
+  if (lines.length === 1) return `<p>${escapeHtml(lines[0])}</p>`;
+
+  const firstIsPoint = isListPoint(lines[0]);
+  const lead = !firstIsPoint ? lines[0] : "";
+  const points = lead ? lines.slice(1) : lines;
+  return `
+    ${lead ? `<h2>${escapeHtml(lead)}</h2>` : ""}
+    <ol class="project-points prototype-detail-points">
+      ${points.map((point) => `<li>${escapeHtml(stripListMarker(point))}</li>`).join("")}
+    </ol>
+  `;
+}
+
+function setupPrototypeDetailRoutes() {
+  window.addEventListener("hashchange", () => {
+    const wasDetailRoute = document.body.dataset.route === "prototype-detail";
+    renderPrototypeDetailRoute({ scroll: true });
+
+    if (wasDetailRoute && !getPrototypeHashSlug()) {
+      const targetId = window.location.hash.replace(/^#/, "");
+      window.requestAnimationFrame(() => {
+        document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth" });
+      });
+    }
+  });
 }
 
 function renderSectionImages(images) {
@@ -1762,6 +2093,9 @@ function renderProjectEditor(project, index) {
         ${field("我的职责", "project-responsibility", project.responsibility || project.role, `data-project-field="responsibility"`)}
         ${field("编程语言", "project-language", project.language, `data-project-field="language"`)}
         ${field("游戏类型", "project-game-type", project.gameType, `data-project-field="gameType"`)}
+        ${field("图片宽度", "project-image-width", project.imageWidth, `data-project-field="imageWidth" placeholder="例如 100% / 620px"`)}
+        ${field("图片比例", "project-image-aspect", project.imageAspect, `data-project-field="imageAspect" placeholder="例如 16 / 9"`)}
+        ${imageFitField("图片显示", "project-image-fit", project.imageFit || "cover", `data-project-field="imageFit"`)}
         <div class="dev-field wide project-tags-editor">
           <div class="dev-inline-head">
             <span>补充标签</span>
@@ -1844,16 +2178,65 @@ function renderSectionEditor(section, index) {
         ${field("章节 ID", "section-id", section.id, `data-section-field="id"`)}
         ${field("小标题", "section-kicker", section.kicker, `data-section-field="kicker"`)}
         ${field("大标题", "section-title", section.title, `data-section-field="title"`)}
-        ${textarea("正文", "section-body", toParagraphs(section.body).join("\\n\\n"), 7, `data-section-field="body"`)}
+        ${sectionLayoutField("显示格式", "section-layout", section.layout || (section.cards?.length ? "cards" : ""), `data-section-field="layout"`)}
+        ${textarea("章节说明", "section-body", toParagraphs(section.body).join("\\n\\n"), 4, `data-section-field="body"`)}
       </div>
       <div class="dev-section-head nested">
-        <h4>图片</h4>
+        <h4>卡片单元</h4>
+        <button class="dev-small-button" type="button" data-add-section-card="${index}">${icon("plus")}添加卡片</button>
+      </div>
+      <div class="dev-list nested">
+        ${getOrderedCustomCards(section).map((card) => renderSectionCardEditor(card, index, card.index)).join("") || `<div class="dev-empty compact">还没有卡片，点击添加卡片。</div>`}
+      </div>
+      <div class="dev-section-head nested">
+        <h4>旧版图片</h4>
         <button class="dev-small-button" type="button" data-add-section-image="${index}">${icon("plus")}添加图片</button>
       </div>
       <div class="dev-list nested">
         ${(section.images || []).map((image, imageIndex) => renderSectionImageEditor(image, index, imageIndex)).join("")}
       </div>
     </article>
+  `;
+}
+
+function renderSectionCardEditor(card, sectionIndex, cardIndex) {
+  const tags = toTags(card.tags);
+  return `
+    <article class="dev-item compact" data-section-card-index="${cardIndex}">
+      <div class="dev-item-head">
+        <strong>${escapeHtml(card.title || "原型单元")}</strong>
+        <button class="dev-icon-button danger" type="button" data-delete-section-card="${sectionIndex}:${cardIndex}" aria-label="删除卡片">${icon("trash")}</button>
+      </div>
+      <div class="dev-form-grid compact">
+        ${field("排序", "section-card-order", orderValue(card, cardIndex), `data-section-card-field="order"`)}
+        ${field("标题", "section-card-title", card.title, `data-section-card-field="title"`)}
+        ${field("详情页路径", "section-card-slug", card.slug, `data-section-card-field="slug" placeholder="例如 gravity-ball"`)}
+        ${textarea("文本条目", "section-card-description", card.description, 5, `data-section-card-field="description"`)}
+        ${textarea("详情页内容", "section-card-details", card.details || card.description, 8, `data-section-card-field="details"`)}
+        ${imageField("图片", card.image, `data-section-card-field="image"`, "section-card", sectionIndex, cardIndex)}
+        ${field("图片宽度", "section-card-image-width", card.imageWidth, `data-section-card-field="imageWidth" placeholder="例如 100% / 620px"`)}
+        ${field("图片比例", "section-card-image-aspect", card.imageAspect, `data-section-card-field="imageAspect" placeholder="例如 16 / 9"`)}
+        ${imageFitField("图片显示", "section-card-image-fit", card.imageFit || "cover", `data-section-card-field="imageFit"`)}
+        <div class="dev-field wide section-card-tags-editor">
+          <div class="dev-inline-head">
+            <span>标签</span>
+            <button class="dev-small-button" type="button" data-add-section-card-tag="${sectionIndex}:${cardIndex}">${icon("plus")}添加标签</button>
+          </div>
+          <div class="dev-list nested">
+            ${tags.length ? tags.map((tag, tagIndex) => renderSectionCardTagEditor(tag, sectionIndex, cardIndex, tagIndex)).join("") : `<div class="dev-empty compact">还没有标签，点击添加标签。</div>`}
+          </div>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+function renderSectionCardTagEditor(tag, sectionIndex, cardIndex, tagIndex) {
+  return `
+    <div class="dev-mini-row section-card-tag-row" data-section-card-tag-index="${tagIndex}">
+      <input aria-label="原型卡片标签" data-section-card-tag-field="value" value="${attr(tag)}" />
+      <button class="dev-icon-button danger" type="button" data-delete-section-card-tag="${sectionIndex}:${cardIndex}:${tagIndex}" aria-label="删除标签">${icon("trash")}</button>
+    </div>
   `;
 }
 
@@ -1978,6 +2361,42 @@ function selectField(label, id, value, extra = "") {
   `;
 }
 
+function imageFitField(label, id, value, extra = "") {
+  const options = [
+    ["cover", "裁切填满"],
+    ["contain", "完整显示"],
+    ["scale-down", "缩小适配"],
+    ["fill", "拉伸填满"]
+  ];
+  return `
+    <label class="dev-field">
+      <span>${escapeHtml(label)}</span>
+      <select id="${attr(id)}" ${extra}>
+        ${options
+          .map(([optionValue, optionLabel]) => `<option value="${optionValue}"${optionValue === value ? " selected" : ""}>${optionLabel}</option>`)
+          .join("")}
+      </select>
+    </label>
+  `;
+}
+
+function sectionLayoutField(label, id, value, extra = "") {
+  const options = [
+    ["cards", "卡片"],
+    ["", "正文 + 图片"]
+  ];
+  return `
+    <label class="dev-field">
+      <span>${escapeHtml(label)}</span>
+      <select id="${attr(id)}" ${extra}>
+        ${options
+          .map(([optionValue, optionLabel]) => `<option value="${optionValue}"${optionValue === value ? " selected" : ""}>${optionLabel}</option>`)
+          .join("")}
+      </select>
+    </label>
+  `;
+}
+
 function contactIconField(label, id, value, extra = "") {
   const icons = [
     ["mail", "Email"],
@@ -2071,6 +2490,9 @@ function handleEditorButton(button) {
       gameType: "Prototype",
       order: getNextOrder(siteData.projects),
       image: "assets/slash-preview.png",
+      imageWidth: "",
+      imageAspect: "16 / 9",
+      imageFit: "cover",
       description: "在这里写作品简介。",
       tags: ["Prototype"]
     });
@@ -2116,13 +2538,71 @@ function handleEditorButton(button) {
       navTitle: `页签${nextNumber}`,
       kicker: "Custom",
       title: "新的标题页签",
-      body: ["在这里添加正文。"],
+      body: ["在这里添加章节说明。"],
+      layout: "cards",
+      cards: [
+        {
+          order: 1,
+          title: "新卡片",
+          slug: "prototype-card",
+          description: "在这里写卡片文本。",
+          details: "设计目标\n1. 在这里写这个原型想验证的问题。\n2. 在这里写关键实现逻辑。\n3. 在这里写测试后的结论和下一步迭代。",
+          image: "assets/recovery-preview.png",
+          imageWidth: "",
+          imageAspect: "16 / 9",
+          imageFit: "cover",
+          tags: ["Prototype"]
+        }
+      ],
       images: []
     });
     renderEditor();
   } else if (button.matches("[data-delete-section]")) {
     syncFromEditor();
     siteData.customSections.splice(Number(button.dataset.deleteSection), 1);
+    renderEditor();
+  } else if (button.matches("[data-add-section-card]")) {
+    syncFromEditor();
+    const section = siteData.customSections[Number(button.dataset.addSectionCard)];
+    if (section) {
+      section.layout = "cards";
+      section.cards = section.cards || [];
+      section.cards.push({
+        order: getNextOrder(section.cards),
+        title: "新卡片",
+        slug: `prototype-${Date.now()}`,
+        description: "在这里写卡片文本。",
+        details: "设计目标\n1. 在这里写这个原型想验证的问题。\n2. 在这里写关键实现逻辑。\n3. 在这里写测试后的结论和下一步迭代。",
+        image: "assets/recovery-preview.png",
+        imageWidth: "",
+        imageAspect: "16 / 9",
+        imageFit: "cover",
+        tags: ["Prototype"]
+      });
+    }
+    renderEditor();
+  } else if (button.matches("[data-delete-section-card]")) {
+    syncFromEditor();
+    const [sectionIndex, cardIndex] = button.dataset.deleteSectionCard.split(":").map(Number);
+    siteData.customSections[sectionIndex]?.cards?.splice(cardIndex, 1);
+    renderEditor();
+  } else if (button.matches("[data-add-section-card-tag]")) {
+    syncFromEditor();
+    const [sectionIndex, cardIndex] = button.dataset.addSectionCardTag.split(":").map(Number);
+    const card = siteData.customSections[sectionIndex]?.cards?.[cardIndex];
+    if (card) {
+      card.tags = toTags(card.tags);
+      card.tags.push("新标签");
+    }
+    renderEditor();
+  } else if (button.matches("[data-delete-section-card-tag]")) {
+    syncFromEditor();
+    const [sectionIndex, cardIndex, tagIndex] = button.dataset.deleteSectionCardTag.split(":").map(Number);
+    const card = siteData.customSections[sectionIndex]?.cards?.[cardIndex];
+    if (card) {
+      card.tags = toTags(card.tags);
+      card.tags.splice(tagIndex, 1);
+    }
     renderEditor();
   } else if (button.matches("[data-add-section-image]")) {
     syncFromEditor();
@@ -2229,6 +2709,9 @@ function collectEditorData() {
         language: row.querySelector("[data-project-field='language']").value.trim(),
         gameType: row.querySelector("[data-project-field='gameType']").value.trim(),
         image: row.querySelector("[data-project-field='image']").value.trim(),
+        imageWidth: row.querySelector("[data-project-field='imageWidth']")?.value.trim() || "",
+        imageAspect: row.querySelector("[data-project-field='imageAspect']")?.value.trim() || "",
+        imageFit: row.querySelector("[data-project-field='imageFit']")?.value.trim() || "cover",
         description: row.querySelector("[data-project-field='description']").value.trim(),
         tags: Array.from(row.querySelectorAll("[data-project-tag-index]"))
           .map((tagRow) => tagRow.querySelector("[data-project-tag-field='value']").value.trim())
@@ -2262,8 +2745,34 @@ function collectEditorData() {
         kicker: row.querySelector("[data-section-field='kicker']").value.trim(),
         title: row.querySelector("[data-section-field='title']").value.trim(),
         body: toParagraphs(row.querySelector("[data-section-field='body']").value),
+        layout: row.querySelector("[data-section-field='layout']")?.value.trim() || "",
+        cards: [],
         images: []
       };
+
+      const sourceSectionIndex = Number(row.dataset.sectionIndex);
+      const existingCards = next.customSections[sourceSectionIndex]?.cards || [];
+      const updatedCards = [...existingCards];
+      Array.from(row.querySelectorAll("[data-section-card-index]")).forEach((cardRow, fallbackIndex) => {
+        const cardIndex = Number(cardRow.dataset.sectionCardIndex);
+        const targetIndex = Number.isFinite(cardIndex) ? cardIndex : fallbackIndex;
+        const title = cardRow.querySelector("[data-section-card-field='title']").value.trim() || "未命名卡片";
+        updatedCards[targetIndex] = {
+          order: toOrder(cardRow.querySelector("[data-section-card-field='order']")?.value, fallbackIndex + 1),
+          title,
+          slug: slugify(cardRow.querySelector("[data-section-card-field='slug']")?.value.trim() || title),
+          description: cardRow.querySelector("[data-section-card-field='description']").value.trim(),
+          details: cardRow.querySelector("[data-section-card-field='details']")?.value.trim() || "",
+          image: cardRow.querySelector("[data-section-card-field='image']").value.trim(),
+          imageWidth: cardRow.querySelector("[data-section-card-field='imageWidth']")?.value.trim() || "",
+          imageAspect: cardRow.querySelector("[data-section-card-field='imageAspect']")?.value.trim() || "",
+          imageFit: cardRow.querySelector("[data-section-card-field='imageFit']")?.value.trim() || "cover",
+          tags: Array.from(cardRow.querySelectorAll("[data-section-card-tag-index]"))
+            .map((tagRow) => tagRow.querySelector("[data-section-card-tag-field='value']").value.trim())
+            .filter(Boolean)
+        };
+      });
+      section.cards = updatedCards.filter(Boolean);
 
       section.images = Array.from(row.querySelectorAll("[data-section-image-index]")).map((imageRow) => ({
         src: imageRow.querySelector("[data-section-image-field='src']").value.trim(),
@@ -2388,6 +2897,7 @@ async function init() {
   setupTimelineTabs();
   setupTheme();
   setupDevMode();
+  setupPrototypeDetailRoutes();
   observeReveals();
   setupParticleCanvas();
 }
