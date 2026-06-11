@@ -238,6 +238,7 @@ let revealObserver;
 let scrollSpy;
 let currentEditorTab = "profile";
 let currentTimelineEditorGroup = "work";
+let inlineEditMode = false;
 
 function cloneData(data) {
   return JSON.parse(JSON.stringify(data));
@@ -459,6 +460,152 @@ function normalizeManualGame(game) {
   };
 }
 
+function createDetailBlock(type = "text", order = 1) {
+  if (type === "image") {
+    return {
+      type: "image",
+      order,
+      src: "assets/recovery-preview.png",
+      caption: "图片说明",
+      alt: "",
+      imageWidth: "",
+      imageAspect: "",
+      imageFit: "contain"
+    };
+  }
+
+  if (type === "document") {
+    return {
+      type: "document",
+      order,
+      title: "文档标题",
+      src: "assets/docs/example.pdf",
+      description: "这里写文档说明。",
+      fileName: "",
+      preview: "auto"
+    };
+  }
+
+  if (type === "video") {
+    return {
+      type: "video",
+      order,
+      title: "视频标题",
+      src: "",
+      description: "这里写视频说明。",
+      poster: "",
+      fileName: "",
+      controls: true,
+      loop: true,
+      muted: true,
+      autoplay: false
+    };
+  }
+  return {
+    type: "text",
+    order,
+    text: "在这里写详情文字。",
+    textStyle: "body"
+  };
+}
+
+function normalizeDetailBlock(block, index = 0) {
+  const source = block && typeof block === "object" ? block : {};
+  const type = source.type === "image" ? "image" : source.type === "document" ? "document" : source.type === "video" ? "video" : "text";
+
+  if (type === "image") {
+    return {
+      type,
+      order: orderValue(source, index),
+      src: String(source.src || source.image || "").trim(),
+      caption: String(source.caption || "").trim(),
+      alt: String(source.alt || "").trim(),
+      imageWidth: String(source.imageWidth || "").trim(),
+      imageAspect: String(source.imageAspect || "").trim(),
+      imageFit: String(source.imageFit || "contain").trim()
+    };
+  }
+
+  if (type === "document") {
+    return {
+      type,
+      order: orderValue(source, index),
+      title: String(source.title || source.name || "文档").trim(),
+      src: String(source.src || source.href || source.url || "").trim(),
+      description: String(source.description || source.caption || "").trim(),
+      fileName: String(source.fileName || source.filename || "").trim(),
+      preview: String(source.preview || "auto").trim()
+    };
+  }
+
+  if (type === "video") {
+    return {
+      type,
+      order: orderValue(source, index),
+      title: String(source.title || source.name || "视频").trim(),
+      src: String(source.src || source.href || source.url || source.video || "").trim(),
+      description: String(source.description || source.caption || "").trim(),
+      poster: String(source.poster || source.cover || "").trim(),
+      fileName: String(source.fileName || source.filename || "").trim(),
+      controls: source.controls !== false,
+      loop: source.loop !== false,
+      muted: source.muted !== false,
+      autoplay: Boolean(source.autoplay)
+    };
+  }
+  return {
+    type,
+    order: orderValue(source, index),
+    text: String(source.text || source.content || "").trim(),
+    textStyle: normalizeDetailTextStyle(source.textStyle || source.style || source.variant)
+  };
+}
+
+function normalizeDetailTextStyle(value) {
+  const style = String(value || "body").trim();
+  return ["body", "heading", "subheading", "callout", "code"].includes(style) ? style : "body";
+}
+
+function detailTextStyleLabel(value) {
+  const labels = {
+    body: "正文",
+    heading: "大标题",
+    subheading: "小标题",
+    callout: "重点提示",
+    code: "代码块"
+  };
+  return labels[normalizeDetailTextStyle(value)] || labels.body;
+}
+function detailBlockHasContent(block) {
+  if (block.type === "image") return Boolean(block.src);
+  if (block.type === "document") return Boolean(block.src || block.title || block.description);
+  if (block.type === "video") return Boolean(block.src || block.title || block.description);
+  return Boolean(block.text);
+}
+
+function normalizeDetailBlocks(blocks, fallbackText = "") {
+  const sourceBlocks = Array.isArray(blocks) ? blocks : [];
+  const normalized = sourceBlocks
+    .map((block, index) => normalizeDetailBlock(block, index))
+    .filter((block) => detailBlockHasContent(block));
+
+  if (normalized.length) return normalized;
+
+  const text = String(fallbackText || "").trim();
+  return text ? [normalizeDetailBlock({ type: "text", order: 1, text }, 0)] : [];
+}
+
+function getOrderedDetailBlocks(card) {
+  return sortByOrder(normalizeDetailBlocks(card?.detailBlocks, card?.details || card?.description).map((block, index) => ({ ...block, index })));
+}
+
+function detailBlocksToText(blocks) {
+  return normalizeDetailBlocks(blocks)
+    .filter((block) => block.type === "text" && block.text)
+    .map((block) => block.text)
+    .join("\n\n");
+}
+
 function customCardSlug(card, index = 0) {
   return slugify(card?.slug || card?.id || card?.title || `prototype-${index + 1}`);
 }
@@ -471,6 +618,7 @@ function normalizeCustomCard(card, index = 0) {
     slug: customCardSlug(source, index),
     description: String(source.description || source.text || "").trim(),
     details: String(source.details || source.detail || source.description || source.text || "").trim(),
+    detailBlocks: normalizeDetailBlocks(source.detailBlocks, source.details || source.detail || source.description || source.text),
     order: orderValue(source, index),
     image: String(source.image || source.src || "assets/recovery-preview.png").trim(),
     tags: toTags(source.tags || "Prototype"),
@@ -757,6 +905,44 @@ function isDevModeRequested() {
   }
 }
 
+function mergePublishedCustomSections(localSections, serverSections) {
+  if (!Array.isArray(localSections) || !Array.isArray(serverSections)) {
+    return Array.isArray(localSections) ? localSections : serverSections;
+  }
+
+  const serverSectionByKey = new Map(serverSections.map((section) => [section.id || section.title || section.navTitle, section]));
+  return localSections.map((localSection) => {
+    const serverSection = serverSectionByKey.get(localSection.id || localSection.title || localSection.navTitle);
+    if (!serverSection || !Array.isArray(localSection.cards) || !Array.isArray(serverSection.cards)) {
+      return localSection;
+    }
+
+    const serverCardsByKey = new Map(serverSection.cards.map((card) => [card.slug || card.title, card]));
+    return {
+      ...localSection,
+      cards: localSection.cards.map((localCard) => {
+        const serverCard = serverCardsByKey.get(localCard.slug || localCard.title);
+        if (!serverCard || !shouldPreferPublishedAnimatedAsset(localCard.image, serverCard.image)) {
+          return localCard;
+        }
+
+        return {
+          ...localCard,
+          image: serverCard.image,
+          imageAspect: serverCard.imageAspect || localCard.imageAspect,
+          imageFit: serverCard.imageFit || localCard.imageFit
+        };
+      })
+    };
+  });
+}
+
+function shouldPreferPublishedAnimatedAsset(localImage, serverImage) {
+  const local = String(localImage || "");
+  const server = String(serverImage || "").toLowerCase();
+  return local.startsWith("data:image/") && (server.endsWith(".gif") || server.endsWith(".webp"));
+}
+
 function mergePublishedAdditions(localData, serverData) {
   if (!serverData) return localData;
 
@@ -782,23 +968,33 @@ function mergePublishedAdditions(localData, serverData) {
     merged.steamLibrary = serverSteam;
   }
 
+  merged.customSections = mergePublishedCustomSections(localData.customSections, serverData.customSections);
+
   return merged;
 }
 
 async function loadInitialData() {
-  const localData = readLocalData();
   const serverData = await readServerData();
 
+  if (isDevModeRequested() && serverData) {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // In dev mode, content.json is the source of truth.
+    }
+    return normalizeData(serverData);
+  }
+
+  const localData = readLocalData();
   if (localData) {
     const mergedLocalData = mergePublishedAdditions(localData, serverData);
-    if (isDevModeRequested() || !serverData || isNewer(mergedLocalData, serverData)) {
+    if (!serverData || isNewer(mergedLocalData, serverData)) {
       return normalizeData(mergedLocalData);
     }
   }
 
   return normalizeData(serverData || localData || DEFAULT_SITE_DATA);
 }
-
 function readLocalData() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -838,6 +1034,30 @@ async function saveServerData(data) {
   }
 }
 
+
+async function uploadAssetFile(file, kind = "files") {
+  if (!file || !["http:", "https:"].includes(window.location.protocol)) return "";
+
+  try {
+    const dataUrl = await readFileAsDataUrl(file);
+    const response = await fetch("api/upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ kind, fileName: file.name, dataUrl })
+    });
+    const result = await response.json().catch(() => null);
+    return response.ok && result?.ok && result.path ? result.path : "";
+  } catch {
+    return "";
+  }
+}
+
+function assetKindForDetailType(type) {
+  if (type === "image") return "images";
+  if (type === "document") return "documents";
+  if (type === "video") return "videos";
+  return "files";
+}
 function setText(selector, value) {
   document.querySelectorAll(selector).forEach((node) => {
     node.textContent = value;
@@ -856,6 +1076,7 @@ function renderAll() {
   renderPrototypeDetailRoute();
   setupScrollSpy();
   observeReveals();
+  syncInlineEditControls();
 }
 
 function getSectionConfig(id) {
@@ -869,6 +1090,7 @@ function renderSectionMeta() {
     setText(`[data-section-title="${item.id}"]`, section.title || "");
     setText(`[data-section-copy="${item.id}"]`, section.copy || "");
   });
+  renderInlineMainToolbars();
 }
 
 function renderNav() {
@@ -1005,7 +1227,9 @@ function renderProfile() {
   setText("[data-current-year]", new Date().getFullYear());
 
   document.getElementById("about-copy").innerHTML = profile.about
-    .map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`)
+    .map(
+      (paragraph, index) => `<p data-inline-editable data-inline-profile-about="${index}">${escapeHtml(paragraph)}</p>`
+    )
     .join("");
 
   document.getElementById("profile-facts").innerHTML = profile.facts
@@ -1059,6 +1283,7 @@ function renderTimelineGroup(type, items, compact = false) {
           <h3>${escapeHtml(title)}</h3>
           <span class="timeline-group-count">${items.length}</span>
         </div>
+        ${renderInlineTimelineGroupToolbar(type)}
       </div>
       <div class="timeline-list${items.length ? "" : " is-empty"}">
         ${
@@ -1075,12 +1300,15 @@ function renderTimelineItem(item, compact = false) {
   const featured = !compact && isFeatured(item, item.index);
 
   return `
-    <article class="timeline-item reveal${featured ? " is-featured" : ""}${isCurrentTimelineItem(item) ? " is-current" : ""}">
-      <div class="timeline-date">${escapeHtml(item.date)}</div>
+    <article class="timeline-item reveal${featured ? " is-featured" : ""}${isCurrentTimelineItem(item) ? " is-current" : ""}" data-inline-timeline-item="${item.index}">
+      ${renderInlineTimelineItemToolbar(item.index)}
+      <div class="timeline-date" data-inline-editable data-inline-timeline-field="date" data-timeline-index="${item.index}">${escapeHtml(item.date)}</div>
       <div class="timeline-card">
-        <h3>${escapeHtml(item.title)}</h3>
-        ${renderTimelineDescription(item.description, { numbered: !compact, plain: compact })}
+        <h3 data-inline-editable data-inline-timeline-field="title" data-timeline-index="${item.index}">${escapeHtml(item.title)}</h3>
+        <div class="inline-rendered-block">${renderTimelineDescription(item.description, { numbered: !compact, plain: compact })}</div>
+        <textarea class="inline-card-textarea" data-inline-timeline-field="description" data-timeline-index="${item.index}">${escapeHtml(item.description || "")}</textarea>
         <div class="tag-row">${toTags(item.tags).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}</div>
+        <input class="inline-tags-input" value="${attr(toTags(item.tags).join(", "))}" data-inline-timeline-field="tags" data-timeline-index="${item.index}" aria-label="经历标签" />
       </div>
     </article>
   `;
@@ -1131,22 +1359,24 @@ function renderProjects(active = "all") {
   document.getElementById("project-grid").innerHTML = projects
     .map(
       (project) => `
-        <article class="project-card reveal${isFeatured(project, project.index) ? " is-featured" : ""}">
+        <article class="project-card reveal${isFeatured(project, project.index) ? " is-featured" : ""}" data-inline-project-card="${project.index}">
+          ${renderInlineProjectToolbar(project.index)}
           <div class="project-media"${renderImageStyle(project)}>
             <img src="${attr(project.image)}" alt="${attr(project.title)}" loading="lazy" />
           </div>
           <div class="project-body">
             <div class="project-meta">
-              <span>${escapeHtml(project.year)}</span>
+              <span data-inline-editable data-inline-project-field="year" data-project-index="${project.index}">${escapeHtml(project.year)}</span>
               <span>排序 ${escapeHtml(orderValue(project, project.index))}</span>
             </div>
-            <h3>${escapeHtml(project.title)}</h3>
-            <p>${escapeHtml(project.description)}</p>
+            <h3 data-inline-editable data-inline-project-field="title" data-project-index="${project.index}">${escapeHtml(project.title)}</h3>
+            <p class="inline-rendered-block">${escapeHtml(project.description)}</p>
+            <textarea class="inline-card-textarea" data-inline-project-field="description" data-project-index="${project.index}">${escapeHtml(project.description || "")}</textarea>
             <div class="project-keywords">
-              ${renderProjectKeyword("引擎", project.engine, true)}
-              ${renderProjectKeyword("职责", project.responsibility || project.role, true)}
-              ${renderProjectKeyword("语言", project.language, false)}
-              ${renderProjectKeyword("类型", project.gameType, false)}
+              ${renderProjectKeyword("引擎", project.engine, true, project.index, "engine")}
+              ${renderProjectKeyword("职责", project.responsibility || project.role, true, project.index, "responsibility")}
+              ${renderProjectKeyword("语言", project.language, false, project.index, "language")}
+              ${renderProjectKeyword("类型", project.gameType, false, project.index, "gameType")}
             </div>
             ${renderProjectTags(project)}
           </div>
@@ -1156,20 +1386,25 @@ function renderProjects(active = "all") {
     .join("");
 }
 
-function renderProjectKeyword(label, value, primary = false) {
+function renderProjectKeyword(label, value, primary = false, projectIndex = -1, field = "") {
   if (!String(value || "").trim()) return "";
+  const inlineAttrs = projectIndex >= 0 && field
+    ? ` data-inline-editable data-inline-project-field="${attr(field)}" data-project-index="${projectIndex}"`
+    : "";
   return `
     <div class="project-keyword${primary ? " is-primary" : ""}">
       <span class="project-keyword-label">${escapeHtml(label)}</span>
-      <strong>${escapeHtml(value)}</strong>
+      <strong${inlineAttrs}>${escapeHtml(value)}</strong>
     </div>
   `;
 }
 
 function renderProjectTags(project) {
   const tags = toTags(project.tags);
-  if (!tags.length) return "";
-  return `<div class="tag-row project-extra-tags">${tags.map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}</div>`;
+  return `
+    ${tags.length ? `<div class="tag-row project-extra-tags">${tags.map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}</div>` : ""}
+    <input class="inline-tags-input" value="${attr(tags.join(", "))}" data-inline-project-field="tags" data-project-index="${project.index}" aria-label="作品标签" />
+  `;
 }
 
 function renderSteamLibrary() {
@@ -1322,12 +1557,13 @@ function renderCustomSection(section, index) {
 
   return `
     <section class="section-band custom-section" id="${attr(section.id)}">
+      ${renderInlineSectionToolbar(index, section)}
       <div class="section-inner custom-section-grid">
         <div>
           <p class="section-kicker">${escapeHtml(section.kicker || "Custom Section")}</p>
           <h2>${escapeHtml(section.title || section.navTitle || "新页签")}</h2>
           <div class="copy-stack">
-            ${toParagraphs(section.body).map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join("")}
+            ${toParagraphs(section.body).map((paragraph, paragraphIndex) => `<p data-inline-editable data-inline-section-body data-section-index="${index}" data-body-index="${paragraphIndex}">${escapeHtml(paragraph)}</p>`).join("")}
           </div>
         </div>
         ${renderSectionImages(section.images || [], index)}
@@ -1336,7 +1572,7 @@ function renderCustomSection(section, index) {
   `;
 }
 
-function renderCustomCardSection(section) {
+function renderCustomCardSection(section, index = 0) {
   const cards = getOrderedCustomCards(section);
   return `
     <section class="section-band custom-section" id="${attr(section.id)}">
@@ -1346,20 +1582,22 @@ function renderCustomCardSection(section) {
             <p class="section-kicker">${escapeHtml(section.kicker || "Custom Section")}</p>
             <h2>${escapeHtml(section.title || section.navTitle || "新页签")}</h2>
           </div>
-          <p>${escapeHtml(toParagraphs(section.body)[0] || "")}</p>
+          <p data-inline-editable data-inline-section-body data-section-index="${index}" data-body-index="0">${escapeHtml(toParagraphs(section.body)[0] || "")}</p>
+          ${renderInlineSectionToolbar(index, section)}
         </div>
         <div class="project-grid custom-card-grid">
-          ${cards.length ? cards.map((card) => renderCustomCard(card, section)).join("") : `<div class="platform-empty">还没有卡片。打开开发者模式的“标题页签”添加图片、标题、文本和标签。</div>`}
+          ${cards.length ? cards.map((card) => renderCustomCard(card, section, index)).join("") : `<div class="platform-empty">还没有卡片。打开站内编辑模式后，可以直接添加卡片。</div>`}
         </div>
       </div>
     </section>
   `;
 }
 
-function renderCustomCard(card, section) {
+function renderCustomCard(card, section, sectionIndex = -1) {
   const image = card.image || "assets/recovery-preview.png";
+  const cardIndex = card.index ?? 0;
   const cardMarkup = `
-    <article class="project-card custom-card reveal">
+    <article class="project-card custom-card reveal" data-inline-custom-card="${sectionIndex}:${cardIndex}">
       <div class="project-media"${renderImageStyle(card)}>
         <img src="${attr(image)}" alt="${attr(card.title)}" loading="lazy" />
       </div>
@@ -1368,21 +1606,29 @@ function renderCustomCard(card, section) {
           <span>排序 ${escapeHtml(orderValue(card, card.index))}</span>
           ${isPrototypeSection(section) ? "<span>查看详情</span>" : ""}
         </div>
-        <h3>${escapeHtml(card.title)}</h3>
-        ${renderCustomCardDescription(card.description)}
+        <h3 data-inline-editable data-inline-custom-card-field="title" data-section-index="${sectionIndex}" data-card-index="${cardIndex}">${escapeHtml(card.title)}</h3>
+        <div class="inline-rendered-block">${renderCustomCardDescription(card.description)}</div>
+        <textarea class="inline-card-textarea" data-inline-custom-card-field="description" data-section-index="${sectionIndex}" data-card-index="${cardIndex}">${escapeHtml(card.description || "")}</textarea>
         <div class="tag-row project-extra-tags">
           ${toTags(card.tags).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}
         </div>
+        <input class="inline-tags-input" value="${attr(toTags(card.tags).join(", "))}" data-inline-custom-card-field="tags" data-section-index="${sectionIndex}" data-card-index="${cardIndex}" aria-label="卡片标签" />
       </div>
     </article>
   `;
 
-  if (!isPrototypeSection(section)) return cardMarkup;
+  const toolbar = renderInlineCardToolbar(sectionIndex, cardIndex);
+  if (!isPrototypeSection(section)) {
+    return `<div class="custom-card-shell">${toolbar}${cardMarkup}</div>`;
+  }
 
   return `
-    <a class="prototype-card-link" href="${attr(prototypeCardHref(card))}" aria-label="查看 ${attr(card.title)} 详情">
-      ${cardMarkup}
-    </a>
+    <div class="custom-card-shell prototype-card-shell">
+      ${toolbar}
+      <a class="prototype-card-link" href="${attr(prototypeCardHref(card))}" aria-label="查看 ${attr(card.title)} 详情">
+        ${cardMarkup}
+      </a>
+    </div>
   `;
 }
 
@@ -1455,20 +1701,36 @@ function renderPrototypeDetailRoute(options = {}) {
   }
 
   document.body.dataset.route = "prototype-detail";
-  host.innerHTML = renderPrototypeDetailPage(section, card);
-  observeReveals();
+
+  try {
+    host.innerHTML = renderPrototypeDetailPage(section, card);
+    observeReveals();
+  } catch (error) {
+    console.error("Prototype detail render failed", error);
+    host.innerHTML = `
+      <section class="section-band prototype-detail-page">
+        <div class="section-inner prototype-detail-inner">
+          <a class="detail-back-link" href="#${attr(section.id || "prototype")}">返回原型设计</a>
+          <p class="prototype-detail-empty">详情页渲染失败。请删除或重新上传刚添加的资源模块。</p>
+        </div>
+      </section>
+    `;
+  }
 
   if (options.scroll) {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 }
-
 function renderPrototypeDetailPage(section, card) {
   const image = card.image || "assets/recovery-preview.png";
+  const heroImageStyle = renderImageStyle({ imageAspect: "16 / 9", imageFit: "cover" });
+  const sectionIndex = siteData.customSections.findIndex((item) => item.id === section.id);
+  const cardIndex = card.index ?? 0;
   return `
     <section class="section-band prototype-detail-page">
       <div class="section-inner prototype-detail-inner">
         <a class="detail-back-link" href="#${attr(section.id || "prototype")}">返回原型设计</a>
+        ${renderInlineDetailPageToolbar(sectionIndex, cardIndex)}
         <div class="prototype-detail-hero reveal">
           <div class="prototype-detail-copy">
             <p class="section-kicker">${escapeHtml(section.kicker || "Prototype")}</p>
@@ -1478,36 +1740,199 @@ function renderPrototypeDetailPage(section, card) {
               ${toTags(card.tags).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}
             </div>
           </div>
-          <div class="prototype-detail-media project-media"${renderImageStyle(card)}>
+          <div class="prototype-detail-media project-media"${heroImageStyle}>
             <img src="${attr(image)}" alt="${attr(card.title)}" loading="lazy" />
           </div>
         </div>
         <div class="prototype-detail-content reveal">
-          ${renderPrototypeDetailContent(card)}
+          ${renderPrototypeDetailContent(card, sectionIndex, cardIndex)}
         </div>
       </div>
     </section>
   `;
 }
 
-function renderPrototypeDetailContent(card) {
-  const detailText = String(card.details || card.description || "").trim();
-  if (!detailText) {
-    return `<p class="prototype-detail-empty">这里还没有详情内容。打开开发者模式，在这张原型卡片里编辑“详情页内容”。</p>`;
+function renderPrototypeDetailContent(card, sectionIndex = -1, cardIndex = -1) {
+  const blocks = getOrderedDetailBlocks(card);
+  if (!blocks.length) {
+    return `<p class="prototype-detail-empty">这里还没有详情内容。打开开发者模式，在这张原型卡片里添加文字或图片模块。</p>`;
   }
 
-  return toParagraphs(detailText)
-    .map((block) => `<section class="prototype-detail-block">${renderPrototypeDetailBlock(block)}</section>`)
-    .join("");
+  return blocks.map((block) => {
+    try {
+      return renderPrototypeDetailModule(block, card, sectionIndex, cardIndex);
+    } catch (error) {
+      console.error("Prototype detail block render failed", block, error);
+      return renderPrototypeDetailErrorBlock(block, sectionIndex, cardIndex);
+    }
+  }).join("");
 }
 
-function renderPrototypeDetailBlock(block) {
-  const lines = String(block || "")
+function renderPrototypeDetailErrorBlock(block, sectionIndex = -1, cardIndex = -1) {
+  const blockIndex = Number.isInteger(block?.index) ? block.index : -1;
+  const type = String(block?.type || "模块");
+  return `
+    <section class="prototype-detail-block prototype-detail-text-block" data-inline-detail-block="${blockIndex}">
+      ${renderInlineDetailBlockToolbar(sectionIndex, cardIndex, blockIndex, type)}
+      <div class="prototype-detail-rendered">
+        <p>${escapeHtml(type)} 渲染失败。这个模块已保留，可以删除后重新上传。</p>
+      </div>
+    </section>
+  `;
+}
+function renderPrototypeDetailModule(block, card, sectionIndex = -1, cardIndex = -1) {
+  if (block.type === "image") {
+    const image = block.src || card.image || "assets/recovery-preview.png";
+    const caption = String(block.caption || "").trim();
+    const alt = block.alt || caption || card.title;
+    return `
+      <figure class="prototype-detail-block prototype-detail-image-block" data-inline-detail-block="${block.index}">
+        ${renderInlineDetailBlockToolbar(sectionIndex, cardIndex, block.index, block.type)}
+        <a class="prototype-detail-image project-media" href="${attr(image)}" target="_blank" rel="noopener"${renderImageStyle({ imageWidth: block.imageWidth })}>
+          <img src="${attr(image)}" alt="${attr(alt)}" loading="lazy" />
+        </a>
+        <figcaption>
+          <span data-inline-editable data-inline-detail-caption="${sectionIndex}:${cardIndex}:${block.index}">${escapeHtml(caption || "图片说明")}</span>
+        </figcaption>
+      </figure>
+    `;
+  }
+
+  if (block.type === "document") {
+    return renderPrototypeDetailDocumentModule(block, sectionIndex, cardIndex);
+  }
+
+  if (block.type === "video") {
+    return renderPrototypeDetailVideoModule(block, sectionIndex, cardIndex);
+  }
+
+  return `
+    <section class="prototype-detail-block prototype-detail-text-block" data-inline-detail-block="${block.index}">
+      ${renderInlineDetailBlockToolbar(sectionIndex, cardIndex, block.index, block.type)}
+      <div class="prototype-detail-rendered prototype-detail-text-${attr(normalizeDetailTextStyle(block.textStyle))}">${renderPrototypeDetailBlock(block.text, block.textStyle)}</div>
+      <textarea class="inline-detail-textarea" data-inline-detail-text="${sectionIndex}:${cardIndex}:${block.index}">${escapeHtml(block.text || "")}</textarea>
+    </section>
+  `;
+}
+
+function renderPrototypeDetailDocumentModule(block, sectionIndex = -1, cardIndex = -1) {
+  const source = String(block.src || "").trim();
+  const title = block.title || documentDisplayName(source) || "文档";
+  const description = String(block.description || "").trim();
+  const canPreview = source && isPdfDocument(source) && block.preview !== "link";
+  return `
+    <article class="prototype-detail-block prototype-detail-document-block" data-inline-detail-block="${block.index}">
+      ${renderInlineDetailBlockToolbar(sectionIndex, cardIndex, block.index, block.type)}
+      <div class="prototype-document-head">
+        <div>
+          <h2>${escapeHtml(title)}</h2>
+          ${description ? `<p>${escapeHtml(description)}</p>` : ""}
+        </div>
+        <div class="prototype-document-actions">
+          ${source ? `<a href="${attr(source)}" target="_blank" rel="noopener">打开文档</a>` : ""}
+          ${source ? `<a href="${attr(source)}" download="${attr(block.fileName || title)}">下载</a>` : ""}
+        </div>
+      </div>
+      ${canPreview ? `
+        <div class="prototype-document-preview">
+          <iframe src="${attr(source)}" title="${attr(title)}" loading="lazy"></iframe>
+        </div>
+      ` : `
+        <div class="prototype-document-placeholder">
+          <strong>${source ? "当前格式适合打开或下载查看" : "还没有填写文档地址"}</strong>
+          <span>${source ? "PDF 会自动显示网页内预览；Word、PPT、Excel 通常需要打开原文件。" : "在开发者模式里填 assets/docs/example.pdf、公开链接，或选择本地文档。"}</span>
+        </div>
+      `}
+    </article>
+  `;
+}
+
+function isPdfDocument(source) {
+  const text = String(source || "").toLowerCase();
+  return text.startsWith("data:application/pdf") || text.includes(".pdf") || text.includes("application/pdf");
+}
+
+function documentDisplayName(source) {
+  const text = String(source || "").split(/[?#]/)[0];
+  const name = text.split(/[\\/]/).pop();
+  return name ? decodeURIComponent(name) : "";
+}
+
+function renderPrototypeDetailVideoModule(block, sectionIndex = -1, cardIndex = -1) {
+  const source = String(block.src || "").trim();
+  const title = block.title || videoDisplayName(source) || "视频";
+  const description = String(block.description || "").trim();
+  const poster = String(block.poster || "").trim();
+  const controls = block.controls !== false;
+  const loop = block.loop !== false;
+  const muted = block.muted !== false;
+  const autoplay = Boolean(block.autoplay);
+  return `
+    <article class="prototype-detail-block prototype-detail-video-block" data-inline-detail-block="${block.index}">
+      ${renderInlineDetailBlockToolbar(sectionIndex, cardIndex, block.index, block.type)}
+      <div class="prototype-video-head">
+        <div>
+          <h2>${escapeHtml(title)}</h2>
+          ${description ? `<p>${escapeHtml(description)}</p>` : ""}
+        </div>
+      </div>
+      ${source ? `
+        <video class="prototype-video-player"${booleanVideoAttribute(controls, "controls")}${booleanVideoAttribute(loop, "loop")}${booleanVideoAttribute(muted, "muted")}${booleanVideoAttribute(autoplay, "autoplay")} playsinline preload="metadata"${poster ? ` poster="${attr(poster)}"` : ""}>
+          <source src="${attr(source)}" type="${attr(videoMimeType(source))}" />
+          你的浏览器不支持视频播放。
+        </video>
+      ` : `
+        <div class="prototype-video-placeholder">
+          <strong>还没有填写视频路径</strong>
+          <span>把 MP4 放进 assets/prototype，再在高级字段里填写相对路径。</span>
+        </div>
+      `}
+    </article>
+  `;
+}
+
+function booleanVideoAttribute(condition, name) {
+  return condition ? ` ${name}` : "";
+}
+
+function videoMimeType(source) {
+  const text = String(source || "").split(/[?#]/)[0].toLowerCase();
+  if (text.endsWith(".webm") || text.startsWith("data:video/webm")) return "video/webm";
+  if (text.endsWith(".mov") || text.startsWith("data:video/quicktime")) return "video/quicktime";
+  return "video/mp4";
+}
+
+function videoDisplayName(source) {
+  const text = String(source || "").split(/[?#]/)[0];
+  const name = text.split(/[\\/]/).pop();
+  return name ? decodeURIComponent(name) : "";
+}
+function renderPrototypeDetailBlock(block, textStyle = "body") {
+  const style = normalizeDetailTextStyle(textStyle);
+  const rawText = String(block || "").trim();
+  const lines = rawText
     .split(/\n+/g)
     .map((line) => line.trim())
     .filter(Boolean);
 
   if (!lines.length) return "";
+
+  if (style === "heading") {
+    return `<h2 class="prototype-text-heading">${escapeHtml(lines.join(" "))}</h2>`;
+  }
+
+  if (style === "subheading") {
+    return `<h3 class="prototype-text-subheading">${escapeHtml(lines.join(" "))}</h3>`;
+  }
+
+  if (style === "callout") {
+    return `<div class="prototype-text-callout">${lines.map((line) => `<p>${escapeHtml(line)}</p>`).join("")}</div>`;
+  }
+
+  if (style === "code") {
+    return `<pre class="prototype-text-code"><code>${escapeHtml(rawText)}</code></pre>`;
+  }
+
   if (lines.length === 1) return `<p>${escapeHtml(lines[0])}</p>`;
 
   const firstIsPoint = isListPoint(lines[0]);
@@ -1520,7 +1945,6 @@ function renderPrototypeDetailBlock(block) {
     </ol>
   `;
 }
-
 function setupPrototypeDetailRoutes() {
   window.addEventListener("hashchange", () => {
     const wasDetailRoute = document.body.dataset.route === "prototype-detail";
@@ -1535,7 +1959,7 @@ function setupPrototypeDetailRoutes() {
   });
 }
 
-function renderSectionImages(images) {
+function renderSectionImages(images, sectionIndex = -1) {
   if (!images.length) {
     return "";
   }
@@ -1544,10 +1968,11 @@ function renderSectionImages(images) {
     <div class="section-media-grid">
       ${images
         .map(
-          (image) => `
-            <figure class="section-media-item reveal">
+          (image, imageIndex) => `
+            <figure class="section-media-item reveal" data-inline-section-image="${sectionIndex}:${imageIndex}">
+              ${renderInlineSectionImageToolbar(sectionIndex, imageIndex)}
               <img src="${attr(image.src)}" alt="${attr(image.alt || image.caption || "section image")}" loading="lazy" />
-              ${image.caption ? `<figcaption>${escapeHtml(image.caption)}</figcaption>` : ""}
+              ${image.caption ? `<figcaption data-inline-editable data-inline-section-image-caption data-section-index="${sectionIndex}" data-image-index="${imageIndex}">${escapeHtml(image.caption)}</figcaption>` : ""}
             </figure>
           `
         )
@@ -1794,6 +2219,546 @@ function setupParticleCanvas() {
   };
 }
 
+function renderInlineMainToolbars() {
+  const targets = [
+    ["about", document.querySelector("[data-section-title='about']")?.closest(".about-copy-column")],
+    ["experience", document.querySelector("[data-section-title='experience']")?.closest(".section-heading")],
+    ["projects", document.querySelector("[data-section-title='projects']")?.closest(".section-heading")],
+    ["steam", document.querySelector("[data-section-title='steam']")?.closest(".section-heading")]
+  ];
+  targets.forEach(([sectionId, target]) => {
+    if (!target || target.querySelector(`.inline-main-toolbar[data-inline-main-toolbar="${sectionId}"]`)) return;
+    target.insertAdjacentHTML("beforeend", renderInlineMainToolbar(sectionId));
+  });
+}
+
+function renderInlineMainToolbar(sectionId) {
+  const controls = {
+    about: `<button type="button" data-inline-action="open-panel" data-editor-tab-target="profile">高级字段</button>`,
+    experience: `<button type="button" data-inline-action="add-timeline" data-timeline-type="work">添加工作</button><button type="button" data-inline-action="add-timeline" data-timeline-type="education">添加教育</button><button type="button" data-inline-action="open-panel" data-editor-tab-target="timeline">高级字段</button>`,
+    projects: `<button type="button" data-inline-action="add-project">添加作品</button><button type="button" data-inline-action="open-panel" data-editor-tab-target="projects">高级字段</button>`,
+    steam: `<button type="button" data-inline-action="open-panel" data-editor-tab-target="games">高级字段</button>`
+  };
+  return `<div class="inline-edit-toolbar inline-main-toolbar" data-inline-toolbar data-inline-main-toolbar="${attr(sectionId)}">${controls[sectionId] || ""}</div>`;
+}
+
+function renderInlineTimelineGroupToolbar(type) {
+  return `
+    <div class="inline-edit-toolbar inline-timeline-group-toolbar" data-inline-toolbar>
+      <button type="button" data-inline-action="add-timeline" data-timeline-type="${attr(type)}">添加${type === "work" ? "工作" : "教育"}</button>
+    </div>
+  `;
+}
+
+function renderInlineTimelineItemToolbar(timelineIndex) {
+  return `
+    <div class="inline-edit-toolbar inline-item-toolbar inline-timeline-item-toolbar" data-inline-toolbar>
+      <button type="button" data-inline-action="move-timeline-up" data-timeline-index="${timelineIndex}">上移</button>
+      <button type="button" data-inline-action="move-timeline-down" data-timeline-index="${timelineIndex}">下移</button>
+      <button type="button" data-inline-action="delete-timeline" data-timeline-index="${timelineIndex}">删除</button>
+    </div>
+  `;
+}
+
+function renderInlineProjectToolbar(projectIndex) {
+  return `
+    <div class="inline-edit-toolbar inline-item-toolbar inline-project-toolbar" data-inline-toolbar>
+      <button type="button" data-inline-action="move-project-up" data-project-index="${projectIndex}">上移</button>
+      <button type="button" data-inline-action="move-project-down" data-project-index="${projectIndex}">下移</button>
+      <label>换图<input type="file" accept="image/*" data-inline-project-image-file data-project-index="${projectIndex}" /></label>
+      <button type="button" data-inline-action="delete-project" data-project-index="${projectIndex}">删除</button>
+    </div>
+  `;
+}
+
+function renderInlineSectionToolbar(sectionIndex, section) {
+  const isCards = section.layout === "cards" || section.cards?.length;
+  return `
+    <div class="inline-edit-toolbar inline-section-toolbar" data-inline-toolbar>
+      ${isCards ? `<button type="button" data-inline-action="add-card" data-section-index="${sectionIndex}">添加卡片</button>` : ""}
+      ${!isCards ? `<button type="button" data-inline-action="add-section-text" data-section-index="${sectionIndex}">添加文字</button>` : ""}
+      ${!isCards ? `<button type="button" data-inline-action="add-section-image" data-section-index="${sectionIndex}">添加图片</button>` : ""}
+      <button type="button" data-inline-action="open-panel" data-editor-tab-target="sections">高级字段</button>
+    </div>
+  `;
+}
+
+function renderInlineSectionImageToolbar(sectionIndex, imageIndex) {
+  if (sectionIndex < 0 || imageIndex < 0) return "";
+  return `
+    <div class="inline-edit-toolbar inline-item-toolbar inline-section-image-toolbar" data-inline-toolbar>
+      <label>换图<input type="file" accept="image/*" data-inline-section-image-file data-section-index="${sectionIndex}" data-image-index="${imageIndex}" /></label>
+      <button type="button" data-inline-action="delete-section-image" data-section-index="${sectionIndex}" data-image-index="${imageIndex}">删除</button>
+    </div>
+  `;
+}
+
+function renderInlineCardToolbar(sectionIndex, cardIndex) {
+  if (sectionIndex < 0) return "";
+  return `
+    <div class="inline-edit-toolbar inline-card-toolbar" data-inline-toolbar>
+      <button type="button" data-inline-action="move-card-up" data-section-index="${sectionIndex}" data-card-index="${cardIndex}">上移</button>
+      <button type="button" data-inline-action="move-card-down" data-section-index="${sectionIndex}" data-card-index="${cardIndex}">下移</button>
+      <label>换图<input type="file" accept="image/*" data-inline-custom-card-image-file data-section-index="${sectionIndex}" data-card-index="${cardIndex}" /></label>
+      <button type="button" data-inline-action="delete-card" data-section-index="${sectionIndex}" data-card-index="${cardIndex}">删除</button>
+    </div>
+  `;
+}
+
+function renderInlineDetailPageToolbar(sectionIndex, cardIndex) {
+  if (sectionIndex < 0 || cardIndex < 0) return "";
+  return `
+    <div class="inline-edit-toolbar inline-detail-page-toolbar" data-inline-toolbar>
+      <button type="button" data-inline-action="add-detail-text" data-section-index="${sectionIndex}" data-card-index="${cardIndex}">添加文字</button>
+      <button type="button" data-inline-action="add-detail-image" data-section-index="${sectionIndex}" data-card-index="${cardIndex}">添加图片</button>
+      <button type="button" data-inline-action="add-detail-document" data-section-index="${sectionIndex}" data-card-index="${cardIndex}">添加文档</button>
+      <button type="button" data-inline-action="add-detail-video" data-section-index="${sectionIndex}" data-card-index="${cardIndex}">添加视频</button>
+      <button type="button" data-inline-action="open-panel" data-editor-tab-target="sections">高级字段</button>
+    </div>
+  `;
+}
+function renderInlineDetailBlockToolbar(sectionIndex, cardIndex, blockIndex, type) {
+  if (sectionIndex < 0 || cardIndex < 0 || blockIndex < 0) return "";
+  const textStyleControls = type === "text" ? renderInlineTextStyleControls(sectionIndex, cardIndex, blockIndex) : "";
+  return `
+    <div class="inline-edit-toolbar inline-block-toolbar" data-inline-toolbar>
+      <button type="button" data-inline-action="move-detail-up" data-section-index="${sectionIndex}" data-card-index="${cardIndex}" data-block-index="${blockIndex}">上移</button>
+      <button type="button" data-inline-action="move-detail-down" data-section-index="${sectionIndex}" data-card-index="${cardIndex}" data-block-index="${blockIndex}">下移</button>
+      ${textStyleControls}
+      ${type === "image" ? `<label>换图<input type="file" accept="image/*" data-inline-detail-image-file data-section-index="${sectionIndex}" data-card-index="${cardIndex}" data-block-index="${blockIndex}" /></label>` : ""}
+      ${type === "document" ? `<label>换文档<input type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" data-inline-detail-document-file data-section-index="${sectionIndex}" data-card-index="${cardIndex}" data-block-index="${blockIndex}" /></label>` : ""}
+      ${type === "video" ? `<label>换视频<input type="file" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov" data-inline-detail-video-file data-section-index="${sectionIndex}" data-card-index="${cardIndex}" data-block-index="${blockIndex}" /></label>` : ""}
+      <button type="button" data-inline-action="delete-detail" data-section-index="${sectionIndex}" data-card-index="${cardIndex}" data-block-index="${blockIndex}">删除</button>
+    </div>
+  `;
+}
+
+function renderInlineTextStyleControls(sectionIndex, cardIndex, blockIndex) {
+  const card = getInlineCard(sectionIndex, cardIndex);
+  const block = card?.detailBlocks?.[blockIndex];
+  const currentStyle = normalizeDetailTextStyle(block?.textStyle);
+  const options = [
+    ["body", "正文"],
+    ["heading", "大标题"],
+    ["subheading", "小标题"],
+    ["callout", "重点"],
+    ["code", "代码"]
+  ];
+
+  return `
+    <span class="inline-text-style-group" aria-label="文字样式">
+      ${options.map(([value, label]) => `
+        <button type="button" class="inline-style-button${value === currentStyle ? " is-active" : ""}" data-inline-action="set-detail-text-style" data-section-index="${sectionIndex}" data-card-index="${cardIndex}" data-block-index="${blockIndex}" data-text-style="${value}">${label}</button>
+      `).join("")}
+    </span>
+  `;
+}
+function setInlineEditMode(enabled) {
+  const nextMode = Boolean(enabled);
+  const shouldCommitInlineEdits = inlineEditMode && !nextMode;
+
+  if (shouldCommitInlineEdits) {
+    syncInlineEditsFromDom();
+  }
+
+  inlineEditMode = nextMode;
+
+  if (shouldCommitInlineEdits) {
+    renderAll();
+    renderEditor();
+  } else {
+    document.body.dataset.inlineEdit = inlineEditMode ? "1" : "0";
+    syncInlineEditControls();
+  }
+
+  showToast(inlineEditMode ? "站内编辑已开启" : "站内编辑已关闭");
+}
+
+function syncInlineEditControls() {
+  document.body.dataset.inlineEdit = inlineEditMode ? "1" : "0";
+  const label = document.querySelector("[data-inline-edit-label]");
+  if (label) label.textContent = inlineEditMode ? "退出站内编辑" : "站内编辑";
+  document.querySelectorAll("[data-inline-editable]").forEach((element) => {
+    element.contentEditable = inlineEditMode ? "true" : "false";
+    element.spellcheck = false;
+  });
+}
+
+function getInlineCard(sectionIndex, cardIndex) {
+  return siteData.customSections[sectionIndex]?.cards?.[cardIndex] || null;
+}
+
+function moveOrderedItem(items, itemIndex, direction) {
+  if (!Array.isArray(items)) return false;
+  const ordered = sortByOrder(items.map((item, index) => ({ ...item, index })));
+  const currentPosition = ordered.findIndex((item) => item.index === itemIndex);
+  const targetPosition = currentPosition + direction;
+  if (currentPosition < 0 || targetPosition < 0 || targetPosition >= ordered.length) return false;
+
+  const otherIndex = ordered[targetPosition].index;
+  const currentOrder = orderValue(items[itemIndex], itemIndex);
+  const otherOrder = orderValue(items[otherIndex], otherIndex);
+  items[itemIndex].order = otherOrder;
+  items[otherIndex].order = currentOrder;
+  return true;
+}
+
+function refreshInlineEdit() {
+  renderAll();
+  renderEditor();
+}
+
+function handleInlineEditClick(event) {
+  const control = event.target.closest("[data-inline-action]");
+  if (!control) return;
+  event.preventDefault();
+  event.stopPropagation();
+
+  const action = control.dataset.inlineAction;
+  const sectionIndex = Number(control.dataset.sectionIndex);
+  const cardIndex = Number(control.dataset.cardIndex);
+  const blockIndex = Number(control.dataset.blockIndex);
+
+  if (action === "open-panel") {
+    currentEditorTab = control.dataset.editorTabTarget || "sections";
+    renderEditor();
+    openEditor();
+    return;
+  }
+
+  if (action === "add-project") {
+    addInlineProject();
+  } else if (action === "move-project-up") {
+    moveOrderedItem(siteData.projects, Number(control.dataset.projectIndex), -1);
+  } else if (action === "move-project-down") {
+    moveOrderedItem(siteData.projects, Number(control.dataset.projectIndex), 1);
+  } else if (action === "delete-project") {
+    siteData.projects.splice(Number(control.dataset.projectIndex), 1);
+  } else if (action === "add-timeline") {
+    addInlineTimelineItem(control.dataset.timelineType);
+  } else if (action === "move-timeline-up") {
+    moveTimelineWithinGroup(Number(control.dataset.timelineIndex), -1);
+  } else if (action === "move-timeline-down") {
+    moveTimelineWithinGroup(Number(control.dataset.timelineIndex), 1);
+  } else if (action === "delete-timeline") {
+    siteData.timeline.splice(Number(control.dataset.timelineIndex), 1);
+  } else if (action === "add-card") {
+    addInlineCard(sectionIndex);
+  } else if (action === "add-section-text") {
+    addInlineSectionText(sectionIndex);
+  } else if (action === "add-section-image") {
+    addInlineSectionImage(sectionIndex);
+  } else if (action === "move-card-up") {
+    moveOrderedItem(siteData.customSections[sectionIndex]?.cards, cardIndex, -1);
+  } else if (action === "move-card-down") {
+    moveOrderedItem(siteData.customSections[sectionIndex]?.cards, cardIndex, 1);
+  } else if (action === "delete-card") {
+    siteData.customSections[sectionIndex]?.cards?.splice(cardIndex, 1);
+  } else if (action === "add-detail-text") {
+    addInlineDetailBlock(sectionIndex, cardIndex, "text");
+  } else if (action === "add-detail-image") {
+    addInlineDetailBlock(sectionIndex, cardIndex, "image");
+  } else if (action === "add-detail-document") {
+    addInlineDetailBlock(sectionIndex, cardIndex, "document");
+  } else if (action === "add-detail-video") {
+    addInlineDetailBlock(sectionIndex, cardIndex, "video");
+  } else if (action === "move-detail-up") {
+    moveOrderedItem(getInlineCard(sectionIndex, cardIndex)?.detailBlocks, blockIndex, -1);
+  } else if (action === "move-detail-down") {
+    moveOrderedItem(getInlineCard(sectionIndex, cardIndex)?.detailBlocks, blockIndex, 1);
+  } else if (action === "set-detail-text-style") {
+    setInlineDetailTextStyle(sectionIndex, cardIndex, blockIndex, control.dataset.textStyle);
+  } else if (action === "delete-section-image") {
+    siteData.customSections[sectionIndex]?.images?.splice(Number(control.dataset.imageIndex), 1);
+  } else if (action === "delete-detail") {
+    const card = getInlineCard(sectionIndex, cardIndex);
+    card?.detailBlocks?.splice(blockIndex, 1);
+    if (card) card.details = detailBlocksToText(card.detailBlocks);
+  }
+
+  refreshInlineEdit();
+}
+
+const INLINE_TEXT_FIELD_SELECTOR = [
+  "[data-inline-project-field]",
+  "[data-inline-timeline-field]",
+  "[data-inline-custom-card-field]",
+  "[data-inline-profile-about]",
+  "[data-inline-section-body]",
+  "[data-inline-section-image-caption]",
+  "[data-inline-detail-caption]"
+].join(", ");
+
+function inlineInputValue(element) {
+  return element.matches("input, textarea") ? element.value : element.textContent;
+}
+
+function updateInlineDetailTextField(textInput) {
+  const [sectionIndex, cardIndex, blockIndex] = textInput.dataset.inlineDetailText.split(":").map(Number);
+  const card = getInlineCard(sectionIndex, cardIndex);
+  const block = card?.detailBlocks?.[blockIndex];
+  if (!block || block.type !== "text") return;
+  block.text = textInput.value;
+  card.details = detailBlocksToText(card.detailBlocks);
+}
+
+function setInlineDetailTextStyle(sectionIndex, cardIndex, blockIndex, textStyle) {
+  syncInlineEditsFromDom();
+  const card = getInlineCard(sectionIndex, cardIndex);
+  const block = card?.detailBlocks?.[blockIndex];
+  if (!card || !block || block.type !== "text") return;
+  block.textStyle = normalizeDetailTextStyle(textStyle);
+  card.details = detailBlocksToText(card.detailBlocks);
+  refreshInlineEdit();
+}
+function syncInlineEditsFromDom() {
+  document.querySelectorAll("[data-inline-detail-text]").forEach(updateInlineDetailTextField);
+  document.querySelectorAll(INLINE_TEXT_FIELD_SELECTOR).forEach(updateInlineTextField);
+}
+
+function updateInlineTextField(target) {
+  const value = inlineInputValue(target).trim();
+
+  if (target.matches("[data-inline-project-field]")) {
+    const project = siteData.projects[Number(target.dataset.projectIndex)];
+    const field = target.dataset.inlineProjectField;
+    if (!project || !field) return true;
+    if (field === "tags") project.tags = toTags(value);
+    else {
+      project[field] = value;
+      if (field === "responsibility") project.role = value;
+    }
+    return true;
+  }
+
+  if (target.matches("[data-inline-timeline-field]")) {
+    const item = siteData.timeline[Number(target.dataset.timelineIndex)];
+    const field = target.dataset.inlineTimelineField;
+    if (!item || !field) return true;
+    item[field] = field === "tags" ? toTags(value) : value;
+    return true;
+  }
+
+  if (target.matches("[data-inline-custom-card-field]")) {
+    const card = getInlineCard(Number(target.dataset.sectionIndex), Number(target.dataset.cardIndex));
+    const field = target.dataset.inlineCustomCardField;
+    if (!card || !field) return true;
+    card[field] = field === "tags" ? toTags(value) : value;
+    return true;
+  }
+
+  if (target.matches("[data-inline-profile-about]")) {
+    siteData.profile.about[Number(target.dataset.inlineProfileAbout)] = value;
+    return true;
+  }
+
+  if (target.matches("[data-inline-section-body]")) {
+    const section = siteData.customSections[Number(target.dataset.sectionIndex)];
+    if (!section) return true;
+    const body = toParagraphs(section.body);
+    body[Number(target.dataset.bodyIndex)] = value;
+    section.body = body;
+    return true;
+  }
+
+  if (target.matches("[data-inline-section-image-caption]")) {
+    const image = siteData.customSections[Number(target.dataset.sectionIndex)]?.images?.[Number(target.dataset.imageIndex)];
+    if (image) image.caption = value;
+    return true;
+  }
+
+  if (target.matches("[data-inline-detail-caption]")) {
+    const [sectionIndex, cardIndex, blockIndex] = target.dataset.inlineDetailCaption.split(":").map(Number);
+    const block = getInlineCard(sectionIndex, cardIndex)?.detailBlocks?.[blockIndex];
+    if (block && block.type === "image") block.caption = value;
+    return true;
+  }
+
+  return false;
+}
+
+function handleInlineEditInput(event) {
+  const textInput = event.target.closest("[data-inline-detail-text]");
+  if (textInput) {
+    updateInlineDetailTextField(textInput);
+    return;
+  }
+
+  const inlineTarget = event.target.closest(INLINE_TEXT_FIELD_SELECTOR);
+  if (inlineTarget) updateInlineTextField(inlineTarget);
+}
+
+async function handleInlineEditChange(event) {
+  const projectImageInput = event.target.closest("[data-inline-project-image-file]");
+  if (projectImageInput) {
+    await updateInlineImageField(projectImageInput, (input) => siteData.projects[Number(input.dataset.projectIndex)], "image");
+    return;
+  }
+
+  const customCardImageInput = event.target.closest("[data-inline-custom-card-image-file]");
+  if (customCardImageInput) {
+    await updateInlineImageField(customCardImageInput, (input) => getInlineCard(Number(input.dataset.sectionIndex), Number(input.dataset.cardIndex)), "image");
+    return;
+  }
+
+  const sectionImageInput = event.target.closest("[data-inline-section-image-file]");
+  if (sectionImageInput) {
+    await updateInlineImageField(sectionImageInput, (input) => siteData.customSections[Number(input.dataset.sectionIndex)]?.images?.[Number(input.dataset.imageIndex)], "src");
+    return;
+  }
+
+  const imageInput = event.target.closest("[data-inline-detail-image-file]");
+  if (imageInput) {
+    await updateInlineDetailFile(imageInput, "image");
+    return;
+  }
+
+  const documentInput = event.target.closest("[data-inline-detail-document-file]");
+  if (documentInput) {
+    await updateInlineDetailFile(documentInput, "document");
+    return;
+  }
+
+  const videoInput = event.target.closest("[data-inline-detail-video-file]");
+  if (videoInput) {
+    await updateInlineDetailFile(videoInput, "video");
+  }
+}
+
+async function updateInlineImageField(input, getTarget, fieldName) {
+  const file = input.files?.[0];
+  const target = getTarget(input);
+  if (!file || !target) return;
+
+  try {
+    const uploadedPath = await uploadAssetFile(file, "images");
+    const isAnimatedGif = file.type === "image/gif" || file.name.toLowerCase().endsWith(".gif");
+    target[fieldName] = uploadedPath || (isAnimatedGif ? await readFileAsDataUrl(file) : await imageFileToDataUrl(file, { maxWidth: 1800, quality: 0.88 }));
+    showToast(uploadedPath ? "图片已上传到 assets，记得保存" : "图片已写入 JSON，记得保存");
+    refreshInlineEdit();
+  } catch {
+    showToast("图片读取失败");
+  } finally {
+    input.value = "";
+  }
+}
+async function updateInlineDetailFile(input, type) {
+  const file = input.files?.[0];
+  if (!file) return;
+
+  const sectionIndex = Number(input.dataset.sectionIndex);
+  const cardIndex = Number(input.dataset.cardIndex);
+  const blockIndex = Number(input.dataset.blockIndex);
+  const block = getInlineCard(sectionIndex, cardIndex)?.detailBlocks?.[blockIndex];
+  if (!block || block.type !== type) return;
+
+  try {
+    const uploadedPath = await uploadAssetFile(file, assetKindForDetailType(type));
+    block.src = uploadedPath || await readFileAsDataUrl(file);
+    if (type === "document" || type === "video") {
+      block.fileName = file.name;
+      if (!block.title || block.title === "文档标题" || block.title === "视频标题") block.title = file.name.replace(/\.[^.]+$/, "");
+    }
+    showToast(uploadedPath ? "文件已上传到 assets，记得保存" : "文件已写入 JSON，记得保存");
+    refreshInlineEdit();
+  } catch {
+    showToast("文件读取失败");
+  } finally {
+    input.value = "";
+  }
+}
+function addInlineProject() {
+  siteData.projects.unshift({
+    title: "新作品",
+    year: String(new Date().getFullYear()),
+    role: "Designer / Developer",
+    responsibility: "Designer / Developer",
+    category: "design",
+    engine: "UE5",
+    language: "C++ / Blueprint",
+    gameType: "Prototype",
+    order: getNextOrder(siteData.projects),
+    image: "assets/slash-preview.png",
+    imageWidth: "",
+    imageAspect: "16 / 9",
+    imageFit: "cover",
+    description: "在这里写作品简介。",
+    tags: ["Prototype"]
+  });
+}
+
+function addInlineTimelineItem(type = "work") {
+  const normalizedType = normalizeTimelineType(type);
+  const label = timelineGroupLabels[normalizedType];
+  currentTimelineEditorGroup = normalizedType;
+  siteData.timeline.unshift({
+    date: String(new Date().getFullYear()),
+    title: `新${label}经历`,
+    description: `1. 在这里写${label}经历的第一条内容。\n2. 在这里写第二条内容。`,
+    tags: [label],
+    type: normalizedType,
+    order: getNextOrder(siteData.timeline.filter((item) => normalizeTimelineType(item.type) === normalizedType))
+  });
+}
+
+function moveTimelineWithinGroup(itemIndex, direction) {
+  const item = siteData.timeline[itemIndex];
+  if (!item) return false;
+  const type = normalizeTimelineType(item.type);
+  const grouped = sortByOrder(siteData.timeline.map((entry, index) => ({ ...entry, index })).filter((entry) => normalizeTimelineType(entry.type) === type));
+  const currentPosition = grouped.findIndex((entry) => entry.index === itemIndex);
+  const target = grouped[currentPosition + direction];
+  if (!target) return false;
+  const currentOrder = orderValue(siteData.timeline[itemIndex], itemIndex);
+  const otherOrder = orderValue(siteData.timeline[target.index], target.index);
+  siteData.timeline[itemIndex].order = otherOrder;
+  siteData.timeline[target.index].order = currentOrder;
+  return true;
+}
+
+function addInlineCard(sectionIndex) {
+  const section = siteData.customSections[sectionIndex];
+  if (!section) return;
+  section.layout = "cards";
+  section.cards = section.cards || [];
+  section.cards.push({
+    order: getNextOrder(section.cards),
+    title: "新卡片",
+    slug: `prototype-${Date.now()}`,
+    description: "在这里写卡片简介。",
+    details: "目标\n1. 在这里写第一个详情条目。",
+    detailBlocks: [{ type: "text", order: 1, text: "目标\n1. 在这里写第一个详情条目。" }],
+    image: "assets/recovery-preview.png",
+    imageWidth: "",
+    imageAspect: "16 / 9",
+    imageFit: "cover",
+    tags: ["Prototype"]
+  });
+}
+
+function addInlineSectionText(sectionIndex) {
+  const section = siteData.customSections[sectionIndex];
+  if (!section) return;
+  const body = toParagraphs(section.body);
+  body.push("在这里添加正文。");
+  section.body = body;
+}
+
+function addInlineSectionImage(sectionIndex) {
+  const section = siteData.customSections[sectionIndex];
+  if (!section) return;
+  section.images = section.images || [];
+  section.images.push({ src: "assets/recovery-preview.png", caption: "图片说明", alt: "" });
+}
+
+function addInlineDetailBlock(sectionIndex, cardIndex, type) {
+  const card = getInlineCard(sectionIndex, cardIndex);
+  if (!card) return;
+  card.detailBlocks = normalizeDetailBlocks(card.detailBlocks, card.details || card.description);
+  card.detailBlocks.push(createDetailBlock(type, getNextOrder(card.detailBlocks)));
+  card.details = detailBlocksToText(card.detailBlocks);
+}
+
 function enableDevMode() {
   localStorage.setItem(DEV_MODE_KEY, "1");
   if (!document.querySelector("[data-dev-open]")) {
@@ -1824,7 +2789,15 @@ function createEditorShell() {
     `
       <button class="dev-open-button" type="button" data-dev-open title="打开内容编辑器">
         ${icon("edit")}
-        <span>编辑</span>
+        <span>高级编辑</span>
+      </button>
+      <button class="inline-edit-button" type="button" data-inline-edit-toggle title="切换站内编辑模式">
+        ${icon("edit")}
+        <span data-inline-edit-label>站内编辑</span>
+      </button>
+      <button class="inline-save-button" type="button" data-inline-save title="保存当前内容">
+        ${icon("save")}
+        <span>保存</span>
       </button>
       <aside class="dev-panel" data-dev-panel aria-hidden="true">
         <div class="dev-panel-header">
@@ -1865,6 +2838,11 @@ function bindEditorEvents() {
   document.querySelector("[data-dev-save]").addEventListener("click", saveCurrentContent);
   document.querySelector("[data-dev-export]").addEventListener("click", exportCurrentContent);
   document.querySelector("[data-dev-import]").addEventListener("change", importContentFile);
+  document.querySelector("[data-inline-edit-toggle]").addEventListener("click", () => setInlineEditMode(!inlineEditMode));
+  document.querySelector("[data-inline-save]").addEventListener("click", saveCurrentContent);
+  document.addEventListener("click", handleInlineEditClick);
+  document.addEventListener("input", handleInlineEditInput);
+  document.addEventListener("change", handleInlineEditChange);
 
   document.querySelector(".dev-tabs").addEventListener("click", (event) => {
     const tab = event.target.closest("[data-editor-tab]");
@@ -1884,6 +2862,18 @@ function bindEditorEvents() {
     const input = event.target.closest("input[type='file'][data-image-upload]");
     if (input) {
       handleImageUpload(input);
+      return;
+    }
+
+    const documentInput = event.target.closest("input[type='file'][data-document-upload]");
+    if (documentInput) {
+      handleDocumentUpload(documentInput);
+      return;
+    }
+
+    const videoInput = event.target.closest("input[type='file'][data-video-upload]");
+    if (videoInput) {
+      handleVideoUpload(videoInput);
     }
   });
 }
@@ -2212,7 +3202,7 @@ function renderSectionCardEditor(card, sectionIndex, cardIndex) {
         ${field("标题", "section-card-title", card.title, `data-section-card-field="title"`)}
         ${field("详情页路径", "section-card-slug", card.slug, `data-section-card-field="slug" placeholder="例如 gravity-ball"`)}
         ${textarea("文本条目", "section-card-description", card.description, 5, `data-section-card-field="description"`)}
-        ${textarea("详情页内容", "section-card-details", card.details || card.description, 8, `data-section-card-field="details"`)}
+        ${renderDetailBlocksEditor(card, sectionIndex, cardIndex)}
         ${imageField("图片", card.image, `data-section-card-field="image"`, "section-card", sectionIndex, cardIndex)}
         ${field("图片宽度", "section-card-image-width", card.imageWidth, `data-section-card-field="imageWidth" placeholder="例如 100% / 620px"`)}
         ${field("图片比例", "section-card-image-aspect", card.imageAspect, `data-section-card-field="imageAspect" placeholder="例如 16 / 9"`)}
@@ -2231,6 +3221,102 @@ function renderSectionCardEditor(card, sectionIndex, cardIndex) {
   `;
 }
 
+function renderDetailBlocksEditor(card, sectionIndex, cardIndex) {
+  const blocks = getOrderedDetailBlocks(card);
+  return `
+    <div class="dev-field wide detail-blocks-editor">
+      <div class="dev-inline-head">
+        <span>详情页模块</span>
+        <div class="dev-inline-actions">
+          <button class="dev-small-button" type="button" data-add-detail-block="${sectionIndex}:${cardIndex}:text">${icon("plus")}添加文字</button>
+          <button class="dev-small-button" type="button" data-add-detail-block="${sectionIndex}:${cardIndex}:image">${icon("plus")}添加图片</button>
+          <button class="dev-small-button" type="button" data-add-detail-block="${sectionIndex}:${cardIndex}:document">${icon("plus")}添加文档</button>
+          <button class="dev-small-button" type="button" data-add-detail-block="${sectionIndex}:${cardIndex}:video">${icon("plus")}添加视频</button>
+        </div>
+      </div>
+      <span class="dev-help">详情页会按模块排序从上到下显示，可以组合成文字、图片、文档预览、视频等结构。</span>
+      <div class="dev-list nested detail-block-list">
+        ${blocks.length ? blocks.map((block) => renderDetailBlockEditor(block, sectionIndex, cardIndex, block.index)).join("") : `<div class="dev-empty compact">还没有详情模块，点击添加文字、图片、文档或视频。</div>`}
+      </div>
+    </div>
+  `;
+}
+function renderDetailBlockEditor(block, sectionIndex, cardIndex, blockIndex) {
+  const typeLabels = {
+    image: "图片模块",
+    document: "文档模块",
+    video: "视频模块",
+    text: "文字模块"
+  };
+  const typeLabel = typeLabels[block.type] || typeLabels.text;
+  return `
+    <article class="dev-item compact detail-block-editor" data-detail-block-index="${blockIndex}" data-detail-block-type="${attr(block.type)}">
+      <div class="dev-item-head">
+        <strong>${escapeHtml(typeLabel)}</strong>
+        <button class="dev-icon-button danger" type="button" data-delete-detail-block="${sectionIndex}:${cardIndex}:${blockIndex}" aria-label="删除详情模块">${icon("trash")}</button>
+      </div>
+      <div class="dev-form-grid compact">
+        ${field("排序", "detail-block-order", orderValue(block, blockIndex), `data-detail-block-field="order"`)}
+        <input type="hidden" data-detail-block-field="type" value="${attr(block.type)}" />
+        ${renderDetailBlockFields(block, sectionIndex, cardIndex, blockIndex)}
+      </div>
+    </article>
+  `;
+}
+
+function renderDetailBlockFields(block, sectionIndex, cardIndex, blockIndex) {
+  if (block.type === "image") return renderDetailImageBlockEditor(block, sectionIndex, cardIndex, blockIndex);
+  if (block.type === "document") return renderDetailDocumentBlockEditor(block, sectionIndex, cardIndex, blockIndex);
+  if (block.type === "video") return renderDetailVideoBlockEditor(block, sectionIndex, cardIndex, blockIndex);
+  return renderDetailTextBlockEditor(block);
+}
+
+function renderDetailTextBlockEditor(block) {
+  const style = normalizeDetailTextStyle(block.textStyle);
+  const options = [
+    ["body", "正文"],
+    ["heading", "大标题"],
+    ["subheading", "小标题"],
+    ["callout", "重点提示"],
+    ["code", "代码块"]
+  ];
+
+  return `
+    <label class="dev-field">
+      <span>文字样式</span>
+      <select data-detail-block-field="textStyle">
+        ${options.map(([value, label]) => `<option value="${value}"${value === style ? " selected" : ""}>${label}</option>`).join("")}
+      </select>
+    </label>
+    ${textarea("文字内容", "detail-block-text", block.text, 5, `data-detail-block-field="text"`)}
+  `;
+}
+function renderDetailImageBlockEditor(block, sectionIndex, cardIndex, blockIndex) {
+  return `
+    ${imageField("图片", block.src, `data-detail-block-field="src"`, "detail-block", `${sectionIndex}-${cardIndex}`, blockIndex)}
+    ${field("图片说明", "detail-block-caption", block.caption, `data-detail-block-field="caption"`)}
+    ${field("替代文字", "detail-block-alt", block.alt, `data-detail-block-field="alt"`)}
+    ${field("图片宽度", "detail-block-image-width", block.imageWidth, `data-detail-block-field="imageWidth" placeholder="例如 100% / 620px"`)}
+  `;
+}
+
+function renderDetailDocumentBlockEditor(block, sectionIndex, cardIndex, blockIndex) {
+  return `
+    ${field("文档标题", "detail-block-document-title", block.title, `data-detail-block-field="title"`)}
+    ${documentField("文档地址", block.src, `data-detail-block-field="src"`, "detail-document", `${sectionIndex}-${cardIndex}`, blockIndex)}
+    ${field("文件名", "detail-block-document-file-name", block.fileName, `data-detail-block-field="fileName" placeholder="例如 combat-design.pdf"`)}
+    ${textarea("文档说明", "detail-block-document-description", block.description, 3, `data-detail-block-field="description"`)}
+  `;
+}
+
+function renderDetailVideoBlockEditor(block, sectionIndex, cardIndex, blockIndex) {
+  return `
+    ${field("视频标题", "detail-block-video-title", block.title, `data-detail-block-field="title"`)}
+    ${videoField("视频路径", block.src, `data-detail-block-field="src"`, "detail-video", `${sectionIndex}-${cardIndex}`, blockIndex)}
+    ${field("封面图", "detail-block-video-poster", block.poster, `data-detail-block-field="poster" placeholder="assets/prototype/poster.jpg"`)}
+    ${textarea("视频说明", "detail-block-video-description", block.description, 3, `data-detail-block-field="description"`)}
+  `;
+}
 function renderSectionCardTagEditor(tag, sectionIndex, cardIndex, tagIndex) {
   return `
     <div class="dev-mini-row section-card-tag-row" data-section-card-tag-index="${tagIndex}">
@@ -2424,12 +3510,35 @@ function imageField(label, value, extra, target, index, imageIndex = "") {
     <label class="dev-field wide">
       <span>${escapeHtml(label)}</span>
       <input value="${attr(value || "")}" ${extra} />
-      <span class="dev-help">可以填 assets/example.png、https 图片地址，或选择本地图片。</span>
+      <span class="dev-help">可以填 assets 路径或 https 图片；选择本地图片会自动复制到 assets/uploads/images。</span>
       <input id="${attr(imageInputId)}" type="file" accept="image/*" data-image-upload data-image-target="${target}" data-image-index="${attr(index)}" data-sub-image-index="${attr(imageIndex)}" />
     </label>
   `;
 }
 
+function documentField(label, value, extra, target, index, blockIndex = "") {
+  const documentInputId = `document-${target}-${index}-${blockIndex}`;
+  return `
+    <label class="dev-field wide">
+      <span>${escapeHtml(label)}</span>
+      <input value="${attr(value || "")}" ${extra} />
+      <span class="dev-help">可以填 assets/docs 或 https 地址；选择本地文档会自动复制到 assets/uploads/documents。</span>
+      <input id="${attr(documentInputId)}" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" data-document-upload data-document-target="${target}" data-document-index="${attr(index)}" data-sub-document-index="${attr(blockIndex)}" />
+    </label>
+  `;
+}
+
+function videoField(label, value, extra, target, index, blockIndex = "") {
+  const videoInputId = `video-${target}-${index}-${blockIndex}`;
+  return `
+    <label class="dev-field wide">
+      <span>${escapeHtml(label)}</span>
+      <input id="${attr(videoInputId)}" value="${attr(value || "")}" ${extra} placeholder="assets/uploads/videos/demo.mp4" />
+      <span class="dev-help">可以填 assets 路径；选择本地 MP4 / WebM 会自动复制到 assets/uploads/videos。</span>
+      <input type="file" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov" data-video-upload data-video-target="${target}" data-video-index="${attr(index)}" data-sub-video-index="${attr(blockIndex)}" />
+    </label>
+  `;
+}
 function handleEditorButton(button) {
   if (button.matches("[data-add-link]")) {
     syncFromEditor();
@@ -2547,6 +3656,11 @@ function handleEditorButton(button) {
           slug: "prototype-card",
           description: "在这里写卡片文本。",
           details: "设计目标\n1. 在这里写这个原型想验证的问题。\n2. 在这里写关键实现逻辑。\n3. 在这里写测试后的结论和下一步迭代。",
+          detailBlocks: [
+            { type: "text", order: 1, text: "设计目标\n1. 在这里写这个原型想验证的问题。\n2. 在这里写关键实现逻辑。" },
+            { type: "image", order: 2, src: "assets/recovery-preview.png", caption: "原型截图", alt: "", imageWidth: "", imageAspect: "", imageFit: "contain" },
+            { type: "text", order: 3, text: "测试结论\n1. 在这里写测试后的结论和下一步迭代。" }
+          ],
           image: "assets/recovery-preview.png",
           imageWidth: "",
           imageAspect: "16 / 9",
@@ -2573,6 +3687,11 @@ function handleEditorButton(button) {
         slug: `prototype-${Date.now()}`,
         description: "在这里写卡片文本。",
         details: "设计目标\n1. 在这里写这个原型想验证的问题。\n2. 在这里写关键实现逻辑。\n3. 在这里写测试后的结论和下一步迭代。",
+        detailBlocks: [
+          { type: "text", order: 1, text: "设计目标\n1. 在这里写这个原型想验证的问题。\n2. 在这里写关键实现逻辑。" },
+          { type: "image", order: 2, src: "assets/recovery-preview.png", caption: "原型截图", alt: "", imageWidth: "", imageAspect: "", imageFit: "contain" },
+          { type: "text", order: 3, text: "测试结论\n1. 在这里写测试后的结论和下一步迭代。" }
+        ],
         image: "assets/recovery-preview.png",
         imageWidth: "",
         imageAspect: "16 / 9",
@@ -2585,6 +3704,26 @@ function handleEditorButton(button) {
     syncFromEditor();
     const [sectionIndex, cardIndex] = button.dataset.deleteSectionCard.split(":").map(Number);
     siteData.customSections[sectionIndex]?.cards?.splice(cardIndex, 1);
+    renderEditor();
+  } else if (button.matches("[data-add-detail-block]")) {
+    syncFromEditor();
+    const [sectionIndex, cardIndex, type] = button.dataset.addDetailBlock.split(":");
+    const card = siteData.customSections[Number(sectionIndex)]?.cards?.[Number(cardIndex)];
+    if (card) {
+      card.detailBlocks = normalizeDetailBlocks(card.detailBlocks, card.details || card.description);
+      card.detailBlocks.push(createDetailBlock(type, getNextOrder(card.detailBlocks)));
+      card.details = detailBlocksToText(card.detailBlocks);
+    }
+    renderEditor();
+  } else if (button.matches("[data-delete-detail-block]")) {
+    syncFromEditor();
+    const [sectionIndex, cardIndex, blockIndex] = button.dataset.deleteDetailBlock.split(":").map(Number);
+    const card = siteData.customSections[sectionIndex]?.cards?.[cardIndex];
+    if (card) {
+      card.detailBlocks = normalizeDetailBlocks(card.detailBlocks, card.details || card.description);
+      card.detailBlocks.splice(blockIndex, 1);
+      card.details = detailBlocksToText(card.detailBlocks);
+    }
     renderEditor();
   } else if (button.matches("[data-add-section-card-tag]")) {
     syncFromEditor();
@@ -2628,9 +3767,65 @@ function handleEditorButton(button) {
   }
 }
 
+function collectDetailBlocks(cardRow) {
+  return Array.from(cardRow.querySelectorAll("[data-detail-block-index]"))
+    .map((blockRow, fallbackIndex) => {
+      const type = blockRow.dataset.detailBlockType === "image" ? "image" : blockRow.dataset.detailBlockType === "document" ? "document" : blockRow.dataset.detailBlockType === "video" ? "video" : "text";
+      const order = toOrder(blockRow.querySelector("[data-detail-block-field='order']")?.value, fallbackIndex + 1);
+
+      if (type === "image") {
+        return {
+          type,
+          order,
+          src: blockRow.querySelector("[data-detail-block-field='src']")?.value.trim() || "",
+          caption: blockRow.querySelector("[data-detail-block-field='caption']")?.value.trim() || "",
+          alt: blockRow.querySelector("[data-detail-block-field='alt']")?.value.trim() || "",
+          imageWidth: blockRow.querySelector("[data-detail-block-field='imageWidth']")?.value.trim() || "",
+          imageAspect: "",
+          imageFit: "contain"
+        };
+      }
+
+      if (type === "document") {
+        return {
+          type,
+          order,
+          title: blockRow.querySelector("[data-detail-block-field='title']")?.value.trim() || "文档",
+          src: blockRow.querySelector("[data-detail-block-field='src']")?.value.trim() || "",
+          description: blockRow.querySelector("[data-detail-block-field='description']")?.value.trim() || "",
+          fileName: blockRow.querySelector("[data-detail-block-field='fileName']")?.value.trim() || "",
+          preview: "auto"
+        };
+      }
+
+      if (type === "video") {
+        return {
+          type,
+          order,
+          title: blockRow.querySelector("[data-detail-block-field='title']")?.value.trim() || "视频",
+          src: blockRow.querySelector("[data-detail-block-field='src']")?.value.trim() || "",
+          description: blockRow.querySelector("[data-detail-block-field='description']")?.value.trim() || "",
+          poster: blockRow.querySelector("[data-detail-block-field='poster']")?.value.trim() || "",
+          fileName: "",
+          controls: true,
+          loop: true,
+          muted: true,
+          autoplay: false
+        };
+      }
+      return {
+        type,
+        order,
+        text: blockRow.querySelector("[data-detail-block-field='text']")?.value.trim() || "",
+        textStyle: normalizeDetailTextStyle(blockRow.querySelector("[data-detail-block-field='textStyle']")?.value)
+      };
+    })
+    .filter((block) => detailBlockHasContent(block));
+}
+
 function syncFromEditor() {
   const panel = document.querySelector("[data-dev-panel]");
-  if (!panel) return;
+  if (!panel || !panel.classList.contains("is-open")) return;
   siteData = collectEditorData();
 }
 
@@ -2757,12 +3952,14 @@ function collectEditorData() {
         const cardIndex = Number(cardRow.dataset.sectionCardIndex);
         const targetIndex = Number.isFinite(cardIndex) ? cardIndex : fallbackIndex;
         const title = cardRow.querySelector("[data-section-card-field='title']").value.trim() || "未命名卡片";
+        const detailBlocks = collectDetailBlocks(cardRow);
         updatedCards[targetIndex] = {
           order: toOrder(cardRow.querySelector("[data-section-card-field='order']")?.value, fallbackIndex + 1),
           title,
           slug: slugify(cardRow.querySelector("[data-section-card-field='slug']")?.value.trim() || title),
           description: cardRow.querySelector("[data-section-card-field='description']").value.trim(),
-          details: cardRow.querySelector("[data-section-card-field='details']")?.value.trim() || "",
+          details: detailBlocksToText(detailBlocks),
+          detailBlocks,
           image: cardRow.querySelector("[data-section-card-field='image']").value.trim(),
           imageWidth: cardRow.querySelector("[data-section-card-field='imageWidth']")?.value.trim() || "",
           imageAspect: cardRow.querySelector("[data-section-card-field='imageAspect']")?.value.trim() || "",
@@ -2798,16 +3995,47 @@ function slugify(value) {
   return cleaned || `custom-${Date.now()}`;
 }
 
+async function handleDocumentUpload(input) {
+  const file = input.files?.[0];
+  if (!file) return;
+
+  try {
+    const uploadedPath = await uploadAssetFile(file, "documents");
+    const field = input.closest(".dev-field")?.querySelector("input:not([type='file'])");
+    if (field) field.value = uploadedPath || await readFileAsDataUrl(file);
+
+    const blockRow = input.closest("[data-detail-block-index]");
+    const titleField = blockRow?.querySelector("[data-detail-block-field='title']");
+    const fileNameField = blockRow?.querySelector("[data-detail-block-field='fileName']");
+    if (titleField && !titleField.value.trim()) titleField.value = file.name.replace(/\.[^.]+$/, "");
+    if (fileNameField) fileNameField.value = file.name;
+
+    showToast(uploadedPath ? "文档已上传到 assets，点击保存后生效" : "文档已写入 JSON，点击保存后生效");
+  } catch {
+    showToast("文档读取失败");
+  } finally {
+    input.value = "";
+  }
+}
+
 async function handleImageUpload(input) {
   const file = input.files?.[0];
   if (!file) return;
 
   try {
-    const dataUrl = await imageFileToDataUrl(file);
+    const uploadedPath = await uploadAssetFile(file, "images");
+    const isDetailImage = input.dataset.imageTarget === "detail-block";
+    const isAnimatedGif = file.type === "image/gif" || file.name.toLowerCase().endsWith(".gif");
+    const value = uploadedPath || (isDetailImage || isAnimatedGif
+      ? await readFileAsDataUrl(file)
+      : await imageFileToDataUrl(file, {
+        maxWidth: 1600,
+        quality: 0.84
+      }));
     const field = input.closest(".dev-field")?.querySelector("input:not([type='file'])");
     if (field) {
-      field.value = dataUrl;
-      showToast("图片已载入，点击保存后生效");
+      field.value = value;
+      showToast(uploadedPath ? "图片已上传到 assets，点击保存后生效" : "图片已写入 JSON，点击保存后生效");
     }
   } catch {
     showToast("图片读取失败");
@@ -2816,38 +4044,92 @@ async function handleImageUpload(input) {
   }
 }
 
-function imageFileToDataUrl(file) {
+async function handleVideoUpload(input) {
+  const file = input.files?.[0];
+  if (!file) return;
+
+  try {
+    const uploadedPath = await uploadAssetFile(file, "videos");
+    const field = input.closest(".dev-field")?.querySelector("input:not([type='file'])");
+    if (field && uploadedPath) field.value = uploadedPath;
+    showToast(uploadedPath ? "视频已上传到 assets，点击保存后生效" : "视频上传失败，请检查格式或大小");
+  } catch {
+    showToast("视频上传失败");
+  } finally {
+    input.value = "";
+  }
+}
+async function imageFileToDataUrl(file, options = {}) {
+  if (options.preserveOriginal && file.size <= (options.originalLimit || 0)) {
+    return readFileAsDataUrl(file);
+  }
+
+  const source = await readFileAsDataUrl(file);
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onerror = reject;
+    image.onload = () => {
+      const maxWidth = options.maxWidth || 1600;
+      const scale = Math.min(1, maxWidth / image.width);
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(image.width * scale));
+      canvas.height = Math.max(1, Math.round(image.height * scale));
+      const context = canvas.getContext("2d");
+      context.imageSmoothingEnabled = true;
+      context.imageSmoothingQuality = "high";
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL("image/jpeg", options.quality || 0.84));
+    };
+    image.src = source;
+  });
+}
+
+function readFileAsDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onerror = reject;
-    reader.onload = () => {
-      const image = new Image();
-      image.onerror = reject;
-      image.onload = () => {
-        const maxWidth = 1600;
-        const scale = Math.min(1, maxWidth / image.width);
-        const canvas = document.createElement("canvas");
-        canvas.width = Math.max(1, Math.round(image.width * scale));
-        canvas.height = Math.max(1, Math.round(image.height * scale));
-        const context = canvas.getContext("2d");
-        context.drawImage(image, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL("image/jpeg", 0.84));
-      };
-      image.src = reader.result;
-    };
+    reader.onload = () => resolve(reader.result);
     reader.readAsDataURL(file);
   });
 }
 
-async function saveCurrentContent() {
-  syncFromEditor();
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(siteData));
-  const serverSaved = await saveServerData(siteData);
-  renderAll();
-  renderEditor();
-  showToast(serverSaved ? "已保存到 content.json" : "已保存到当前浏览器，可导出 JSON");
+function saveLocalPreviewData(data) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    return true;
+  } catch (error) {
+    console.warn("Local preview save failed. The server save may still be valid.", error);
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // Ignore cleanup failures; the server save result is the source of truth.
+    }
+    return false;
+  }
 }
 
+async function saveCurrentContent() {
+  syncFromEditor();
+  const serverSaved = await saveServerData(siteData);
+  const localSaved = serverSaved ? false : saveLocalPreviewData(siteData);
+
+  if (serverSaved) {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // content.json has already been saved.
+    }
+  }
+
+  renderAll();
+  renderEditor();
+
+  if (serverSaved) {
+    showToast("已保存到 content.json");
+  } else {
+    showToast(localSaved ? "已保存到当前浏览器，可导出 JSON" : "保存失败：图片数据过大，请压缩图片或导出 JSON");
+  }
+}
 function exportCurrentContent() {
   syncFromEditor();
   const blob = new Blob([JSON.stringify(siteData, null, 2)], { type: "application/json" });
