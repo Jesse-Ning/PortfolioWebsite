@@ -1,5 +1,9 @@
 const STORAGE_KEY = "portfolio-site-data-v1";
 const DEV_MODE_KEY = "portfolio-dev-mode";
+const DEBUG_LOG_LIMIT = 80;
+const debugLogs = [];
+let debugCaptureReady = false;
+let debugLogFilter = "";
 
 const DEFAULT_SITE_DATA = {
   updatedAt: "2026-05-30T00:00:00.000Z",
@@ -1039,6 +1043,7 @@ async function uploadAssetFile(file, kind = "files") {
   if (!file || !["http:", "https:"].includes(window.location.protocol)) return "";
 
   try {
+    debugLog("upload", "start", { kind, fileName: file.name, size: file.size, type: file.type });
     const dataUrl = await readFileAsDataUrl(file);
     const response = await fetch("api/upload", {
       method: "POST",
@@ -1046,8 +1051,11 @@ async function uploadAssetFile(file, kind = "files") {
       body: JSON.stringify({ kind, fileName: file.name, dataUrl })
     });
     const result = await response.json().catch(() => null);
-    return response.ok && result?.ok && result.path ? result.path : "";
-  } catch {
+    const path = response.ok && result?.ok && result.path ? result.path : "";
+    debugLog("upload", path ? "success" : "failed response", { status: response.status, path, result }, path ? "info" : "warn");
+    return path;
+  } catch (error) {
+    debugLog("upload", "failed exception", { error: debugString(error) }, "error");
     return "";
   }
 }
@@ -1057,6 +1065,94 @@ function assetKindForDetailType(type) {
   if (type === "document") return "documents";
   if (type === "video") return "videos";
   return "files";
+}
+
+function debugTime() {
+  return new Date().toLocaleTimeString("zh-CN", { hour12: false });
+}
+
+function debugString(value) {
+  if (value instanceof Error) return `${value.name}: ${value.message}`;
+  if (typeof value === "string") return value;
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
+}
+
+function debugLog(scope, message, details = {}, level = "info") {
+  debugLogs.unshift({
+    time: debugTime(),
+    level,
+    scope,
+    message,
+    details
+  });
+  debugLogs.splice(DEBUG_LOG_LIMIT);
+  renderDebugLogPanel();
+}
+
+function getVisibleDetailState() {
+  const headerHeight = document.querySelector(".site-header")?.getBoundingClientRect().height || 0;
+  const viewportHeight = window.innerHeight || 0;
+  const detailNodes = Array.from(document.querySelectorAll(".prototype-detail-hero, .prototype-detail-block"));
+  const visibleCount = detailNodes.filter((node) => {
+    const rect = node.getBoundingClientRect();
+    return rect.bottom > headerHeight + 24 && rect.top < viewportHeight - 24;
+  }).length;
+  const pageRect = document.querySelector(".prototype-detail-page")?.getBoundingClientRect();
+  return {
+    scrollY: Math.round(window.scrollY || 0),
+    viewportHeight: Math.round(viewportHeight),
+    scrollHeight: Math.round(document.documentElement.scrollHeight || 0),
+    detailTop: pageRect ? Math.round(pageRect.top) : null,
+    detailHeight: pageRect ? Math.round(pageRect.height) : null,
+    visibleDetailNodes: visibleCount
+  };
+}
+
+function debugRouteState(extra = {}) {
+  const host = document.getElementById("prototype-detail-route");
+  return {
+    hash: window.location.hash,
+    route: document.body.dataset.route || "",
+    slug: typeof getPrototypeHashSlug === "function" ? getPrototypeHashSlug() : "",
+    detailBlocks: document.querySelectorAll(".prototype-detail-block").length,
+    hostChildren: host?.children.length ?? -1,
+    ...getVisibleDetailState(),
+    ...extra
+  };
+}
+
+function correctBlankPrototypeViewport(reason = "unknown") {
+  if (document.body.dataset.route !== "prototype-detail") return;
+  const before = debugRouteState({ reason });
+  if (before.visibleDetailNodes > 0) return;
+
+  const page = document.querySelector(".prototype-detail-page");
+  if (!page) return;
+  window.scrollTo({ top: page.offsetTop, behavior: "auto" });
+  debugLog("scroll", "corrected blank prototype viewport", {
+    before,
+    after: debugRouteState({ reason })
+  }, "warn");
+}
+
+function setupDebugCapture() {
+  if (debugCaptureReady) return;
+  debugCaptureReady = true;
+  window.addEventListener("error", (event) => {
+    debugLog("window.error", event.message || "Runtime error", {
+      source: event.filename,
+      line: event.lineno,
+      column: event.colno,
+      error: debugString(event.error)
+    }, "error");
+  });
+  window.addEventListener("unhandledrejection", (event) => {
+    debugLog("promise", "Unhandled rejection", { reason: debugString(event.reason) }, "error");
+  });
 }
 function setText(selector, value) {
   document.querySelectorAll(selector).forEach((node) => {
@@ -1680,23 +1776,52 @@ function getPrototypeHashSlug() {
   return decodeURIComponent(hash.slice("prototype/".length));
 }
 
+function normalizeRouteSlug(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
 function getPrototypeCardBySlug(slug) {
   const section = getPrototypeSection();
   if (!section || !slug) return null;
-  return getOrderedCustomCards(section).find((card) => card.slug === slug || customCardSlug(card, card.index) === slug) || null;
+  const normalizedSlug = normalizeRouteSlug(slug);
+  return getOrderedCustomCards(section).find((card) => {
+    return normalizeRouteSlug(card.slug) === normalizedSlug || normalizeRouteSlug(customCardSlug(card, card.index)) === normalizedSlug;
+  }) || null;
 }
 
 function renderPrototypeDetailRoute(options = {}) {
   const host = document.getElementById("prototype-detail-route");
-  if (!host) return;
+  if (!host) {
+    debugLog("route", "prototype host missing", { hash: window.location.hash }, "warn");
+    return;
+  }
 
   const slug = getPrototypeHashSlug();
   const section = getPrototypeSection();
   const card = getPrototypeCardBySlug(slug);
 
-  if (!slug || !section || !card) {
+  if (!slug) {
     document.body.removeAttribute("data-route");
     host.innerHTML = "";
+    debugLog("route", "not prototype detail route", debugRouteState());
+    return;
+  }
+
+  if (!section || !card) {
+    document.body.dataset.route = "prototype-detail";
+    debugLog("route", "prototype card missing", {
+      slug,
+      hasSection: !!section,
+      cards: section?.cards?.map((item) => ({ title: item.title, slug: item.slug })) || []
+    }, "error");
+    host.innerHTML = `
+      <section class="section-band prototype-detail-page">
+        <div class="section-inner prototype-detail-inner">
+          <a class="detail-back-link" href="#prototype">返回原型设计</a>
+          <p class="prototype-detail-empty">没有找到这个详情页：${escapeHtml(slug)}。请刷新页面或检查详情页路径。</p>
+        </div>
+      </section>
+    `;
     return;
   }
 
@@ -1705,7 +1830,9 @@ function renderPrototypeDetailRoute(options = {}) {
   try {
     host.innerHTML = renderPrototypeDetailPage(section, card);
     observeReveals();
+    debugLog("route", "prototype detail rendered", debugRouteState({ cardTitle: card.title }));
   } catch (error) {
+    debugLog("route", "prototype detail render failed", { error: debugString(error), slug, cardTitle: card?.title }, "error");
     console.error("Prototype detail render failed", error);
     host.innerHTML = `
       <section class="section-band prototype-detail-page">
@@ -2799,6 +2926,24 @@ function createEditorShell() {
         ${icon("save")}
         <span>保存</span>
       </button>
+      <button class="dev-log-button" type="button" data-dev-log-toggle title="打开调试日志">
+        <span>日志</span>
+      </button>
+      <aside class="dev-log-panel" data-dev-log-panel aria-hidden="true">
+        <div class="dev-log-header">
+          <strong>Debug Log</strong>
+          <div>
+            <button type="button" data-dev-log-export>导出</button>
+            <button type="button" data-dev-log-clear>清空</button>
+            <button type="button" data-dev-log-close>关闭</button>
+          </div>
+        </div>
+        <div class="dev-log-tools">
+          <input type="search" data-dev-log-search placeholder="搜索 scope / message / details" />
+          <span data-dev-log-count></span>
+        </div>
+        <div class="dev-log-body" data-dev-log-body></div>
+      </aside>
       <aside class="dev-panel" data-dev-panel aria-hidden="true">
         <div class="dev-panel-header">
           <div>
@@ -2840,6 +2985,11 @@ function bindEditorEvents() {
   document.querySelector("[data-dev-import]").addEventListener("change", importContentFile);
   document.querySelector("[data-inline-edit-toggle]").addEventListener("click", () => setInlineEditMode(!inlineEditMode));
   document.querySelector("[data-inline-save]").addEventListener("click", saveCurrentContent);
+  document.querySelector("[data-dev-log-toggle]").addEventListener("click", toggleDebugLogPanel);
+  document.querySelector("[data-dev-log-close]").addEventListener("click", closeDebugLogPanel);
+  document.querySelector("[data-dev-log-clear]").addEventListener("click", clearDebugLogPanel);
+  document.querySelector("[data-dev-log-export]").addEventListener("click", exportDebugLogPanel);
+  document.querySelector("[data-dev-log-search]").addEventListener("input", updateDebugLogFilter);
   document.addEventListener("click", handleInlineEditClick);
   document.addEventListener("input", handleInlineEditInput);
   document.addEventListener("change", handleInlineEditChange);
@@ -2876,6 +3026,85 @@ function bindEditorEvents() {
       handleVideoUpload(videoInput);
     }
   });
+}
+
+function renderDebugLogPanel() {
+  const body = document.querySelector("[data-dev-log-body]");
+  if (!body) return;
+  const count = document.querySelector("[data-dev-log-count]");
+  const search = document.querySelector("[data-dev-log-search]");
+  const filter = debugLogFilter.trim().toLowerCase();
+  if (search && search.value !== debugLogFilter) search.value = debugLogFilter;
+  const visibleLogs = filter
+    ? debugLogs.filter((entry) => {
+        const haystack = `${entry.time} ${entry.level} ${entry.scope} ${entry.message} ${debugString(entry.details)}`.toLowerCase();
+        return haystack.includes(filter);
+      })
+    : debugLogs;
+  if (count) count.textContent = filter ? `${visibleLogs.length}/${debugLogs.length}` : `${debugLogs.length}`;
+  body.innerHTML = visibleLogs.length
+    ? visibleLogs.map((entry) => {
+        const detail = entry.details && Object.keys(entry.details).length
+          ? `<pre>${escapeHtml(debugString(entry.details))}</pre>`
+          : "";
+        return `
+          <article class="dev-log-entry is-${attr(entry.level)}">
+            <div><span>${escapeHtml(entry.time)}</span><b>${escapeHtml(entry.scope)}</b><em>${escapeHtml(entry.level)}</em></div>
+            <p>${escapeHtml(entry.message)}</p>
+            ${detail}
+          </article>
+        `;
+      }).join("")
+    : `<p class="dev-log-empty">${debugLogs.length ? "没有匹配的日志。" : "暂无日志。复现保存/上传问题后这里会显示记录。"}</p>`;
+}
+
+function openDebugLogPanel() {
+  const panel = document.querySelector("[data-dev-log-panel]");
+  if (!panel) return;
+  panel.classList.add("is-open");
+  panel.setAttribute("aria-hidden", "false");
+  renderDebugLogPanel();
+}
+
+function closeDebugLogPanel() {
+  const panel = document.querySelector("[data-dev-log-panel]");
+  if (!panel) return;
+  panel.classList.remove("is-open");
+  panel.setAttribute("aria-hidden", "true");
+}
+
+function toggleDebugLogPanel() {
+  const panel = document.querySelector("[data-dev-log-panel]");
+  if (panel?.classList.contains("is-open")) closeDebugLogPanel();
+  else openDebugLogPanel();
+}
+
+function clearDebugLogPanel() {
+  debugLogs.splice(0);
+  renderDebugLogPanel();
+}
+
+function updateDebugLogFilter(event) {
+  debugLogFilter = event.target.value || "";
+  renderDebugLogPanel();
+}
+
+function exportDebugLogPanel() {
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    url: window.location.href,
+    filter: debugLogFilter,
+    logs: debugLogs
+  };
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `portfolio-debug-log-${stamp}.json`;
+  link.click();
+  URL.revokeObjectURL(url);
+  debugLog("debug", "log exported", { count: debugLogs.length, filter: debugLogFilter });
 }
 
 function openEditor() {
@@ -4109,9 +4338,12 @@ function saveLocalPreviewData(data) {
 }
 
 async function saveCurrentContent() {
+  debugLog("save", "start", debugRouteState());
+  syncInlineEditsFromDom();
   syncFromEditor();
   const serverSaved = await saveServerData(siteData);
   const localSaved = serverSaved ? false : saveLocalPreviewData(siteData);
+  debugLog("save", "data saved", { serverSaved, localSaved, updatedAt: siteData.updatedAt });
 
   if (serverSaved) {
     try {
@@ -4121,8 +4353,17 @@ async function saveCurrentContent() {
     }
   }
 
-  renderAll();
-  renderEditor();
+  try {
+    renderAll();
+    renderEditor();
+    correctBlankPrototypeViewport("after-save-render");
+    debugLog("save", "render after save complete", debugRouteState());
+  } catch (error) {
+    debugLog("save", "render after save failed", { error: debugString(error), ...debugRouteState() }, "error");
+    showToast("保存后渲染失败：请打开日志查看原因");
+    openDebugLogPanel();
+    return;
+  }
 
   if (serverSaved) {
     showToast("已保存到 content.json");
@@ -4173,6 +4414,7 @@ function showToast(message) {
 }
 
 async function init() {
+  setupDebugCapture();
   siteData = await loadInitialData();
   renderAll();
   setupFilters();
@@ -4182,6 +4424,7 @@ async function init() {
   setupPrototypeDetailRoutes();
   observeReveals();
   setupParticleCanvas();
+  debugLog("init", "ready", debugRouteState());
 }
 
 init();

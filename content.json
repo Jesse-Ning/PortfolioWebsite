@@ -3015,7 +3015,9 @@
       "navTitle": "原型设计",
       "kicker": "prototype",
       "title": "原型设计",
-      "body": [],
+      "body": [
+        ""
+      ],
       "layout": "cards",
       "cards": [
         {
@@ -3044,7 +3046,7 @@
               "type": "text",
               "order": 3,
               "text": "角色BP代码逻辑",
-              "textStyle": "body"
+              "textStyle": "heading"
             },
             {
               "type": "image",
@@ -3106,7 +3108,7 @@
               "type": "text",
               "order": 10,
               "text": "引力球BP的代码逻辑",
-              "textStyle": "body"
+              "textStyle": "heading"
             },
             {
               "type": "image",

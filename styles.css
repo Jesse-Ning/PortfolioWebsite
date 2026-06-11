@@ -1529,7 +1529,8 @@ body[data-route="prototype-detail"] #prototype-detail-route {
 }
 
 .inline-edit-button,
-.inline-save-button {
+.inline-save-button,
+.dev-log-button {
   position: fixed;
   right: 22px;
   z-index: 45;
@@ -1557,6 +1558,10 @@ body[data-route="prototype-detail"] #prototype-detail-route {
   background: var(--jade);
 }
 
+.dev-log-button {
+  bottom: 184px;
+}
+
 .inline-edit-button svg,
 .inline-save-button svg {
   width: 17px;
@@ -1565,6 +1570,135 @@ body[data-route="prototype-detail"] #prototype-detail-route {
 
 body[data-inline-edit="1"] .inline-edit-button {
   background: var(--red);
+}
+
+.dev-log-panel {
+  position: fixed;
+  right: 22px;
+  bottom: 238px;
+  z-index: 72;
+  display: none;
+  width: min(520px, calc(100vw - 44px));
+  max-height: min(520px, calc(100svh - 120px));
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  color: #eef3f7;
+  background: rgba(10, 13, 18, 0.96);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+}
+
+.dev-log-panel.is-open {
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+.dev-log-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.dev-log-header button {
+  margin-left: 8px;
+  padding: 7px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 6px;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.dev-log-tools {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.dev-log-tools input {
+  width: 100%;
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 6px;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+  font: inherit;
+  font-size: 0.84rem;
+}
+
+.dev-log-tools input:focus {
+  outline: 2px solid color-mix(in srgb, var(--jade) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.dev-log-tools span {
+  min-width: 44px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-align: right;
+}
+
+.dev-log-body {
+  overflow: auto;
+  padding: 10px;
+  font-family: Consolas, "SFMono-Regular", monospace;
+  font-size: 0.78rem;
+}
+
+.dev-log-entry {
+  margin: 0 0 8px;
+  padding: 9px;
+  border-left: 3px solid var(--jade);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.dev-log-entry.is-warn {
+  border-left-color: #f2a93b;
+}
+
+.dev-log-entry.is-error {
+  border-left-color: var(--red);
+}
+
+.dev-log-entry div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+}
+
+.dev-log-entry em {
+  margin-left: auto;
+  font-style: normal;
+  text-transform: uppercase;
+}
+
+.dev-log-entry p {
+  margin: 6px 0 0;
+}
+
+.dev-log-entry pre {
+  max-height: 130px;
+  margin: 8px 0 0;
+  overflow: auto;
+  white-space: pre-wrap;
+  color: #cbd7e2;
+}
+
+.dev-log-empty {
+  margin: 0;
+  color: var(--muted);
 }
 
 .custom-section,
@@ -2170,14 +2304,22 @@ body[data-theme="dark"] .dev-action.primary {
 
   .dev-open-button,
   .inline-edit-button,
-  .inline-save-button {
+  .inline-save-button,
+  .dev-log-button {
     right: 12px;
   }
 
   .dev-open-button span,
   .inline-edit-button span,
-  .inline-save-button span {
+  .inline-save-button span,
+  .dev-log-button span {
     display: none;
+  }
+
+  .dev-log-panel {
+    right: 12px;
+    bottom: 230px;
+    width: calc(100vw - 24px);
   }
 
   .custom-section > .inline-section-toolbar {
