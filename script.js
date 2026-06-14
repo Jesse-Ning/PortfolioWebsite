@@ -40,12 +40,9 @@ const DEFAULT_SITE_DATA = {
       { label: "AI", items: ["Claude", "Codex", "Gemini"] }
     ],
     links: [
-      { label: "Email", href: "mailto:yourname@example.com", icon: "mail", primary: true },
-      { label: "微信", href: "weixin://", icon: "wechat" },
-      { label: "电话", href: "tel:+86-000-0000-0000", icon: "phone" },
+      { label: "Email", href: "mailto:499133405@qq.com", icon: "mail", primary: true },
       { label: "GitHub", href: "https://github.com/", icon: "github" },
-      { label: "Bilibili", href: "https://space.bilibili.com/", icon: "video" },
-      { label: "Steam", href: "https://steamcommunity.com/", icon: "gamepad" }
+      { label: "Bilibili", href: "https://space.bilibili.com/", icon: "video" }
     ]
   },
   timeline: [
@@ -152,6 +149,57 @@ const DEFAULT_SITE_DATA = {
   },
   customSections: []
 };
+
+const DEFAULT_HERO_STYLE = {
+  fontFamily: '"Microsoft YaHei UI", "Microsoft YaHei", "Segoe UI", sans-serif',
+  headingSize: "42px",
+  lineHeight: "1.18",
+  headingWeight: "780",
+  maxWidth: "1120px",
+  titleSize: "16px",
+  titleLineHeight: "1.45",
+  align: "center",
+  nowrap: true
+};
+
+function cssLength(value, fallback) {
+  const raw = String(value || "").trim();
+  if (!raw) return fallback;
+  return /^-?\d+(\.\d+)?$/.test(raw) ? `${raw}px` : raw;
+}
+
+function normalizeHeroStyle(value = {}) {
+  const source = value && typeof value === "object" ? value : {};
+  const align = ["left", "center", "right"].includes(source.align) ? source.align : DEFAULT_HERO_STYLE.align;
+  return {
+    fontFamily: String(source.fontFamily || DEFAULT_HERO_STYLE.fontFamily).trim(),
+    headingSize: cssLength(source.headingSize, DEFAULT_HERO_STYLE.headingSize),
+    lineHeight: String(source.lineHeight || DEFAULT_HERO_STYLE.lineHeight).trim(),
+    headingWeight: String(source.headingWeight || DEFAULT_HERO_STYLE.headingWeight).trim(),
+    maxWidth: cssLength(source.maxWidth, DEFAULT_HERO_STYLE.maxWidth),
+    titleSize: cssLength(source.titleSize, DEFAULT_HERO_STYLE.titleSize),
+    titleLineHeight: String(source.titleLineHeight || DEFAULT_HERO_STYLE.titleLineHeight).trim(),
+    align,
+    nowrap: source.nowrap !== false
+  };
+}
+
+function applyHeroStyle(value) {
+  const hero = document.querySelector(".hero");
+  const inner = document.querySelector(".hero-inner");
+  if (!hero || !inner) return;
+  const style = normalizeHeroStyle(value);
+  hero.style.setProperty("--hero-align", style.align);
+  inner.style.setProperty("--hero-font-family", style.fontFamily);
+  inner.style.setProperty("--hero-heading-size", style.headingSize);
+  inner.style.setProperty("--hero-line-height", style.lineHeight);
+  inner.style.setProperty("--hero-heading-weight", style.headingWeight);
+  inner.style.setProperty("--hero-max-width", style.maxWidth);
+  inner.style.setProperty("--hero-title-size", style.titleSize);
+  inner.style.setProperty("--hero-title-line-height", style.titleLineHeight);
+  inner.style.setProperty("--hero-align", style.align);
+  inner.style.setProperty("--hero-white-space", style.nowrap ? "nowrap" : "normal");
+}
 
 const iconMap = {
   mail:
@@ -948,6 +996,8 @@ function normalizeData(data) {
     profile: {
       ...fallback.profile,
       ...(source.profile || {}),
+      heroGreeting: String(source.profile?.heroGreeting || fallback.profile.heroGreeting || "").trim(),
+      heroStyle: normalizeHeroStyle(source.profile?.heroStyle || fallback.profile.heroStyle),
       about: toParagraphs(source.profile?.about || fallback.profile.about),
       facts: Array.isArray(source.profile?.facts) ? source.profile.facts : fallback.profile.facts,
       keywords: normalizeKeywordGroups(source.profile?.keywords || fallback.profile.keywords),
@@ -1298,8 +1348,9 @@ function renderNav() {
     label: section.navTitle || section.title || "新页签"
   }));
   const contactItem = baseItems.find((item) => item.id === "contact");
-  const mainItems = baseItems.filter((item) => item.id !== "contact");
-  const navItems = [...mainItems, ...customItems, contactItem].filter(Boolean);
+  const steamItem = baseItems.find((item) => item.id === "steam");
+  const mainItems = baseItems.filter((item) => item.id !== "contact" && item.id !== "steam");
+  const navItems = [...mainItems, ...customItems, steamItem, contactItem].filter(Boolean);
 
   document.querySelector(".site-nav").innerHTML = navItems
     .map((item) => `<a href="#${attr(item.id)}">${escapeHtml(item.label)}</a>`)
@@ -1401,7 +1452,12 @@ function renderSoftwareIconItem(item, group) {
 }
 
 function renderContactLink(link) {
-  const href = String(link.href || "#").trim() || "#";
+  const rawHref = String(link.href || "#").trim() || "#";
+  const href =
+    (link.icon === "mail" || String(link.label || "").toLowerCase() === "email") &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawHref)
+      ? `mailto:${rawHref}`
+      : rawHref;
   const isExternal = href.startsWith("http://") || href.startsWith("https://");
   return `
     <a class="link-button${link.primary ? " primary" : ""}" href="${attr(href)}" target="${isExternal ? "_blank" : "_self"}" rel="noreferrer">
@@ -1413,13 +1469,16 @@ function renderContactLink(link) {
 
 function renderProfile() {
   const { profile } = siteData;
+  const heroGreeting = profile.heroGreeting || `Hi，我是${profile.name}，很高兴遇见你，`;
   document.title = `${profile.name} | Personal Portfolio`;
   setText("[data-profile-name]", profile.name);
+  setText("[data-profile-greeting]", heroGreeting);
   setText("[data-profile-initials]", profile.initials);
   setText("[data-profile-kicker]", profile.kicker);
   setText("[data-profile-title]", profile.title);
   setText("[data-profile-summary]", profile.summary);
   setText("[data-current-year]", new Date().getFullYear());
+  applyHeroStyle(profile.heroStyle);
 
   document.getElementById("about-copy").innerHTML = profile.about
     .map(
@@ -1925,6 +1984,7 @@ function hasProjectDetail(project) {
 }
 
 function projectDetailHref(project) {
+  if (isDetailProject(project)) return "yinyang-design.html";
   return `#project/${encodeURIComponent(projectCardSlug(project, project.index))}`;
 }
 
@@ -3412,8 +3472,30 @@ function renderEditor() {
 
 function renderProfileEditor() {
   const profile = siteData.profile;
+  const heroStyle = normalizeHeroStyle(profile.heroStyle);
+  const heroGreeting = profile.heroGreeting || `Hi，我是${profile.name}，很高兴遇见你，`;
   return `
     <div class="dev-form-grid">
+      ${textarea("首屏欢迎语", "profile-hero-greeting", heroGreeting, 2)}
+      ${field("欢迎语字体", "profile-hero-font-family", heroStyle.fontFamily)}
+      ${field("欢迎语字号", "profile-hero-heading-size", heroStyle.headingSize)}
+      ${field("欢迎语行距", "profile-hero-line-height", heroStyle.lineHeight)}
+      ${field("欢迎语字重", "profile-hero-heading-weight", heroStyle.headingWeight)}
+      ${field("首屏最大宽度", "profile-hero-max-width", heroStyle.maxWidth)}
+      ${field("职业说明字号", "profile-hero-title-size", heroStyle.titleSize)}
+      ${field("职业说明行距", "profile-hero-title-line-height", heroStyle.titleLineHeight)}
+      <label class="dev-field">
+        <span>首屏对齐</span>
+        <select id="profile-hero-align">
+          ${["left", "center", "right"]
+            .map((option) => `<option value="${option}"${option === heroStyle.align ? " selected" : ""}>${option}</option>`)
+            .join("")}
+        </select>
+      </label>
+      <label class="dev-check-field">
+        <input id="profile-hero-nowrap" type="checkbox"${heroStyle.nowrap ? " checked" : ""} />
+        <span>欢迎语尽量保持一行</span>
+      </label>
       ${field("姓名", "profile-name", profile.name)}
       ${field("头像缩写", "profile-initials", profile.initials)}
       ${field("英文身份", "profile-kicker", profile.kicker)}
@@ -4344,6 +4426,20 @@ function collectEditorData() {
     next.profile.kicker = editorRoot.querySelector("#" + "profile-kicker").value.trim();
     next.profile.title = editorRoot.querySelector("#" + "profile-title").value.trim();
     next.profile.summary = editorRoot.querySelector("#" + "profile-summary").value.trim();
+    next.profile.heroGreeting =
+      editorRoot.querySelector("#" + "profile-hero-greeting")?.value.trim() ||
+      `Hi，我是${next.profile.name}，很高兴遇见你，`;
+    next.profile.heroStyle = normalizeHeroStyle({
+      fontFamily: editorRoot.querySelector("#" + "profile-hero-font-family")?.value,
+      headingSize: editorRoot.querySelector("#" + "profile-hero-heading-size")?.value,
+      lineHeight: editorRoot.querySelector("#" + "profile-hero-line-height")?.value,
+      headingWeight: editorRoot.querySelector("#" + "profile-hero-heading-weight")?.value,
+      maxWidth: editorRoot.querySelector("#" + "profile-hero-max-width")?.value,
+      titleSize: editorRoot.querySelector("#" + "profile-hero-title-size")?.value,
+      titleLineHeight: editorRoot.querySelector("#" + "profile-hero-title-line-height")?.value,
+      align: editorRoot.querySelector("#" + "profile-hero-align")?.value,
+      nowrap: editorRoot.querySelector("#" + "profile-hero-nowrap")?.checked
+    });
     next.profile.about = toParagraphs(editorRoot.querySelector("#" + "profile-about").value);
     next.profile.facts = Array.from(editorRoot.querySelectorAll("[data-fact-index]")).map((row) => ({
       value: row.querySelector("[data-fact-field='value']").value.trim(),

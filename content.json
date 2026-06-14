@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-14T08:42:21.118Z",
+  "updatedAt": "2026-06-14T16:30:45.423Z",
   "sections": {
     "about": {
       "nav": "介绍",
@@ -36,10 +36,10 @@
     "name": "庞振宁",
     "initials": "YY",
     "kicker": "",
-    "title": "游戏设计师 & UE蓝图程序员",
+    "title": "游戏设计师 & UE蓝图程序员 & AI FDE",
     "summary": "",
     "about": [
-      "我是一名偏设计实现型的游戏创作者，工作重点放在战斗系统、镜头反馈、角色状态机和关卡节奏上。比起只写一个功能，我更在意玩家按下按钮之后，画面、声音、动画和数值是否形成清楚的回应。\n目前主要使用 Unreal Engine 的蓝图和 C++ 做动作游戏原型，围绕角色基础运动包括闪避、弹反、处决和Boss 行为树、战斗镜头和 UI 反馈建立可迭代的玩法模块。\n我喜欢用研究的方式做设计：拆解优秀游戏，记录机制意图，再把假设做成小原型验证。"
+      "我是一名偏设计实现型的游戏创作者，工作重点放在战斗系统、镜头反馈、角色状态机和关卡节奏上。比起只写一个功能，我更在意玩家按下按钮之后，画面、声音、动画和数值是否形成清楚的回应。\n目前主要使用 Unreal Engine 的蓝图和 C++ 做动作游戏原型，围绕角色基础运动包括闪避、弹反、处决和Boss 行为树、战斗镜头和 UI 反馈建立可迭代的玩法模块。\n我喜欢用研究的方式做设计：拆解优秀游戏，记录机制意图，再把假设做成小原型验证。现在我也在学习并使用AI，目前我已经构建了一套可以应用于虚幻引擎的AI开发流程，可以实现C++和蓝图的关联，并且工作流也非常适合迭代和调试。在未来我会更多的将AI应用到实际的开发流程里。"
     ],
     "facts": [
       {
@@ -118,7 +118,7 @@
     "links": [
       {
         "label": "Email",
-        "href": "499133405@qq.com",
+        "href": "mailto:499133405@qq.com",
         "icon": "mail",
         "primary": true
       },
@@ -133,20 +133,20 @@
         "href": "https://space.bilibili.com/2099525?spm_id_from=333.1365.0.0",
         "icon": "video",
         "primary": false
-      },
-      {
-        "label": "Steam",
-        "href": "https://steamcommunity.com/",
-        "icon": "gamepad",
-        "primary": false
-      },
-      {
-        "label": "微信",
-        "href": "Jsmine22",
-        "icon": "wechat",
-        "primary": false
       }
-    ]
+    ],
+    "heroGreeting": "Hi，我是庞振宁，很高兴遇见你。",
+    "heroStyle": {
+      "fontFamily": "\"Microsoft YaHei UI\", \"Microsoft YaHei\", \"Segoe UI\", sans-serif",
+      "headingSize": "42px",
+      "lineHeight": "1.18",
+      "headingWeight": "780",
+      "maxWidth": "1120px",
+      "titleSize": "16px",
+      "titleLineHeight": "1.45",
+      "align": "center",
+      "nowrap": true
+    }
   },
   "timeline": [
     {
@@ -162,7 +162,7 @@
     {
       "date": "2024-现在",
       "title": "Void Interactive",
-      "description": "负责UE5项目《莲》的战斗体验设计方案：\n1.根据项目要求和设计大纲进行3C设计与MVP演示。\n2.制作富有乐趣且具有挑战性的boss战斗与敌人AI架构。\n3.撰写和迭代战斗系统的开发文档，需求文档与相关的debug调试工具。\n4.依靠UE5的内置功能快速搭建玩法与白盒、灰盒展示。\n5.装配，维护引擎内和战斗相关的资产。\n6.与程序和美术合作将设计方案落地。",
+      "description": "负责UE5项目《莲》的战斗体验设计方案：\n1.根据项目要求和设计大纲进行3C设计与MVP演示。\n2.制作富有乐趣且具有挑战性的boss战斗与敌人AI架构。\n3.撰写和迭代战斗系统的开发文档，需求文档与相关的debug调试工具。\n4.依靠UE5的内置功能快速搭建玩法与白盒、灰盒展示。\n5.装配，维护引擎内和战斗相关的资产。\n6.使用Codex和Claude code构建工作流，从而实现程序实现功能与策划友好调试。\n7.与程序和美术合作将设计方案落地。",
       "tags": [
         "战斗策划"
       ],
@@ -3237,7 +3237,9 @@
       "navTitle": "原型设计",
       "kicker": "prototype",
       "title": "原型设计",
-      "body": [],
+      "body": [
+        ""
+      ],
       "layout": "cards",
       "cards": [
         {
