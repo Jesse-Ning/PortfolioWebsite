@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-11T08:00:17.073Z",
+  "updatedAt": "2026-06-13T15:12:05.968Z",
   "sections": {
     "about": {
       "nav": "介绍",
@@ -192,7 +192,9 @@
   ],
   "projects": [
     {
-      "order": 5,
+      "order": 6,
+      "slug": "quest-for-valor",
+      "website": "【RPG关卡作品：Quest For Valor】 https://www.bilibili.com/video/BV1k3vUepEQi/?share_source=copy_web&vd_source=ce03f59b94906fd6cba5bf3a66861b0e",
       "title": "Quest For Valor",
       "year": "2024",
       "role": "关卡设计",
@@ -206,12 +208,15 @@
       "imageAspect": "",
       "imageFit": "cover",
       "description": "跟随小朱诺和动物伙伴们一起去讨伐骷髅王,将美丽的动物王国从邪恶手中还回来！",
+      "detailBlocks": [],
       "tags": [
         "线性关卡"
       ]
     },
     {
       "order": 1,
+      "slug": "阴阳之力",
+      "website": "",
       "title": "阴阳之力",
       "year": "2026",
       "role": "战斗策划",
@@ -220,17 +225,23 @@
       "engine": "UE5",
       "language": "C++ / Blueprint",
       "gameType": "原型",
-      "image": "assets/uploads/images/legacy-ee160d297efe593d.jpg",
+      "image": "assets/uploads/images/1781360709429-asset.png",
       "imageWidth": "1000",
       "imageAspect": "",
       "imageFit": "contain",
       "description": "凡所有相，皆是虚妄，若见诸相非相，即见如来。\n遇见危险不要恐惧，静下心来去直面恐惧才是取胜之道。专注于自己的呼吸，让自己慢下来就能无往不利。",
+      "detailBlocks": [],
       "tags": [
-        "GAS"
+        "GAS",
+        "战斗设计原型",
+        "C++",
+        "ARPG"
       ]
     },
     {
       "order": 2,
+      "slug": "莲lotus",
+      "website": "【个人自制战斗Demo】 https://www.bilibili.com/video/BV1gzTMz5ESH/?share_source=copy_web&vd_source=ce03f59b94906fd6cba5bf3a66861b0e",
       "title": "莲_Lotus",
       "year": "2025",
       "role": "战斗设计",
@@ -244,12 +255,15 @@
       "imageAspect": "",
       "imageFit": "scale-down",
       "description": "所有人都将错误和苦难归结到你的身上，认为你的存在是带给他们苦厄的根源。他们以为把你杀死就能换取和平？但他们没想到正是他们的咄咄逼人给世界带来了灭顶之灾。\n复仇吧，化作愤怒的火焰；复仇吧，将世界的恶洗刷殆尽。",
+      "detailBlocks": [],
       "tags": [
         "Soul-Like"
       ]
     },
     {
       "order": 3,
+      "slug": "illegally-assembly",
+      "website": "【RPG关卡作品：Quest For Valor】 https://www.bilibili.com/video/BV1k3vUepEQi/?share_source=copy_web&vd_source=ce03f59b94906fd6cba5bf3a66861b0e",
       "title": "Illegally Assembly",
       "year": "2024",
       "role": "PM/数值设计",
@@ -263,12 +277,15 @@
       "imageAspect": "",
       "imageFit": "cover",
       "description": "你被发配到了一颗荒芜但充满矿产资源的星球上，你唯一的出路就是挖掘这里矿物并将其换成金钱来换取赎罪的机会！但是一切都有时间限制，否则面对的将是永久监禁！\n搜集，传输，配方，金钱,未知的危险！来不遗余力去寻找最优解决方案吧！",
+      "detailBlocks": [],
       "tags": [
         "项目管理"
       ]
     },
     {
       "order": 4,
+      "slug": "夏日烟火祭",
+      "website": "【RPG关卡作品：Quest For Valor】 https://www.bilibili.com/video/BV1k3vUepEQi/?share_source=copy_web&vd_source=ce03f59b94906fd6cba5bf3a66861b0e",
       "title": "夏日烟火祭",
       "year": "2024",
       "role": "游戏设计",
@@ -282,12 +299,15 @@
       "imageAspect": "",
       "imageFit": "cover",
       "description": "在这款游戏中玩家将会置身于日本的烟火大会，在传统的金鱼游戏中捞起金鱼获得分数从而获得强大的道具来帮助自己的捞取效率。\n你的最终目标是一个大大漂亮的烟花！",
+      "detailBlocks": [],
       "tags": [
         "VR"
       ]
     },
     {
       "order": 5,
+      "slug": "博物馆潜行",
+      "website": "【RPG关卡作品：Quest For Valor】 https://www.bilibili.com/video/BV1k3vUepEQi/?share_source=copy_web&vd_source=ce03f59b94906fd6cba5bf3a66861b0e",
       "title": "博物馆潜行",
       "year": "2024",
       "role": "游戏设计/关卡设计",
@@ -301,6 +321,7 @@
       "imageAspect": "",
       "imageFit": "cover",
       "description": "目标是巨大宝藏！但是博物馆里戒备森严，危险！\n玩家将会体检“双主角”配合去躲避博物馆保安，应对警备器械并在最后成功偷取宝物。",
+      "detailBlocks": [],
       "tags": [
         "双主角"
       ]
@@ -2935,55 +2956,135 @@
       "id": "playstation",
       "label": "PlayStation",
       "logo": "playstation",
-      "description": "这里预留给 PlayStation 游戏。你可以先添加名字、类型和游玩时间，封面后续再补。",
+      "description": "",
       "games": [
         {
           "name": "只狼",
-          "image": "",
+          "image": "https://cdn.cloudflare.steamstatic.com/steam/apps/814380/header.jpg",
           "genres": [
-            "动作 冒险"
+            "类魂"
           ],
           "playtimeMinutes": 5760
         },
         {
-          "name": "新游戏",
-          "image": "",
+          "name": "血源诅咒",
+          "image": "https://upload.wikimedia.org/wikipedia/en/6/68/Bloodborne_Cover_Wallpaper.jpg",
           "genres": [
-            "未分类"
+            "类魂"
           ],
-          "playtimeMinutes": 0
+          "playtimeMinutes": 6000
         },
         {
-          "name": "新游戏",
-          "image": "",
+          "name": "黑暗之魂3",
+          "image": "https://cdn.cloudflare.steamstatic.com/steam/apps/374320/header.jpg",
           "genres": [
-            "未分类"
+            "类魂"
           ],
-          "playtimeMinutes": 0
+          "playtimeMinutes": 6000
         },
         {
-          "name": "新游戏",
-          "image": "",
+          "name": "荒野大镖客",
+          "image": "https://cdn.cloudflare.steamstatic.com/steam/apps/1174180/header.jpg",
           "genres": [
-            "未分类"
+            "开放世界"
           ],
-          "playtimeMinutes": 0
+          "playtimeMinutes": 30000
         },
         {
-          "name": "新游戏",
-          "image": "",
+          "name": "GTA5",
+          "image": "https://cdn.cloudflare.steamstatic.com/steam/apps/271590/header.jpg",
           "genres": [
-            "未分类"
+            "开放世界"
           ],
-          "playtimeMinutes": 0
+          "playtimeMinutes": 6000
         },
         {
-          "name": "新游戏",
-          "image": "",
+          "name": "对马岛之魂",
+          "image": "https://cdn.cloudflare.steamstatic.com/steam/apps/2215430/header.jpg",
           "genres": [
-            "未分类"
+            "开放世界"
           ],
-          "playtimeMinutes": 0
+          "playtimeMinutes": 9000
+        },
+        {
+          "name": "最后生还者1",
+          "image": "https://cdn.cloudflare.steamstatic.com/steam/apps/1888930/header.jpg",
+          "genres": [
+            "线性叙事"
+          ],
+          "playtimeMinutes": 4800
+        },
+        {
+          "name": "最后生还者2",
+          "image": "https://upload.wikimedia.org/wikipedia/en/4/4f/TLOU_P2_Box_Art_2.png",
+          "genres": [
+            "线性叙事"
+          ],
+          "playtimeMinutes": 3600
+        },
+        {
+          "name": "神秘海域4",
+          "image": "https://cdn.cloudflare.steamstatic.com/steam/apps/1659420/header.jpg",
+          "genres": [
+            "冒险"
+          ],
+          "playtimeMinutes": 1800
+        },
+        {
+          "name": "阿卡姆骑士",
+          "image": "https://cdn.cloudflare.steamstatic.com/steam/apps/208650/header.jpg",
+          "genres": [
+            "动作"
+          ],
+          "playtimeMinutes": 1200
+        },
+        {
+          "name": "漫威蜘蛛侠1",
+          "image": "https://cdn.cloudflare.steamstatic.com/steam/apps/1817070/header.jpg",
+          "genres": [
+            "开放世界"
+          ],
+          "playtimeMinutes": 2400
+        },
+        {
+          "name": "漫威蜘蛛侠2",
+          "image": "https://cdn.cloudflare.steamstatic.com/steam/apps/2651280/header.jpg",
+          "genres": [
+            "开放世界"
+          ],
+          "playtimeMinutes": 1800
+        },
+        {
+          "name": "漫威蜘蛛侠：迈尔斯莫拉雷斯",
+          "image": "https://cdn.cloudflare.steamstatic.com/steam/apps/1817190/header.jpg",
+          "genres": [
+            "开放世界"
+          ],
+          "playtimeMinutes": 1200
+        },
+        {
+          "name": "死亡搁浅1",
+          "image": "https://cdn.cloudflare.steamstatic.com/steam/apps/1190460/header.jpg",
+          "genres": [
+            "开放世界"
+          ],
+          "playtimeMinutes": 6000
+        },
+        {
+          "name": "合金装备V:幻痛",
+          "image": "https://cdn.cloudflare.steamstatic.com/steam/apps/287700/header.jpg",
+          "genres": [
+            "潜行"
+          ],
+          "playtimeMinutes": 2400
+        },
+        {
+          "name": "女神异闻录5",
+          "image": "https://cdn.cloudflare.steamstatic.com/steam/apps/1687950/header.jpg",
+          "genres": [
+            "回合制"
+          ],
+          "playtimeMinutes": 7800
         }
       ]
     },
@@ -2991,8 +3092,81 @@
       "id": "nintendo",
       "label": "Nintendo",
       "logo": "nintendo",
-      "description": "这里预留给 Nintendo 游戏。你可以先添加名字、类型和游玩时间，封面后续再补。",
-      "games": []
+      "description": "",
+      "games": [
+        {
+          "name": "塞尔达传说：王国之泪",
+          "image": "https://assets.nintendo.com/image/upload/f_auto/q_auto/dpr_1.5/ncom/My%20Nintendo%20Store/EN-US/MNS%20HOME/Characters/Legend%20of%20Zelda%20Character%20Shop/Main%20Assets/900x900_chara_TOTK",
+          "genres": [
+            "开放世界"
+          ],
+          "playtimeMinutes": 12000
+        },
+        {
+          "name": "塞尔达传说：旷野之息",
+          "image": "https://assets.nintendo.com/image/upload/f_auto/q_auto/dpr_1.5/ncom/My%20Nintendo%20Store/EN-US/MNS%20HOME/Characters/Legend%20of%20Zelda%20Character%20Shop/Main%20Assets/900x900_chara_BOTW",
+          "genres": [
+            "开放世界"
+          ],
+          "playtimeMinutes": 4800
+        },
+        {
+          "name": "塞尔达传说：魔吉拉的假面",
+          "image": "https://assets.nintendo.com/image/upload/f_auto/q_auto/dpr_1.5/ncom/My%20Nintendo%20Store/EN-US/MNS%20HOME/Characters/Legend%20of%20Zelda%20Character%20Shop/Main%20Assets/900x900_chara_majora",
+          "genres": [
+            "冒险"
+          ],
+          "playtimeMinutes": 720
+        },
+        {
+          "name": "马里奥赛车8",
+          "image": "https://upload.wikimedia.org/wikipedia/en/b/b5/MarioKart8Boxart.jpg",
+          "genres": [
+            "赛车竞速"
+          ],
+          "playtimeMinutes": 24000
+        },
+        {
+          "name": "宝可梦：朱",
+          "image": "https://upload.wikimedia.org/wikipedia/en/0/00/Pok%C3%A9mon_Scarlet_and_Violet_banner.png",
+          "genres": [
+            "RPG"
+          ],
+          "playtimeMinutes": 4800
+        },
+        {
+          "name": "路易吉洋楼",
+          "image": "https://nintheorist.com/wp-content/uploads/2019/06/luigis-mansion_3_portada_nintendo-switch.jpg?w=1140",
+          "genres": [
+            "冒险"
+          ],
+          "playtimeMinutes": 1800
+        },
+        {
+          "name": "动物森友会",
+          "image": "https://upload.wikimedia.org/wikipedia/en/1/1f/Animal_Crossing_New_Horizons.jpg",
+          "genres": [
+            "模拟经营"
+          ],
+          "playtimeMinutes": 7800
+        },
+        {
+          "name": "星露谷物语",
+          "image": "https://cdn.cloudflare.steamstatic.com/steam/apps/413150/header.jpg",
+          "genres": [
+            "模拟经营"
+          ],
+          "playtimeMinutes": 4800
+        },
+        {
+          "name": "西瓜游戏",
+          "image": "https://assets.nintendo.com/image/upload/f_auto/q_auto/dpr_1.5/c_scale,w_400/ncom/software/switch/70010000068513/b359ce335c17eb71e8b85a4b4fa15368db97dd581df7b54e729d4f618d63f895",
+          "genres": [
+            "休闲"
+          ],
+          "playtimeMinutes": 3600
+        }
+      ]
     }
   ],
   "research": [
@@ -3015,9 +3189,7 @@
       "navTitle": "原型设计",
       "kicker": "prototype",
       "title": "原型设计",
-      "body": [
-        ""
-      ],
+      "body": [],
       "layout": "cards",
       "cards": [
         {
@@ -3176,19 +3348,55 @@
           "title": "扇形技能检测",
           "slug": "扇形技能检测",
           "description": "向量的点乘叉乘等向量的基本算法与碰撞检测\n在标准技能制作中的敌人检测流程",
-          "details": "向量的点乘叉乘等向量的基本算法与碰撞检测\n在标准技能制作中的敌人检测流程",
+          "details": "基础的向量计算知识和GAS的运用\n\nGameplay Ability内部的向量计算",
           "detailBlocks": [
             {
               "type": "text",
               "order": 1,
-              "text": "向量的点乘叉乘等向量的基本算法与碰撞检测\n在标准技能制作中的敌人检测流程",
+              "text": "基础的向量计算知识和GAS的运用",
+              "textStyle": "heading"
+            },
+            {
+              "type": "text",
+              "order": 2,
+              "text": "Gameplay Ability内部的向量计算",
               "textStyle": "body"
             },
             {
               "type": "image",
-              "order": 2,
-              "src": "assets/uploads/images/legacy-12fa16df9f67199b.png",
-              "caption": "图片说明",
+              "order": 3,
+              "src": "assets/uploads/images/1781354365677-Init.png",
+              "caption": "触发GA后的初始化",
+              "alt": "",
+              "imageWidth": "",
+              "imageAspect": "",
+              "imageFit": "contain"
+            },
+            {
+              "type": "image",
+              "order": 4,
+              "src": "assets/uploads/images/1781354409683-FilterByDistance.png",
+              "caption": "球形检测+距离筛选",
+              "alt": "",
+              "imageWidth": "",
+              "imageAspect": "",
+              "imageFit": "contain"
+            },
+            {
+              "type": "image",
+              "order": 5,
+              "src": "assets/uploads/images/1781354434501-By-Angle.png",
+              "caption": "角度检测筛选",
+              "alt": "",
+              "imageWidth": "",
+              "imageAspect": "",
+              "imageFit": "contain"
+            },
+            {
+              "type": "image",
+              "order": 6,
+              "src": "assets/uploads/images/1781354453006-Line-Trace.png",
+              "caption": "射线检测部署Gameplay Effects",
               "alt": "",
               "imageWidth": "",
               "imageAspect": "",
@@ -3228,9 +3436,9 @@
             },
             {
               "type": "image",
-              "order": 5,
-              "src": "assets/uploads/images/legacy-75956c661fb48ef6.png",
-              "caption": "AI相关",
+              "order": 4,
+              "src": "assets/uploads/images/legacy-bc8d1cf4eba7e38a.png",
+              "caption": "枚举+AIDirector",
               "alt": "",
               "imageWidth": "",
               "imageAspect": "",
@@ -3238,9 +3446,9 @@
             },
             {
               "type": "image",
-              "order": 4,
-              "src": "assets/uploads/images/legacy-bc8d1cf4eba7e38a.png",
-              "caption": "枚举+AIDirector",
+              "order": 5,
+              "src": "assets/uploads/images/legacy-75956c661fb48ef6.png",
+              "caption": "AI相关",
               "alt": "",
               "imageWidth": "",
               "imageAspect": "",
@@ -3381,6 +3589,12 @@
               "imageFit": "contain"
             },
             {
+              "type": "text",
+              "order": 21,
+              "text": "4.将检测到的Agent依靠战场坐标根据其方位和距离设置战斗状态：直接战斗，准备战斗和待命状态",
+              "textStyle": "subheading"
+            },
+            {
               "type": "image",
               "order": 22,
               "src": "assets/uploads/images/1781163785413-asset.png",
@@ -3389,12 +3603,6 @@
               "imageWidth": "",
               "imageAspect": "",
               "imageFit": "contain"
-            },
-            {
-              "type": "text",
-              "order": 21,
-              "text": "4.将检测到的Agent依靠战场坐标根据其方位和距离设置战斗状态：直接战斗，准备战斗和待命状态",
-              "textStyle": "subheading"
             },
             {
               "type": "image",
@@ -3488,41 +3696,6 @@
             "Behaviour Tree",
             "AI State",
             "EQS"
-          ]
-        }
-      ],
-      "images": []
-    },
-    {
-      "id": "custom-1781078769912",
-      "navTitle": "案例学习",
-      "kicker": "CaseStudy",
-      "title": "案例学习",
-      "body": [
-        "在这里添加章节说明。"
-      ],
-      "layout": "cards",
-      "cards": [
-        {
-          "order": 1,
-          "title": "新卡片",
-          "slug": "prototype-card",
-          "description": "在这里写卡片文本。",
-          "details": "设计目标\n1. 在这里写这个原型想验证的问题。\n2. 在这里写关键实现逻辑。\n3. 在这里写测试后的结论和下一步迭代。",
-          "detailBlocks": [
-            {
-              "type": "text",
-              "order": 1,
-              "text": "设计目标\n1. 在这里写这个原型想验证的问题。\n2. 在这里写关键实现逻辑。\n3. 在这里写测试后的结论和下一步迭代。",
-              "textStyle": "body"
-            }
-          ],
-          "image": "assets/recovery-preview.png",
-          "imageWidth": "",
-          "imageAspect": "16 / 9",
-          "imageFit": "cover",
-          "tags": [
-            "Prototype"
           ]
         }
       ],

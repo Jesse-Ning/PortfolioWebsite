@@ -999,6 +999,11 @@ body[data-theme="dark"] .filter-button.is-active {
   padding-top: 0;
 }
 
+.project-card.is-featured .project-actions {
+  order: 7;
+  width: min(100%, var(--featured-content-width));
+}
+
 .project-media {
   position: relative;
   width: min(100%, var(--project-image-width, 100%));
@@ -1018,6 +1023,44 @@ body[data-theme="dark"] .filter-button.is-active {
 
 .project-card:hover .project-media img {
   transform: scale(1.04);
+}
+
+.project-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.project-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--surface-strong) 82%, transparent);
+  font-size: 0.88rem;
+  font-weight: 820;
+  text-decoration: none;
+}
+
+.project-action:hover {
+  border-color: color-mix(in srgb, var(--jade) 60%, var(--line));
+  color: var(--jade);
+}
+
+.project-action.is-primary {
+  border-color: color-mix(in srgb, var(--jade) 70%, var(--line));
+  color: #0d2d27;
+  background: color-mix(in srgb, var(--jade) 82%, #ffffff);
+}
+
+.project-action.is-disabled {
+  color: var(--muted);
+  opacity: 0.62;
 }
 
 .project-meta {
@@ -2529,10 +2572,13 @@ body[data-theme="dark"] .dev-action.primary {
 }
 
 .steam-card {
+  display: grid;
+  grid-template-rows: auto 1fr;
   overflow: hidden;
 }
 
 .steam-media {
+  position: relative;
   aspect-ratio: 460 / 215;
   background: color-mix(in srgb, var(--ink) 10%, transparent);
 }
@@ -2545,12 +2591,18 @@ body[data-theme="dark"] .dev-action.primary {
 
 .steam-card-body {
   display: grid;
+  grid-template-rows: auto auto 1fr;
   gap: 10px;
   padding: 16px;
 }
 
 .steam-card h3 {
+  display: -webkit-box;
+  min-height: 2.62em;
   margin: 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   font-size: 1.05rem;
   line-height: 1.25;
 }
@@ -2575,6 +2627,36 @@ body[data-theme="dark"] .dev-action.primary {
   font-weight: 750;
 }
 
+.game-pagination {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.game-pagination button {
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.game-pagination button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.game-pagination span {
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 850;
+}
+
 @media (max-width: 680px) {
   .steam-summary {
     grid-template-columns: 1fr;
@@ -2585,10 +2667,6 @@ body[data-theme="dark"] .dev-action.primary {
 .steam-filter-row {
   margin-top: 8px;
   margin-bottom: 22px;
-}
-
-.steam-media {
-  position: relative;
 }
 
 .steam-platform-badge {
@@ -2720,6 +2798,11 @@ body[data-theme="dark"] .dev-action.primary {
   background: color-mix(in srgb, var(--surface-strong) 70%, transparent);
 }
 
+.platform-game-card {
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
 .platform-game-media {
   aspect-ratio: 16 / 9;
   background: color-mix(in srgb, var(--ink) 8%, transparent);
@@ -2744,12 +2827,18 @@ body[data-theme="dark"] .dev-action.primary {
 
 .platform-game-body {
   display: grid;
+  grid-template-rows: auto auto 1fr;
   gap: 9px;
   padding: 13px;
 }
 
 .platform-game-body h4 {
+  display: -webkit-box;
+  min-height: 2.6em;
   margin: 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   font-size: 1rem;
   line-height: 1.3;
 }

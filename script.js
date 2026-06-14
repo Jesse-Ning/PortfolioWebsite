@@ -1,6 +1,7 @@
 const STORAGE_KEY = "portfolio-site-data-v1";
 const DEV_MODE_KEY = "portfolio-dev-mode";
 const DEBUG_LOG_LIMIT = 80;
+const APP_BUILD_VERSION = "20260614-local-source";
 const debugLogs = [];
 let debugCaptureReady = false;
 let debugLogFilter = "";
@@ -235,8 +236,13 @@ const timelineGroupLabels = {
 };
 
 let siteData = cloneData(DEFAULT_SITE_DATA);
+let lastDataSource = "default";
 let activeProjectFilter = "all";
 let activeSteamGenreFilter = "all";
+const GAME_LIBRARY_PAGE_SIZE = 20;
+const PROJECT_DETAIL_SECTION_INDEX = -2;
+let activeSteamPage = 1;
+const activePlatformPages = {};
 let activeTimelineGroup = "work";
 let revealObserver;
 let scrollSpy;
@@ -413,9 +419,26 @@ function normalizeProject(project, index = 0) {
     imageAspect: String(item.imageAspect || "").trim(),
     imageFit: String(item.imageFit || "cover").trim(),
     description: String(item.description || "").trim(),
+    slug: projectCardSlug(item, index),
+    website: String(item.website || item.url || item.href || "").trim(),
+    detailBlocks: normalizeDetailBlocks(item.detailBlocks, item.details || ""),
     tags: toTags(item.tags),
     order: orderValue(item, index)
   };
+}
+
+function extractActionHref(value) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  if (text.startsWith("#")) return text;
+
+  const urlMatch = text.match(/https?:\/\/[^\s"'<>]+/i);
+  if (urlMatch) return urlMatch[0];
+
+  const wwwMatch = text.match(/www\.[^\s"'<>]+/i);
+  if (wwwMatch) return `https://${wwwMatch[0]}`;
+
+  return text;
 }
 
 function normalizeProjects(projects) {
@@ -614,6 +637,10 @@ function customCardSlug(card, index = 0) {
   return slugify(card?.slug || card?.id || card?.title || `prototype-${index + 1}`);
 }
 
+function projectCardSlug(project, index = 0) {
+  return slugify(project?.slug || project?.id || project?.title || `project-${index + 1}`);
+}
+
 function normalizeCustomCard(card, index = 0) {
   const source = card && typeof card === "object" ? card : {};
   return {
@@ -766,6 +793,45 @@ function getFilteredSteamGames(games = getOrderedSteamGames()) {
   return games.filter((game) => steamGameMatchesFilter(game));
 }
 
+function getPageCount(total, pageSize = GAME_LIBRARY_PAGE_SIZE) {
+  return Math.max(1, Math.ceil(Number(total || 0) / pageSize));
+}
+
+function clampPage(page, total, pageSize = GAME_LIBRARY_PAGE_SIZE) {
+  const pageCount = getPageCount(total, pageSize);
+  return Math.min(Math.max(Number(page) || 1, 1), pageCount);
+}
+
+function getPagedItems(items, page, pageSize = GAME_LIBRARY_PAGE_SIZE) {
+  const safeItems = Array.isArray(items) ? items : [];
+  const safePage = clampPage(page, safeItems.length, pageSize);
+  const start = (safePage - 1) * pageSize;
+  return {
+    page: safePage,
+    pageCount: getPageCount(safeItems.length, pageSize),
+    items: safeItems.slice(start, start + pageSize)
+  };
+}
+
+function renderGamePagination({ total, page, target, platformId = "" }) {
+  if (total <= GAME_LIBRARY_PAGE_SIZE) return "";
+  const pageCount = getPageCount(total);
+  const currentPage = clampPage(page, total);
+  const prevAttrs = target === "platform"
+    ? `data-platform-id="${attr(platformId)}" data-platform-page="${currentPage - 1}"`
+    : `data-steam-page="${currentPage - 1}"`;
+  const nextAttrs = target === "platform"
+    ? `data-platform-id="${attr(platformId)}" data-platform-page="${currentPage + 1}"`
+    : `data-steam-page="${currentPage + 1}"`;
+  return `
+    <nav class="game-pagination" aria-label="游戏库分页">
+      <button type="button" ${prevAttrs}${currentPage <= 1 ? " disabled" : ""}>上一页</button>
+      <span>第 ${escapeHtml(currentPage)} / ${escapeHtml(pageCount)} 页</span>
+      <button type="button" ${nextAttrs}${currentPage >= pageCount ? " disabled" : ""}>下一页</button>
+    </nav>
+  `;
+}
+
 function renderSteamGenreFilters(games) {
   const host = document.getElementById("steam-library-filters");
   if (!host) return;
@@ -909,6 +975,22 @@ function isDevModeRequested() {
   }
 }
 
+function isLocalPreviewServer() {
+  try {
+    return ["127.0.0.1", "localhost", "::1"].includes(window.location.hostname);
+  } catch {
+    return false;
+  }
+}
+
+function clearLocalPreviewData() {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // Local storage can be unavailable in restricted browser modes.
+  }
+}
+
 function mergePublishedCustomSections(localSections, serverSections) {
   if (!Array.isArray(localSections) || !Array.isArray(serverSections)) {
     return Array.isArray(localSections) ? localSections : serverSections;
@@ -980,12 +1062,9 @@ function mergePublishedAdditions(localData, serverData) {
 async function loadInitialData() {
   const serverData = await readServerData();
 
-  if (isDevModeRequested() && serverData) {
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-    } catch {
-      // In dev mode, content.json is the source of truth.
-    }
+  if ((isDevModeRequested() || isLocalPreviewServer()) && serverData) {
+    clearLocalPreviewData();
+    lastDataSource = "content.json";
     return normalizeData(serverData);
   }
 
@@ -993,10 +1072,12 @@ async function loadInitialData() {
   if (localData) {
     const mergedLocalData = mergePublishedAdditions(localData, serverData);
     if (!serverData || isNewer(mergedLocalData, serverData)) {
+      lastDataSource = "localStorage";
       return normalizeData(mergedLocalData);
     }
   }
 
+  lastDataSource = serverData ? "content.json" : localData ? "localStorage" : "default";
   return normalizeData(serverData || localData || DEFAULT_SITE_DATA);
 }
 function readLocalData() {
@@ -1125,6 +1206,24 @@ function debugRouteState(extra = {}) {
   };
 }
 
+function debugDataState(extra = {}) {
+  return {
+    build: APP_BUILD_VERSION,
+    dataSource: lastDataSource,
+    projectCount: siteData.projects?.length || 0,
+    projectActionCount: document.querySelectorAll(".project-actions").length,
+    projectDetailLinkCount: document.querySelectorAll(".project-action.is-primary").length,
+    steamGameCount: siteData.steamLibrary?.games?.length || 0,
+    platformModules: (siteData.gamePlatforms || []).map((platform) => ({
+      id: platform.id || platform.label || "",
+      label: platform.label || "",
+      gameCount: platform.games?.length || 0
+    })),
+    editorButtonCount: document.querySelectorAll("[data-dev-open], [data-inline-edit-toggle], [data-inline-save]").length,
+    ...extra
+  };
+}
+
 function correctBlankPrototypeViewport(reason = "unknown") {
   if (document.body.dataset.route !== "prototype-detail") return;
   const before = debugRouteState({ reason });
@@ -1169,7 +1268,7 @@ function renderAll() {
   renderProjects(activeProjectFilter);
   renderSteamLibrary();
   renderCustomSections();
-  renderPrototypeDetailRoute();
+  renderCurrentDetailRoute();
   setupScrollSpy();
   observeReveals();
   syncInlineEditControls();
@@ -1475,11 +1574,27 @@ function renderProjects(active = "all") {
               ${renderProjectKeyword("类型", project.gameType, false, project.index, "gameType")}
             </div>
             ${renderProjectTags(project)}
+            ${renderProjectActions(project)}
           </div>
         </article>
       `
     )
     .join("");
+}
+
+function renderProjectActions(project, options = {}) {
+  const showDetail = options.detail !== false;
+  const showWebsiteSlot = options.websitePlaceholder !== false;
+  const website = extractActionHref(project.website);
+  if (!showDetail && !website && !showWebsiteSlot) return "";
+
+  return `
+    <div class="project-actions">
+      ${showDetail ? `<a class="project-action is-primary" href="${attr(projectDetailHref(project))}">查看详情</a>` : ""}
+      ${website ? `<a class="project-action" href="${attr(website)}" target="_blank" rel="noopener">跳转网站</a>` : ""}
+      ${!website && showWebsiteSlot ? `<span class="project-action is-disabled">暂无网站</span>` : ""}
+    </div>
+  `;
 }
 
 function renderProjectKeyword(label, value, primary = false, projectIndex = -1, field = "") {
@@ -1507,6 +1622,8 @@ function renderSteamLibrary() {
   const library = siteData.steamLibrary;
   const games = getOrderedSteamGames();
   const filteredGames = getFilteredSteamGames(games);
+  const pagedGames = getPagedItems(filteredGames, activeSteamPage);
+  activeSteamPage = pagedGames.page;
   const summary = document.getElementById("steam-summary");
   const grid = document.getElementById("steam-library-grid");
   if (!summary || !grid) return;
@@ -1530,7 +1647,7 @@ function renderSteamLibrary() {
   renderSteamGenreFilters(games);
 
   grid.innerHTML = filteredGames.length
-    ? filteredGames.map(renderSteamGameCard).join("")
+    ? `${pagedGames.items.map(renderSteamGameCard).join("")}${renderGamePagination({ total: filteredGames.length, page: activeSteamPage, target: "steam" })}`
     : `<div class="steam-empty reveal">这个分类下暂时没有游戏。</div>`;
 
   renderGamePlatformModules();
@@ -1580,6 +1697,9 @@ function renderGamePlatformModules() {
 
 function renderGamePlatformModule(platform) {
   const games = [...platform.games].sort((left, right) => Number(right.playtimeMinutes || 0) - Number(left.playtimeMinutes || 0));
+  const platformId = String(platform.id || platform.label || "platform");
+  const pagedGames = getPagedItems(games, activePlatformPages[platformId] || 1);
+  activePlatformPages[platformId] = pagedGames.page;
   const totalMinutes = games.reduce((sum, game) => sum + Number(game.playtimeMinutes || 0), 0);
   return `
     <section class="platform-module reveal">
@@ -1597,7 +1717,7 @@ function renderGamePlatformModule(platform) {
         </div>
       </div>
       <div class="platform-game-grid">
-        ${games.length ? games.map((game) => renderManualGameCard(game, platform)).join("") : `<div class="platform-empty">这里已经预留好了。打开开发者模式的“游戏库”页签，就能添加 ${escapeHtml(platform.label)} 游戏。</div>`}
+        ${games.length ? `${pagedGames.items.map((game) => renderManualGameCard(game, platform)).join("")}${renderGamePagination({ total: games.length, page: pagedGames.page, target: "platform", platformId })}` : `<div class="platform-empty">这里已经预留好了。打开开发者模式的“游戏库”页签，就能添加 ${escapeHtml(platform.label)} 游戏。</div>`}
       </div>
     </section>
   `;
@@ -1776,8 +1896,30 @@ function getPrototypeHashSlug() {
   return decodeURIComponent(hash.slice("prototype/".length));
 }
 
+function getProjectHashSlug() {
+  const hash = window.location.hash.replace(/^#/, "");
+  if (!hash.startsWith("project/")) return "";
+  return decodeURIComponent(hash.slice("project/".length));
+}
+
 function normalizeRouteSlug(value) {
   return String(value || "").trim().toLowerCase();
+}
+
+function getProjectBySlug(slug) {
+  if (!slug) return null;
+  const normalizedSlug = normalizeRouteSlug(slug);
+  return getOrderedProjects("all").find((project) => {
+    return normalizeRouteSlug(project.slug) === normalizedSlug || normalizeRouteSlug(projectCardSlug(project, project.index)) === normalizedSlug;
+  }) || null;
+}
+
+function hasProjectDetail(project) {
+  return getOrderedDetailBlocks(project).length > 0;
+}
+
+function projectDetailHref(project) {
+  return `#project/${encodeURIComponent(projectCardSlug(project, project.index))}`;
 }
 
 function getPrototypeCardBySlug(slug) {
@@ -1787,6 +1929,62 @@ function getPrototypeCardBySlug(slug) {
   return getOrderedCustomCards(section).find((card) => {
     return normalizeRouteSlug(card.slug) === normalizedSlug || normalizeRouteSlug(customCardSlug(card, card.index)) === normalizedSlug;
   }) || null;
+}
+
+function renderProjectDetailRoute(options = {}) {
+  const host = document.getElementById("prototype-detail-route");
+  if (!host) {
+    debugLog("route", "project host missing", { hash: window.location.hash }, "warn");
+    return;
+  }
+
+  const slug = getProjectHashSlug();
+  const project = getProjectBySlug(slug);
+
+  if (!slug) {
+    return false;
+  }
+
+  document.body.dataset.route = "prototype-detail";
+
+  if (!project) {
+    debugLog("route", "project detail missing", {
+      slug,
+      projects: getOrderedProjects("all").map((item) => ({ title: item.title, slug: item.slug }))
+    }, "error");
+    host.innerHTML = `
+      <section class="section-band prototype-detail-page">
+        <div class="section-inner prototype-detail-inner">
+          <a class="detail-back-link" href="#projects">返回作品</a>
+          <p class="prototype-detail-empty">没有找到这个作品详情页：${escapeHtml(slug)}。</p>
+        </div>
+      </section>
+    `;
+    return true;
+  }
+
+  try {
+    host.innerHTML = renderProjectDetailPage(project);
+    observeReveals();
+    debugLog("route", "project detail rendered", debugRouteState({ cardTitle: project.title }));
+  } catch (error) {
+    debugLog("route", "project detail render failed", { error: debugString(error), slug, projectTitle: project?.title }, "error");
+    console.error("Project detail render failed", error);
+    host.innerHTML = `
+      <section class="section-band prototype-detail-page">
+        <div class="section-inner prototype-detail-inner">
+          <a class="detail-back-link" href="#projects">返回作品</a>
+          <p class="prototype-detail-empty">作品详情页渲染失败，请检查刚添加的资源模块。</p>
+        </div>
+      </section>
+    `;
+  }
+
+  if (options.scroll) {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  return true;
 }
 
 function renderPrototypeDetailRoute(options = {}) {
@@ -1848,6 +2046,12 @@ function renderPrototypeDetailRoute(options = {}) {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 }
+
+function renderCurrentDetailRoute(options = {}) {
+  if (renderProjectDetailRoute(options)) return;
+  renderPrototypeDetailRoute(options);
+}
+
 function renderPrototypeDetailPage(section, card) {
   const image = card.image || "assets/recovery-preview.png";
   const heroImageStyle = renderImageStyle({ imageAspect: "16 / 9", imageFit: "cover" });
@@ -1873,6 +2077,37 @@ function renderPrototypeDetailPage(section, card) {
         </div>
         <div class="prototype-detail-content reveal">
           ${renderPrototypeDetailContent(card, sectionIndex, cardIndex)}
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function renderProjectDetailPage(project) {
+  const image = project.image || "assets/recovery-preview.png";
+  const heroImageStyle = renderImageStyle({ imageAspect: "16 / 9", imageFit: "cover" });
+  const projectIndex = Number.isInteger(project.index) ? project.index : siteData.projects.findIndex((item) => item === project);
+  return `
+    <section class="section-band prototype-detail-page">
+      <div class="section-inner prototype-detail-inner">
+        <a class="detail-back-link" href="#projects">返回作品</a>
+        ${renderInlineDetailPageToolbar(PROJECT_DETAIL_SECTION_INDEX, projectIndex)}
+        <div class="prototype-detail-hero reveal">
+          <div class="prototype-detail-copy">
+            <p class="section-kicker">Project</p>
+            <h1>${escapeHtml(project.title)}</h1>
+            ${renderCustomCardDescription(project.description)}
+            ${renderProjectActions(project, { detail: false, websitePlaceholder: false })}
+            <div class="tag-row project-extra-tags">
+              ${toTags(project.tags).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}
+            </div>
+          </div>
+          <div class="prototype-detail-media project-media"${heroImageStyle}>
+            <img src="${attr(image)}" alt="${attr(project.title)}" loading="lazy" />
+          </div>
+        </div>
+        <div class="prototype-detail-content reveal">
+          ${renderPrototypeDetailContent(project, PROJECT_DETAIL_SECTION_INDEX, projectIndex)}
         </div>
       </div>
     </section>
@@ -2075,9 +2310,9 @@ function renderPrototypeDetailBlock(block, textStyle = "body") {
 function setupPrototypeDetailRoutes() {
   window.addEventListener("hashchange", () => {
     const wasDetailRoute = document.body.dataset.route === "prototype-detail";
-    renderPrototypeDetailRoute({ scroll: true });
+    renderCurrentDetailRoute({ scroll: true });
 
-    if (wasDetailRoute && !getPrototypeHashSlug()) {
+    if (wasDetailRoute && !getPrototypeHashSlug() && !getProjectHashSlug()) {
       const targetId = window.location.hash.replace(/^#/, "");
       window.requestAnimationFrame(() => {
         document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth" });
@@ -2118,10 +2353,29 @@ function setupFilters() {
     observeReveals();
   });
 
-  document.getElementById("steam-library-filters")?.addEventListener("click", (event) => {
+  document.getElementById("steam")?.addEventListener("click", (event) => {
+    const steamPageButton = event.target.closest("[data-steam-page]");
+    if (steamPageButton) {
+      activeSteamPage = clampPage(steamPageButton.dataset.steamPage, getFilteredSteamGames().length);
+      renderSteamLibrary();
+      observeReveals();
+      return;
+    }
+
+    const platformPageButton = event.target.closest("[data-platform-page]");
+    if (platformPageButton) {
+      const platformId = platformPageButton.dataset.platformId;
+      const platform = siteData.gamePlatforms.find((item) => String(item.id || item.label || "platform") === platformId);
+      activePlatformPages[platformId] = clampPage(platformPageButton.dataset.platformPage, platform?.games?.length || 0);
+      renderGamePlatformModules();
+      observeReveals();
+      return;
+    }
+
     const button = event.target.closest("[data-steam-filter]");
     if (!button) return;
     activeSteamGenreFilter = button.dataset.steamFilter || "all";
+    activeSteamPage = 1;
     renderSteamLibrary();
     observeReveals();
   });
@@ -2362,7 +2616,7 @@ function renderInlineMainToolbars() {
 function renderInlineMainToolbar(sectionId) {
   const controls = {
     about: `<button type="button" data-inline-action="open-panel" data-editor-tab-target="profile">高级字段</button>`,
-    experience: `<button type="button" data-inline-action="add-timeline" data-timeline-type="work">添加工作</button><button type="button" data-inline-action="add-timeline" data-timeline-type="education">添加教育</button><button type="button" data-inline-action="open-panel" data-editor-tab-target="timeline">高级字段</button>`,
+    experience: `<button type="button" data-inline-action="add-timeline" data-timeline-type="work">添加工作</button><button type="button" data-inline-action="add-timeline" data-timeline-type="education">添加教育</button><button type="button" data-inline-action="open-panel" data-editor-tab-target="experience">高级字段</button>`,
     projects: `<button type="button" data-inline-action="add-project">添加作品</button><button type="button" data-inline-action="open-panel" data-editor-tab-target="projects">高级字段</button>`,
     steam: `<button type="button" data-inline-action="open-panel" data-editor-tab-target="games">高级字段</button>`
   };
@@ -2433,19 +2687,20 @@ function renderInlineCardToolbar(sectionIndex, cardIndex) {
 }
 
 function renderInlineDetailPageToolbar(sectionIndex, cardIndex) {
-  if (sectionIndex < 0 || cardIndex < 0) return "";
+  if ((sectionIndex < 0 && sectionIndex !== PROJECT_DETAIL_SECTION_INDEX) || cardIndex < 0) return "";
+  const editorTabTarget = sectionIndex === PROJECT_DETAIL_SECTION_INDEX ? "projects" : "sections";
   return `
     <div class="inline-edit-toolbar inline-detail-page-toolbar" data-inline-toolbar>
       <button type="button" data-inline-action="add-detail-text" data-section-index="${sectionIndex}" data-card-index="${cardIndex}">添加文字</button>
       <button type="button" data-inline-action="add-detail-image" data-section-index="${sectionIndex}" data-card-index="${cardIndex}">添加图片</button>
       <button type="button" data-inline-action="add-detail-document" data-section-index="${sectionIndex}" data-card-index="${cardIndex}">添加文档</button>
       <button type="button" data-inline-action="add-detail-video" data-section-index="${sectionIndex}" data-card-index="${cardIndex}">添加视频</button>
-      <button type="button" data-inline-action="open-panel" data-editor-tab-target="sections">高级字段</button>
+      <button type="button" data-inline-action="open-panel" data-editor-tab-target="${editorTabTarget}">高级字段</button>
     </div>
   `;
 }
 function renderInlineDetailBlockToolbar(sectionIndex, cardIndex, blockIndex, type) {
-  if (sectionIndex < 0 || cardIndex < 0 || blockIndex < 0) return "";
+  if ((sectionIndex < 0 && sectionIndex !== PROJECT_DETAIL_SECTION_INDEX) || cardIndex < 0 || blockIndex < 0) return "";
   const textStyleControls = type === "text" ? renderInlineTextStyleControls(sectionIndex, cardIndex, blockIndex) : "";
   return `
     <div class="inline-edit-toolbar inline-block-toolbar" data-inline-toolbar>
@@ -2512,6 +2767,9 @@ function syncInlineEditControls() {
 }
 
 function getInlineCard(sectionIndex, cardIndex) {
+  if (sectionIndex === PROJECT_DETAIL_SECTION_INDEX) {
+    return siteData.projects[cardIndex] || null;
+  }
   return siteData.customSections[sectionIndex]?.cards?.[cardIndex] || null;
 }
 
@@ -2547,7 +2805,8 @@ function handleInlineEditClick(event) {
   const blockIndex = Number(control.dataset.blockIndex);
 
   if (action === "open-panel") {
-    currentEditorTab = control.dataset.editorTabTarget || "sections";
+    const targetTab = control.dataset.editorTabTarget || "sections";
+    currentEditorTab = targetTab === "timeline" ? "experience" : targetTab;
     renderEditor();
     openEditor();
     return;
@@ -3135,6 +3394,13 @@ function renderEditor() {
     sections: renderSectionsEditor,
     data: renderDataEditor
   };
+  if (!renderers[currentEditorTab]) {
+    debugLog("editor", "invalid editor tab fallback", { currentEditorTab }, "warn");
+    currentEditorTab = "sections";
+    document.querySelectorAll("[data-editor-tab]").forEach((tab) => {
+      tab.classList.toggle("is-active", tab.dataset.editorTab === currentEditorTab);
+    });
+  }
   body.innerHTML = renderers[currentEditorTab]();
 }
 
@@ -3306,6 +3572,8 @@ function renderProjectEditor(project, index) {
       <div class="dev-form-grid compact">
         ${field("排序", "project-order", orderValue(project, index), `data-project-field="order"`)}
         ${field("标题", "project-title", project.title, `data-project-field="title"`)}
+        ${field("详情页路径", "project-slug", project.slug || projectCardSlug(project, index), `data-project-field="slug" placeholder="例如 阴阳之力"`)}
+        ${field("跳转网站", "project-website", project.website, `data-project-field="website" placeholder="https://... 或 #project/..."`)}
         ${field("年份", "project-year", project.year, `data-project-field="year"`)}
         ${selectField("分类", "project-category", project.category, `data-project-field="category"`)}
         ${field("引擎", "project-engine", project.engine, `data-project-field="engine"`)}
@@ -3329,6 +3597,7 @@ function renderProjectEditor(project, index) {
           </div>
         </div>
         ${textarea("简介", "project-description", project.description, 4, `data-project-field="description"`)}
+        ${renderDetailBlocksEditor(project, PROJECT_DETAIL_SECTION_INDEX, index)}
         ${imageField("图片", project.image, `data-project-field="image"`, "project", index)}
       </div>
     </article>
@@ -3937,7 +4206,7 @@ function handleEditorButton(button) {
   } else if (button.matches("[data-add-detail-block]")) {
     syncFromEditor();
     const [sectionIndex, cardIndex, type] = button.dataset.addDetailBlock.split(":");
-    const card = siteData.customSections[Number(sectionIndex)]?.cards?.[Number(cardIndex)];
+    const card = getInlineCard(Number(sectionIndex), Number(cardIndex));
     if (card) {
       card.detailBlocks = normalizeDetailBlocks(card.detailBlocks, card.details || card.description);
       card.detailBlocks.push(createDetailBlock(type, getNextOrder(card.detailBlocks)));
@@ -3947,7 +4216,7 @@ function handleEditorButton(button) {
   } else if (button.matches("[data-delete-detail-block]")) {
     syncFromEditor();
     const [sectionIndex, cardIndex, blockIndex] = button.dataset.deleteDetailBlock.split(":").map(Number);
-    const card = siteData.customSections[sectionIndex]?.cards?.[cardIndex];
+    const card = getInlineCard(sectionIndex, cardIndex);
     if (card) {
       card.detailBlocks = normalizeDetailBlocks(card.detailBlocks, card.details || card.description);
       card.detailBlocks.splice(blockIndex, 1);
@@ -4060,24 +4329,25 @@ function syncFromEditor() {
 
 function collectEditorData() {
   const next = normalizeData(siteData);
+  const editorRoot = document.querySelector("[data-editor-body]") || document;
 
-  const profileName = document.getElementById("profile-name");
+  const profileName = editorRoot.querySelector("#" + "profile-name");
   if (profileName) {
     next.profile.name = profileName.value.trim() || "你的名字";
-    next.profile.initials = document.getElementById("profile-initials").value.trim() || "YY";
-    next.profile.kicker = document.getElementById("profile-kicker").value.trim();
-    next.profile.title = document.getElementById("profile-title").value.trim();
-    next.profile.summary = document.getElementById("profile-summary").value.trim();
-    next.profile.about = toParagraphs(document.getElementById("profile-about").value);
-    next.profile.facts = Array.from(document.querySelectorAll("[data-fact-index]")).map((row) => ({
+    next.profile.initials = editorRoot.querySelector("#" + "profile-initials").value.trim() || "YY";
+    next.profile.kicker = editorRoot.querySelector("#" + "profile-kicker").value.trim();
+    next.profile.title = editorRoot.querySelector("#" + "profile-title").value.trim();
+    next.profile.summary = editorRoot.querySelector("#" + "profile-summary").value.trim();
+    next.profile.about = toParagraphs(editorRoot.querySelector("#" + "profile-about").value);
+    next.profile.facts = Array.from(editorRoot.querySelectorAll("[data-fact-index]")).map((row) => ({
       value: row.querySelector("[data-fact-field='value']").value.trim(),
       label: row.querySelector("[data-fact-field='label']").value.trim()
     }));
-    next.profile.keywords = Array.from(document.querySelectorAll("[data-keyword-index]")).map((row) => ({
+    next.profile.keywords = Array.from(editorRoot.querySelectorAll("[data-keyword-index]")).map((row) => ({
       label: row.querySelector("[data-keyword-field='label']").value.trim() || "关键词",
       items: toTags(row.querySelector("[data-keyword-field='items']").value)
     }));
-    next.profile.links = Array.from(document.querySelectorAll("[data-link-index]")).map((row) => ({
+    next.profile.links = Array.from(editorRoot.querySelectorAll("[data-link-index]")).map((row) => ({
       label: row.querySelector("[data-link-field='label']").value.trim() || "联系方式",
       href: row.querySelector("[data-link-field='href']").value.trim(),
       icon: row.querySelector("[data-link-field='icon']").value,
@@ -4086,9 +4356,9 @@ function collectEditorData() {
   }
 
 
-  if (document.querySelector("[data-base-section-id]")) {
+  if (editorRoot.querySelector("[data-base-section-id]")) {
     next.sections = { ...next.sections };
-    Array.from(document.querySelectorAll("[data-base-section-id]")).forEach((row) => {
+    Array.from(editorRoot.querySelectorAll("[data-base-section-id]")).forEach((row) => {
       const id = row.dataset.baseSectionId;
       next.sections[id] = {
         nav: row.querySelector("[data-base-section-field='nav']").value.trim(),
@@ -4099,11 +4369,11 @@ function collectEditorData() {
     });
   }
 
-  if (document.querySelector("[data-timeline-panel]")) {
-    const panel = document.querySelector("[data-timeline-panel]");
+  if (editorRoot.querySelector("[data-timeline-panel]")) {
+    const panel = editorRoot.querySelector("[data-timeline-panel]");
     const editedType = normalizeTimelineType(panel.dataset.timelinePanel || currentTimelineEditorGroup);
     const updatedTimeline = [...next.timeline];
-    Array.from(document.querySelectorAll("[data-timeline-index]")).forEach((row) => {
+    Array.from(editorRoot.querySelectorAll("[data-timeline-index]")).forEach((row) => {
       const index = Number(row.dataset.timelineIndex);
       updatedTimeline[index] = {
         order: toOrder(row.querySelector("[data-timeline-field='order']")?.value, index + 1),
@@ -4117,13 +4387,16 @@ function collectEditorData() {
     next.timeline = updatedTimeline.filter(Boolean);
   }
 
-  if (document.querySelector("[data-project-index]")) {
+  if (editorRoot.querySelector("[data-project-index]")) {
     const updatedProjects = [...next.projects];
-    Array.from(document.querySelectorAll("[data-project-index]")).forEach((row) => {
+    Array.from(editorRoot.querySelectorAll("[data-project-index]")).forEach((row) => {
       const index = Number(row.dataset.projectIndex);
       const responsibility = row.querySelector("[data-project-field='responsibility']").value.trim();
+      const detailBlocks = collectDetailBlocks(row);
       updatedProjects[index] = {
         order: toOrder(row.querySelector("[data-project-field='order']")?.value, index + 1),
+        slug: slugify(row.querySelector("[data-project-field='slug']")?.value.trim() || row.querySelector("[data-project-field='title']").value.trim() || `project-${index + 1}`),
+        website: row.querySelector("[data-project-field='website']")?.value.trim() || "",
         title: row.querySelector("[data-project-field='title']").value.trim() || "未命名作品",
         year: row.querySelector("[data-project-field='year']").value.trim(),
         role: responsibility,
@@ -4137,6 +4410,8 @@ function collectEditorData() {
         imageAspect: row.querySelector("[data-project-field='imageAspect']")?.value.trim() || "",
         imageFit: row.querySelector("[data-project-field='imageFit']")?.value.trim() || "cover",
         description: row.querySelector("[data-project-field='description']").value.trim(),
+        details: detailBlocksToText(detailBlocks),
+        detailBlocks,
         tags: Array.from(row.querySelectorAll("[data-project-tag-index]"))
           .map((tagRow) => tagRow.querySelector("[data-project-tag-field='value']").value.trim())
           .filter(Boolean)
@@ -4145,8 +4420,8 @@ function collectEditorData() {
     next.projects = updatedProjects.filter(Boolean);
   }
 
-  if (document.querySelector("[data-platform-index]")) {
-    next.gamePlatforms = Array.from(document.querySelectorAll("[data-platform-index]")).map((row) => ({
+  if (editorRoot.querySelector("[data-platform-index]")) {
+    next.gamePlatforms = Array.from(editorRoot.querySelectorAll("[data-platform-index]")).map((row) => ({
       id: slugify(row.querySelector("[data-platform-field='id']").value.trim() || row.querySelector("[data-platform-field='label']").value),
       label: row.querySelector("[data-platform-field='label']").value.trim() || "游戏平台",
       logo: row.querySelector("[data-platform-field='logo']").value.trim(),
@@ -4160,8 +4435,8 @@ function collectEditorData() {
     }));
   }
 
-  if (document.querySelector("[data-section-index]")) {
-    next.customSections = Array.from(document.querySelectorAll("[data-section-index]")).map((row) => {
+  if (editorRoot.querySelector("[data-section-index]")) {
+    next.customSections = Array.from(editorRoot.querySelectorAll("[data-section-index]")).map((row) => {
       const rawId = row.querySelector("[data-section-field='id']").value.trim();
       const section = {
         id: slugify(rawId || row.querySelector("[data-section-field='navTitle']").value || `custom-${Date.now()}`),
@@ -4424,7 +4699,10 @@ async function init() {
   setupPrototypeDetailRoutes();
   observeReveals();
   setupParticleCanvas();
-  debugLog("init", "ready", debugRouteState());
+  debugLog("init", "ready", {
+    ...debugRouteState(),
+    ...debugDataState()
+  });
 }
 
 init();
