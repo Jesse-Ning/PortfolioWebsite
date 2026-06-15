@@ -3381,7 +3381,7 @@
               "imageFit": "contain"
             }
           ],
-          "image": "assets/prototype/gravity-ball.gif",
+          "image": "https://portfolio-1443651172.cos.ap-shanghai.myqcloud.com/assets/prototype/gravity-ball.gif",
           "imageWidth": "",
           "imageAspect": "16 / 9",
           "imageFit": "cover",
@@ -3451,7 +3451,7 @@
               "imageFit": "contain"
             }
           ],
-          "image": "assets/uploads/images/legacy-66adc0d8622b6ad6.gif",
+          "image": "https://portfolio-1443651172.cos.ap-shanghai.myqcloud.com/assets/uploads/images/legacy-66adc0d8622b6ad6.gif",
           "imageWidth": "",
           "imageAspect": "16 / 9",
           "imageFit": "cover",
