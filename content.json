@@ -248,6 +248,18 @@
           "order": 1,
           "text": "凡所有相，皆是虚妄，若见诸相非相，即见如来。\n遇见危险不要恐惧，静下心来去直面恐惧才是取胜之道。专注于自己的呼吸，让自己慢下来就能无往不利。",
           "textStyle": "body"
+        },
+        {
+          "type": "video",
+          "order": 2,
+          "title": "演示视频",
+          "src": "https://portfolio-1443651172.cos.ap-shanghai.myqcloud.com/assets/videos/yinyang-demo.mp4",
+          "description": "",
+          "poster": "",
+          "controls": true,
+          "loop": false,
+          "muted": false,
+          "autoplay": false
         }
       ],
       "tags": [
