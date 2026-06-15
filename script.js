@@ -2329,7 +2329,8 @@ function documentDisplayName(source) {
 function renderPrototypeDetailVideoModule(block, sectionIndex = -1, cardIndex = -1) {
   const source = String(block.src || "").trim();
   const title = block.title || videoDisplayName(source) || "视频";
-  const description = String(block.description || "").trim();
+  const rawDescription = String(block.description || "").trim();
+  const description = /^本地视频路径[:：]/.test(rawDescription) ? "" : rawDescription;
   const poster = String(block.poster || "").trim();
   const controls = block.controls !== false;
   const loop = block.loop !== false;
