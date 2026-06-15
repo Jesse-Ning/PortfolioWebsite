@@ -32,6 +32,11 @@
       "copy": ""
     }
   },
+  "cv": {
+    "src": "assets/uploads/documents/1781533755407-_.pdf",
+    "fileName": "庞振宁_简历.pdf",
+    "label": "下载 CV"
+  },
   "profile": {
     "name": "庞振宁",
     "initials": "YY",
@@ -110,8 +115,7 @@
         "label": "AI",
         "items": [
           "Claude",
-          "Codex",
-          "Genmini"
+          "Codex"
         ]
       }
     ],
@@ -3237,7 +3241,9 @@
       "navTitle": "原型设计",
       "kicker": "prototype",
       "title": "原型设计",
-      "body": [],
+      "body": [
+        ""
+      ],
       "layout": "cards",
       "cards": [
         {
@@ -3381,7 +3387,7 @@
               "imageFit": "contain"
             }
           ],
-          "image": "assets/prototype/gravity-ball.gif",
+          "image": "https://portfolio-1443651172.cos.ap-shanghai.myqcloud.com/assets/prototype/gravity-ball.gif",
           "imageWidth": "",
           "imageAspect": "16 / 9",
           "imageFit": "cover",
@@ -3451,7 +3457,7 @@
               "imageFit": "contain"
             }
           ],
-          "image": "assets/uploads/images/legacy-66adc0d8622b6ad6.gif",
+          "image": "https://portfolio-1443651172.cos.ap-shanghai.myqcloud.com/assets/uploads/images/legacy-66adc0d8622b6ad6.gif",
           "imageWidth": "",
           "imageAspect": "16 / 9",
           "imageFit": "cover",

@@ -447,6 +447,22 @@ h2 {
   margin-bottom: 34px;
 }
 
+.section-heading-actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-left: auto;
+}
+
+.cv-download-button,
+.cv-upload-button {
+  min-width: auto;
+  min-height: 40px;
+  cursor: pointer;
+}
+
 .section-copy,
 .copy-stack p {
   color: var(--muted);
@@ -1201,6 +1217,17 @@ body[data-theme="dark"] .filter-button.is-active {
   outline: 2px solid var(--jade);
   outline-offset: 4px;
   border-radius: 8px;
+}
+
+.custom-card-actions {
+  margin-top: 18px;
+}
+
+.prototype-card-link:hover .prototype-detail-button,
+.prototype-card-link:focus-visible .prototype-detail-button {
+  border-color: color-mix(in srgb, var(--jade) 76%, var(--line));
+  color: #ffffff;
+  background: #111318;
 }
 
 #prototype-detail-route {
@@ -2349,6 +2376,10 @@ body[data-theme="dark"] .dev-action.primary {
 
   .section-heading {
     display: block;
+  }
+
+  .section-heading-actions {
+    margin-top: 16px;
   }
 }
 
