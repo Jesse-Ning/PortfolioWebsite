@@ -414,6 +414,123 @@
         text-align: center;
       }
 
+      .combat-loop-diagram {
+        position: relative;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: clamp(20px, 4vw, 30px);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background:
+          linear-gradient(135deg, rgba(93, 216, 196, 0.08), transparent 38%),
+          rgba(255, 255, 255, 0.035);
+        overflow: hidden;
+      }
+
+      .combat-loop-summary {
+        margin: 0 0 24px;
+        color: #d8e5ea;
+        line-height: 1.9;
+      }
+
+      .combat-loop-row {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 20px;
+        align-items: stretch;
+      }
+
+      .combat-loop-step {
+        position: relative;
+        min-height: 118px;
+        padding: 18px 16px;
+        border: 1px solid rgba(93, 216, 196, 0.24);
+        border-left: 5px solid var(--jade);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.055);
+        box-shadow: 0 18px 42px rgba(0, 0, 0, 0.2);
+      }
+
+      .combat-loop-step::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        right: -17px;
+        width: 14px;
+        height: 14px;
+        border-top: 2px solid rgba(93, 216, 196, 0.82);
+        border-right: 2px solid rgba(93, 216, 196, 0.82);
+        transform: translateY(-50%) rotate(45deg);
+        z-index: 2;
+      }
+
+      .combat-loop-step:last-child::after {
+        display: none;
+      }
+
+      .combat-loop-step .loop-index {
+        width: auto;
+        height: auto;
+        display: inline-flex;
+        margin-bottom: 14px;
+        padding: 5px 9px;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        line-height: 1;
+      }
+
+      .combat-loop-step strong {
+        display: block;
+        color: #f4fbfb;
+        font-size: clamp(1rem, 1.8vw, 1.2rem);
+        line-height: 1.45;
+      }
+
+      .combat-loop-step.is-breath {
+        border-left-color: var(--gold);
+        background: rgba(220, 175, 76, 0.095);
+      }
+
+      .combat-loop-step.is-enemy {
+        border-left-color: var(--red);
+        background: rgba(204, 83, 91, 0.085);
+      }
+
+      .combat-loop-return {
+        position: relative;
+        margin: 28px 8% 0;
+        padding-top: 18px;
+        color: var(--muted);
+        text-align: center;
+        font-size: 0.92rem;
+        line-height: 1.7;
+      }
+
+      .combat-loop-return::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        height: 18px;
+        border-left: 2px solid rgba(145, 163, 174, 0.48);
+        border-right: 2px solid rgba(145, 163, 174, 0.48);
+        border-bottom: 2px solid rgba(145, 163, 174, 0.48);
+        border-radius: 0 0 12px 12px;
+      }
+
+      .combat-loop-return::after {
+        content: "";
+        position: absolute;
+        left: -6px;
+        top: -5px;
+        width: 12px;
+        height: 12px;
+        border-left: 2px solid rgba(145, 163, 174, 0.72);
+        border-top: 2px solid rgba(145, 163, 174, 0.72);
+        transform: rotate(-45deg);
+      }
+
       .combat-system-grid {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -598,6 +715,24 @@
         .loop-return span {
           writing-mode: horizontal-tb;
         }
+        .combat-loop-row {
+          grid-template-columns: 1fr;
+          gap: 12px;
+        }
+        .combat-loop-step {
+          min-height: auto;
+        }
+        .combat-loop-step::after {
+          top: auto;
+          right: auto;
+          left: 50%;
+          bottom: -11px;
+          transform: translateX(-50%) rotate(135deg);
+        }
+        .combat-loop-return {
+          margin-left: 0;
+          margin-right: 0;
+        }
         .combat-system-grid {
           grid-template-columns: 1fr;
         }
@@ -751,19 +886,39 @@
 
       <section class="section" id="loop">
         <div class="section-head">
-          <h2>战斗循环</h2>
-          <p>玩家不是一直进攻，而是在压力积累、风险判断和反制窗口之间反复切换。</p>
+          <h2>战斗逻辑</h2>
+          <p>玩家不是一直进攻，而是在观察、瞬间判断、呼吸变化和敌人动态反馈之间形成持续决策。</p>
         </div>
         <div class="system-panel">
-          <div class="loop">
-            <div class="cycle-stack">
-              <div class="loop-step"><span class="loop-index">01</span><div><strong>行动</strong><span>移动 / 防御 / 攻击</span></div></div>
-              <div class="loop-step"><span class="loop-index">02</span><div><strong>压力</strong><span>呼吸值上升，风险变得可感知</span></div></div>
-              <div class="loop-step"><span class="loop-index">03</span><div><strong>精准</strong><span>完美闪避 / 格挡打开反制窗口</span></div></div>
-              <div class="loop-step"><span class="loop-index">04</span><div><strong>反制</strong><span>玩家夺回主动权并推动资源增长</span></div></div>
-              <div class="loop-step"><span class="loop-index">05</span><div><strong>禅意</strong><span>慢放爆发后回到下一轮行动</span></div></div>
+          <div class="combat-loop-diagram" aria-label="战斗逻辑循环">
+            <p class="combat-loop-summary">
+              观察敌人意图与自身情况 -> 依据自身情况对敌人的攻击做出瞬间判断 -> 呼吸值改变 -> 观察呼吸值并部署下一步行动 -> 敌人的行为发生动态变化。
+            </p>
+            <div class="combat-loop-row">
+              <article class="combat-loop-step is-observe">
+                <span class="loop-index">01</span>
+                <strong>观察敌人意图<br />与自身情况</strong>
+              </article>
+              <article class="combat-loop-step is-judge">
+                <span class="loop-index">02</span>
+                <strong>瞬间判断<br />对应行动</strong>
+              </article>
+              <article class="combat-loop-step is-breath">
+                <span class="loop-index">03</span>
+                <strong>呼吸值改变</strong>
+              </article>
+              <article class="combat-loop-step is-plan">
+                <span class="loop-index">04</span>
+                <strong>观察呼吸值<br />部署下一步</strong>
+              </article>
+              <article class="combat-loop-step is-enemy">
+                <span class="loop-index">05</span>
+                <strong>敌人行为<br />动态变化</strong>
+              </article>
             </div>
-            <div class="loop-return"><span>回到行动</span></div>
+            <div class="combat-loop-return">
+              <span>敌人的动态变化会重新回到玩家观察与判断，形成持续高压下的决策循环。</span>
+            </div>
           </div>
         </div>
       </section>
