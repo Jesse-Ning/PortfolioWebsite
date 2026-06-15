@@ -1582,8 +1582,14 @@ function renderProjects(active = "all") {
     .join("");
 }
 
+function isDetailProject(project) {
+  const title = String(project?.title || "").trim();
+  const slug = String(project?.slug || "").trim();
+  return title === "阴阳之力" || slug === "阴阳之力";
+}
+
 function renderProjectActions(project, options = {}) {
-  const showDetail = options.detail !== false;
+  const showDetail = options.detail !== false && isDetailProject(project);
   const showWebsiteSlot = options.websitePlaceholder !== false;
   const website = extractActionHref(project.website);
   if (!showDetail && !website && !showWebsiteSlot) return "";
