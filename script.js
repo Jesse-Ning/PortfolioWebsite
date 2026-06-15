@@ -15,6 +15,11 @@ const DEFAULT_SITE_DATA = {
     steam: { nav: "游戏库", kicker: "Steam Library", title: "游戏库", copy: "这些游戏记录了我的游玩兴趣、类型偏好和长期体验积累。" },
     contact: { nav: "联系", kicker: "Contact", title: "一起聊聊游戏设计与战斗系统", copy: "" }
   },
+  cv: {
+    src: "",
+    fileName: "",
+    label: "下载 CV"
+  },
   profile: {
     name: "你的名字",
     initials: "YY",
@@ -993,6 +998,7 @@ function normalizeData(data) {
   return {
     updatedAt: source.updatedAt || fallback.updatedAt,
     sections: normalizeSections(source.sections || fallback.sections),
+    cv: normalizeCvDocument(source.cv || fallback.cv),
     profile: {
       ...fallback.profile,
       ...(source.profile || {}),
@@ -1009,6 +1015,15 @@ function normalizeData(data) {
     gamePlatforms: normalizeGamePlatforms(source.gamePlatforms || fallback.gamePlatforms),
     research: Array.isArray(source.research) ? source.research : fallback.research,
     customSections: normalizeCustomSections(source.customSections)
+  };
+}
+
+function normalizeCvDocument(value) {
+  const source = value && typeof value === "object" ? value : {};
+  return {
+    src: String(source.src || source.href || "").trim(),
+    fileName: String(source.fileName || source.name || "").trim(),
+    label: String(source.label || "下载 CV").trim()
   };
 }
 
@@ -1335,7 +1350,30 @@ function renderSectionMeta() {
     setText(`[data-section-title="${item.id}"]`, section.title || "");
     setText(`[data-section-copy="${item.id}"]`, section.copy || "");
   });
+  renderCvActions();
   renderInlineMainToolbars();
+}
+
+function canUploadCv() {
+  return isDevModeRequested() || inlineEditMode || Boolean(document.querySelector("[data-dev-open]"));
+}
+
+function renderCvActions() {
+  const container = document.querySelector("[data-cv-actions]");
+  if (!container) return;
+
+  const cv = normalizeCvDocument(siteData.cv);
+  const hasCv = Boolean(cv.src);
+  const uploadVisible = canUploadCv();
+  container.innerHTML = `
+    ${hasCv ? `<a class="link-button cv-download-button" href="${attr(cv.src)}" download="${attr(cv.fileName || "CV")}">${escapeHtml(cv.label || "下载 CV")}</a>` : ""}
+    ${uploadVisible ? `
+      <label class="link-button cv-upload-button">
+        ${hasCv ? "替换 CV" : "上传 CV"}
+        <input class="visually-hidden" type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" data-cv-upload />
+      </label>
+    ` : ""}
+  `;
 }
 
 function renderNav() {
@@ -2819,6 +2857,7 @@ function setInlineEditMode(enabled) {
   } else {
     document.body.dataset.inlineEdit = inlineEditMode ? "1" : "0";
     syncInlineEditControls();
+    renderCvActions();
   }
 
   showToast(inlineEditMode ? "站内编辑已开启" : "站内编辑已关闭");
@@ -3320,6 +3359,7 @@ function bindEditorEvents() {
   document.addEventListener("click", handleInlineEditClick);
   document.addEventListener("input", handleInlineEditInput);
   document.addEventListener("change", handleInlineEditChange);
+  document.addEventListener("change", handleCvUploadChange);
 
   document.querySelector(".dev-tabs").addEventListener("click", (event) => {
     const tab = event.target.closest("[data-editor-tab]");
@@ -3353,6 +3393,38 @@ function bindEditorEvents() {
       handleVideoUpload(videoInput);
     }
   });
+}
+
+function handleCvUploadChange(event) {
+  const input = event.target.closest("[data-cv-upload]");
+  if (!input) return;
+  handleCvUpload(input);
+}
+
+async function handleCvUpload(input) {
+  const file = input.files?.[0];
+  if (!file) return;
+
+  try {
+    showToast("正在上传 CV...");
+    const uploadedPath = await uploadAssetFile(file, "documents");
+    if (!uploadedPath) {
+      showToast("CV 上传失败：请双击 OpenEditor.bat，用 127.0.0.1:4173 打开后再传");
+      return;
+    }
+    siteData.cv = normalizeCvDocument({
+      src: uploadedPath,
+      fileName: file.name,
+      label: "下载 CV"
+    });
+    renderCvActions();
+    renderEditor();
+    showToast("CV 已上传，点击保存后生效");
+  } catch {
+    showToast("CV 上传失败");
+  } finally {
+    input.value = "";
+  }
 }
 
 function renderDebugLogPanel() {

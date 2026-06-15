@@ -447,14 +447,20 @@ h2 {
   margin-bottom: 34px;
 }
 
-.section-heading-action {
+.section-heading-actions {
+  display: flex;
   flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
   margin-left: auto;
 }
 
-.cv-download-button {
+.cv-download-button,
+.cv-upload-button {
   min-width: auto;
   min-height: 40px;
+  cursor: pointer;
 }
 
 .section-copy,
@@ -2372,7 +2378,7 @@ body[data-theme="dark"] .dev-action.primary {
     display: block;
   }
 
-  .section-heading-action {
+  .section-heading-actions {
     margin-top: 16px;
   }
 }
