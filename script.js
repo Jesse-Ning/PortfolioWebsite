@@ -1659,7 +1659,6 @@ function renderProjects(active = "all") {
           <div class="project-body">
             <div class="project-meta">
               <span data-inline-editable data-inline-project-field="year" data-project-index="${project.index}">${escapeHtml(project.year)}</span>
-              <span>排序 ${escapeHtml(orderValue(project, project.index))}</span>
             </div>
             <h3 data-inline-editable data-inline-project-field="title" data-project-index="${project.index}">${escapeHtml(project.title)}</h3>
             <p class="inline-rendered-block">${escapeHtml(project.description)}</p>
@@ -1923,7 +1922,6 @@ function renderCustomCard(card, section, sectionIndex = -1) {
       </div>
       <div class="project-body">
         <div class="project-meta custom-card-meta">
-          <span>排序 ${escapeHtml(orderValue(card, card.index))}</span>
           ${isPrototype ? "<span>查看详情</span>" : ""}
         </div>
         <h3 data-inline-editable data-inline-custom-card-field="title" data-section-index="${sectionIndex}" data-card-index="${cardIndex}">${escapeHtml(card.title)}</h3>
