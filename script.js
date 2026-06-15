@@ -1,7 +1,7 @@
 const STORAGE_KEY = "portfolio-site-data-v1";
 const DEV_MODE_KEY = "portfolio-dev-mode";
 const DEBUG_LOG_LIMIT = 80;
-const APP_BUILD_VERSION = "20260614-local-source";
+const APP_BUILD_VERSION = "20260615-clean-copy";
 const debugLogs = [];
 let debugCaptureReady = false;
 let debugLogFilter = "";
@@ -21,8 +21,8 @@ const DEFAULT_SITE_DATA = {
     label: "下载 CV"
   },
   profile: {
-    name: "你的名字",
-    initials: "YY",
+    name: "庞振宁",
+    initials: "庞",
     kicker: "Game Designer / Gameplay Programmer",
     title: "游戏设计师 & 战斗系统程序员",
     summary: "我关注动作游戏中的时机、反馈、节奏和玩家决策，喜欢把设计想法落到可玩的系统里。",
@@ -41,13 +41,13 @@ const DEFAULT_SITE_DATA = {
       { label: "技能", items: ["战斗系统", "玩法原型", "镜头反馈", "Boss AI"] },
       { label: "编程语言", items: ["C++", "Blueprint", "C#", "JavaScript"] },
       { label: "语言", items: ["中文", "英语", "日语"] },
-      { label: "软件", items: ["Unreal Engine 5", "Unity", "Blender", "Git"] },
+      { label: "软件", items: ["Unreal Engine 5", "Unity", "Blender", "Git", "GitHub"] },
       { label: "AI", items: ["Claude", "Codex"] }
     ],
     links: [
       { label: "Email", href: "mailto:499133405@qq.com", icon: "mail", primary: true },
-      { label: "GitHub", href: "https://github.com/", icon: "github" },
-      { label: "Bilibili", href: "https://space.bilibili.com/", icon: "video" }
+      { label: "GitHub", href: "https://github.com/Jesse-Ning", icon: "github" },
+      { label: "Bilibili", href: "https://space.bilibili.com/2099525?spm_id_from=333.1365.0.0", icon: "video" }
     ]
   },
   timeline: [
@@ -1508,7 +1508,7 @@ function renderContactLink(link) {
 function renderProfile() {
   const { profile } = siteData;
   const heroGreeting = profile.heroGreeting || `Hi，我是${profile.name}，很高兴遇见你，`;
-  document.title = `${profile.name} | Personal Portfolio`;
+  document.title = `${profile.name} | 个人作品集`;
   setText("[data-profile-name]", profile.name);
   setText("[data-profile-greeting]", heroGreeting);
   setText("[data-profile-initials]", profile.initials);
@@ -1800,6 +1800,7 @@ function renderGamePlatformModules() {
 function renderGamePlatformModule(platform) {
   const games = [...platform.games].sort((left, right) => Number(right.playtimeMinutes || 0) - Number(left.playtimeMinutes || 0));
   const platformId = String(platform.id || platform.label || "platform");
+  const description = String(platform.description || "").trim();
   const pagedGames = getPagedItems(games, activePlatformPages[platformId] || 1);
   activePlatformPages[platformId] = pagedGames.page;
   const totalMinutes = games.reduce((sum, game) => sum + Number(game.playtimeMinutes || 0), 0);
@@ -1810,7 +1811,7 @@ function renderGamePlatformModule(platform) {
           ${platformLogoMarkup(platform.logo || platform.id, platform.label)}
           <div>
             <h3>${escapeHtml(platform.label)}</h3>
-            <p>${escapeHtml(platform.description || "可以在开发者模式里添加游戏。")}</p>
+            ${description ? `<p>${escapeHtml(description)}</p>` : ""}
           </div>
         </div>
         <div class="platform-stats">
@@ -1819,7 +1820,7 @@ function renderGamePlatformModule(platform) {
         </div>
       </div>
       <div class="platform-game-grid">
-        ${games.length ? `${pagedGames.items.map((game) => renderManualGameCard(game, platform)).join("")}${renderGamePagination({ total: games.length, page: pagedGames.page, target: "platform", platformId })}` : `<div class="platform-empty">这里已经预留好了。打开开发者模式的“游戏库”页签，就能添加 ${escapeHtml(platform.label)} 游戏。</div>`}
+        ${games.length ? `${pagedGames.items.map((game) => renderManualGameCard(game, platform)).join("")}${renderGamePagination({ total: games.length, page: pagedGames.page, target: "platform", platformId })}` : `<div class="platform-empty">暂无 ${escapeHtml(platform.label)} 游戏记录。</div>`}
       </div>
     </section>
   `;
@@ -1831,7 +1832,7 @@ function renderManualGameCard(game, platform) {
   return `
     <article class="platform-game-card">
       <div class="platform-game-media">
-        ${hasImage ? `<img src="${attr(game.image)}" alt="${attr(game.name)}" loading="lazy" />` : `<div class="platform-cover-placeholder">${platformLogoMarkup(platform.logo || platform.id, platform.label)}<span>封面待补</span></div>`}
+        ${hasImage ? `<img src="${attr(game.image)}" alt="${attr(game.name)}" loading="lazy" />` : `<div class="platform-cover-placeholder">${platformLogoMarkup(platform.logo || platform.id, platform.label)}</div>`}
       </div>
       <div class="platform-game-body">
         <h4>${escapeHtml(game.name)}</h4>
@@ -1904,7 +1905,7 @@ function renderCustomCardSection(section, index = 0) {
           ${renderInlineSectionToolbar(index, section)}
         </div>
         <div class="project-grid custom-card-grid">
-          ${cards.length ? cards.map((card) => renderCustomCard(card, section, index)).join("") : `<div class="platform-empty">还没有卡片。打开站内编辑模式后，可以直接添加卡片。</div>`}
+          ${cards.length ? cards.map((card) => renderCustomCard(card, section, index)).join("") : `<div class="platform-empty">内容整理中。</div>`}
         </div>
       </div>
     </section>
@@ -2078,7 +2079,7 @@ function renderProjectDetailRoute(options = {}) {
       <section class="section-band prototype-detail-page">
         <div class="section-inner prototype-detail-inner">
           <a class="detail-back-link" href="#projects">返回作品</a>
-          <p class="prototype-detail-empty">作品详情页渲染失败，请检查刚添加的资源模块。</p>
+          <p class="prototype-detail-empty">作品详情暂时无法显示，请稍后查看。</p>
         </div>
       </section>
     `;
@@ -2140,7 +2141,7 @@ function renderPrototypeDetailRoute(options = {}) {
       <section class="section-band prototype-detail-page">
         <div class="section-inner prototype-detail-inner">
           <a class="detail-back-link" href="#${attr(section.id || "prototype")}">返回原型设计</a>
-          <p class="prototype-detail-empty">详情页渲染失败。请删除或重新上传刚添加的资源模块。</p>
+          <p class="prototype-detail-empty">详情内容暂时无法显示，请稍后查看。</p>
         </div>
       </section>
     `;
@@ -2221,7 +2222,7 @@ function renderProjectDetailPage(project) {
 function renderPrototypeDetailContent(card, sectionIndex = -1, cardIndex = -1) {
   const blocks = getOrderedDetailBlocks(card);
   if (!blocks.length) {
-    return `<p class="prototype-detail-empty">这里还没有详情内容。打开开发者模式，在这张原型卡片里添加文字或图片模块。</p>`;
+    return `<p class="prototype-detail-empty">详情内容整理中。</p>`;
   }
 
   return blocks.map((block) => {
@@ -2241,7 +2242,7 @@ function renderPrototypeDetailErrorBlock(block, sectionIndex = -1, cardIndex = -
     <section class="prototype-detail-block prototype-detail-text-block" data-inline-detail-block="${blockIndex}">
       ${renderInlineDetailBlockToolbar(sectionIndex, cardIndex, blockIndex, type)}
       <div class="prototype-detail-rendered">
-        <p>${escapeHtml(type)} 渲染失败。这个模块已保留，可以删除后重新上传。</p>
+        <p>${escapeHtml(type)} 暂时无法显示。</p>
       </div>
     </section>
   `;
@@ -2305,8 +2306,8 @@ function renderPrototypeDetailDocumentModule(block, sectionIndex = -1, cardIndex
         </div>
       ` : `
         <div class="prototype-document-placeholder">
-          <strong>${source ? "当前格式适合打开或下载查看" : "还没有填写文档地址"}</strong>
-          <span>${source ? "PDF 会自动显示网页内预览；Word、PPT、Excel 通常需要打开原文件。" : "在开发者模式里填 assets/docs/example.pdf、公开链接，或选择本地文档。"}</span>
+          <strong>${source ? "当前格式适合打开或下载查看" : "文档暂未配置"}</strong>
+          <span>${source ? "PDF 会自动显示网页内预览；Word、PPT、Excel 通常需要打开原文件。" : "相关文档整理中。"}</span>
         </div>
       `}
     </article>
@@ -2350,8 +2351,8 @@ function renderPrototypeDetailVideoModule(block, sectionIndex = -1, cardIndex = 
         </video>
       ` : `
         <div class="prototype-video-placeholder">
-          <strong>还没有填写视频路径</strong>
-          <span>把 MP4 放进 assets/prototype，再在高级字段里填写相对路径。</span>
+          <strong>视频暂未配置</strong>
+          <span>演示视频整理中。</span>
         </div>
       `}
     </article>
@@ -4494,8 +4495,8 @@ function collectEditorData() {
 
   const profileName = editorRoot.querySelector("#" + "profile-name");
   if (profileName) {
-    next.profile.name = profileName.value.trim() || "你的名字";
-    next.profile.initials = editorRoot.querySelector("#" + "profile-initials").value.trim() || "YY";
+    next.profile.name = profileName.value.trim() || "庞振宁";
+    next.profile.initials = editorRoot.querySelector("#" + "profile-initials").value.trim() || "庞";
     next.profile.kicker = editorRoot.querySelector("#" + "profile-kicker").value.trim();
     next.profile.title = editorRoot.querySelector("#" + "profile-title").value.trim();
     next.profile.summary = editorRoot.querySelector("#" + "profile-summary").value.trim();

@@ -39,7 +39,7 @@
   },
   "profile": {
     "name": "庞振宁",
-    "initials": "YY",
+    "initials": "庞",
     "kicker": "",
     "title": "游戏设计师 & UE蓝图程序员 & AI FDE",
     "summary": "",
@@ -95,9 +95,9 @@
           "Unreal Engine 5",
           "Unity",
           "Git",
-          "GItHub",
-          "SketchUP",
-          "PhotoShop",
+          "GitHub",
+          "SketchUp",
+          "Photoshop",
           "Word",
           "Excel",
           "PowerPoint"
@@ -166,7 +166,7 @@
     {
       "date": "2024-现在",
       "title": "Void Interactive",
-      "description": "负责UE5项目《莲》的战斗体验设计方案：\n1.根据项目要求和设计大纲进行3C设计与MVP演示。\n2.制作富有乐趣且具有挑战性的boss战斗与敌人AI架构。\n3.撰写和迭代战斗系统的开发文档，需求文档与相关的debug调试工具。\n4.依靠UE5的内置功能快速搭建玩法与白盒、灰盒展示。\n5.装配，维护引擎内和战斗相关的资产。\n6.使用Codex和Claude code构建工作流，从而实现程序实现功能与策划友好调试。\n7.与程序和美术合作将设计方案落地。",
+      "description": "负责UE5项目《莲》的战斗体验设计方案：\n1.根据项目要求和设计大纲进行3C设计与MVP演示。\n2.制作富有乐趣且具有挑战性的Boss战斗与敌人AI架构。\n3.撰写和迭代战斗系统的开发文档、需求文档与相关调试工具。\n4.依靠UE5的内置功能快速搭建玩法与白盒、灰盒展示。\n5.装配、维护引擎内和战斗相关的资产。\n6.使用Codex和Claude Code构建工作流，实现程序功能与策划调试的顺畅衔接。\n7.与程序和美术合作将设计方案落地。",
       "tags": [
         "战斗策划"
       ],
@@ -376,19 +376,19 @@
       "imageWidth": "",
       "imageAspect": "",
       "imageFit": "cover",
-      "description": "目标是巨大宝藏！但是博物馆里戒备森严，危险！\n玩家将会体检“双主角”配合去躲避博物馆保安，应对警备器械并在最后成功偷取宝物。",
+      "description": "目标是巨大宝藏！但是博物馆里戒备森严，危险！\n玩家将会体验“双主角”配合去躲避博物馆保安，应对警备器械并在最后成功偷取宝物。",
       "detailBlocks": [
         {
           "type": "text",
           "order": 1,
-          "text": "目标是巨大宝藏！但是博物馆里戒备森严，危险！\n玩家将会体检“双主角”配合去躲避博物馆保安，应对警备器械并在最后成功偷取宝物。",
+          "text": "目标是巨大宝藏！但是博物馆里戒备森严，危险！\n玩家将会体验“双主角”配合去躲避博物馆保安，应对警备器械并在最后成功偷取宝物。",
           "textStyle": "body"
         }
       ],
       "tags": [
         "双主角"
       ],
-      "details": "目标是巨大宝藏！但是博物馆里戒备森严，危险！\n玩家将会体检“双主角”配合去躲避博物馆保安，应对警备器械并在最后成功偷取宝物。"
+      "details": "目标是巨大宝藏！但是博物馆里戒备森严，危险！\n玩家将会体验“双主角”配合去躲避博物馆保安，应对警备器械并在最后成功偷取宝物。"
     }
   ],
   "steamLibrary": {
@@ -3482,7 +3482,7 @@
           "order": 3,
           "title": "多人AI寻路算法",
           "slug": "多人ai寻路算法",
-          "description": "AI Perception进行感知检测\nAI Controller，AI Director 和 Behaviout Tree的分工协作\n战场坐标轴的构建与AI Agent的身份给予\n基于战场坐标轴实现AI的位置分配\n玩家移动时AI Agent会根据以配置的坐标位置进行相对移动从而实现始终跟随玩家的效果",
+          "description": "AI Perception进行感知检测\nAI Controller，AI Director 和 Behaviour Tree的分工协作\n战场坐标轴的构建与AI Agent的身份给予\n基于战场坐标轴实现AI的位置分配\n玩家移动时AI Agent会根据已配置的坐标位置进行相对移动，从而实现始终跟随玩家的效果",
           "details": "蓝图资产\n\nAI感知检测流程：\n\n1.在AIController里面通过AIPerception进行检测\n\n2.将感知检测报告给AI Director\n\n3.通过AI Director构建战场坐标，设置Agent的战斗状态和战场位置\n\n4.将检测到的Agent依靠战场坐标根据其方位和距离设置战斗状态：直接战斗，准备战斗和待命状态\n\n构建EQS_CombatLocation Slot\n\n在BT里面通过Task生成EQS,根据角度和距离进行计算并得出最高分的Query",
           "detailBlocks": [
             {
