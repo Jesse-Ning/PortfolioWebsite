@@ -1877,6 +1877,7 @@ function renderCustomCardSection(section, index = 0) {
 function renderCustomCard(card, section, sectionIndex = -1) {
   const image = card.image || "assets/recovery-preview.png";
   const cardIndex = card.index ?? 0;
+  const isPrototype = isPrototypeSection(section);
   const cardMarkup = `
     <article class="project-card custom-card reveal" data-inline-custom-card="${sectionIndex}:${cardIndex}">
       <div class="project-media"${renderImageStyle(card)}>
@@ -1885,7 +1886,7 @@ function renderCustomCard(card, section, sectionIndex = -1) {
       <div class="project-body">
         <div class="project-meta custom-card-meta">
           <span>排序 ${escapeHtml(orderValue(card, card.index))}</span>
-          ${isPrototypeSection(section) ? "<span>查看详情</span>" : ""}
+          ${isPrototype ? "<span>查看详情</span>" : ""}
         </div>
         <h3 data-inline-editable data-inline-custom-card-field="title" data-section-index="${sectionIndex}" data-card-index="${cardIndex}">${escapeHtml(card.title)}</h3>
         <div class="inline-rendered-block">${renderCustomCardDescription(card.description)}</div>
@@ -1893,13 +1894,14 @@ function renderCustomCard(card, section, sectionIndex = -1) {
         <div class="tag-row project-extra-tags">
           ${toTags(card.tags).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}
         </div>
+        ${isPrototype ? `<div class="project-actions custom-card-actions"><span class="project-action is-primary prototype-detail-button">查看详情</span></div>` : ""}
         <input class="inline-tags-input" value="${attr(toTags(card.tags).join(", "))}" data-inline-custom-card-field="tags" data-section-index="${sectionIndex}" data-card-index="${cardIndex}" aria-label="卡片标签" />
       </div>
     </article>
   `;
 
   const toolbar = renderInlineCardToolbar(sectionIndex, cardIndex);
-  if (!isPrototypeSection(section)) {
+  if (!isPrototype) {
     return `<div class="custom-card-shell">${toolbar}${cardMarkup}</div>`;
   }
 

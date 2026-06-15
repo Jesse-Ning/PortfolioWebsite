@@ -447,6 +447,16 @@ h2 {
   margin-bottom: 34px;
 }
 
+.section-heading-action {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.cv-download-button {
+  min-width: auto;
+  min-height: 40px;
+}
+
 .section-copy,
 .copy-stack p {
   color: var(--muted);
@@ -1201,6 +1211,17 @@ body[data-theme="dark"] .filter-button.is-active {
   outline: 2px solid var(--jade);
   outline-offset: 4px;
   border-radius: 8px;
+}
+
+.custom-card-actions {
+  margin-top: 18px;
+}
+
+.prototype-card-link:hover .prototype-detail-button,
+.prototype-card-link:focus-visible .prototype-detail-button {
+  border-color: color-mix(in srgb, var(--jade) 76%, var(--line));
+  color: #ffffff;
+  background: #111318;
 }
 
 #prototype-detail-route {
@@ -2349,6 +2370,10 @@ body[data-theme="dark"] .dev-action.primary {
 
   .section-heading {
     display: block;
+  }
+
+  .section-heading-action {
+    margin-top: 16px;
   }
 }
 
