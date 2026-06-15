@@ -1,7 +1,7 @@
 const STORAGE_KEY = "portfolio-site-data-v1";
 const DEV_MODE_KEY = "portfolio-dev-mode";
 const DEBUG_LOG_LIMIT = 80;
-const APP_BUILD_VERSION = "20260615-clean-copy";
+const APP_BUILD_VERSION = "20260616-final-ui";
 const debugLogs = [];
 let debugCaptureReady = false;
 let debugLogFilter = "";
@@ -816,6 +816,10 @@ function formatPlaytime(minutes) {
   if (value < 60) return `${value} 分钟`;
   const hours = value / 60;
   return hours >= 100 ? `${Math.round(hours)} 小时` : `${hours.toFixed(1)} 小时`;
+}
+
+function formatGameCount(count) {
+  return `${Number(count || 0)} 款游戏`;
 }
 
 function formatSteamDate(value) {
@@ -1650,8 +1654,10 @@ function renderProjects(active = "all") {
 
   document.getElementById("project-grid").innerHTML = projects
     .map(
-      (project) => `
-        <article class="project-card reveal${isFeatured(project, project.index) ? " is-featured" : ""}" data-inline-project-card="${project.index}">
+      (project) => {
+        const detailHref = isDetailProject(project) ? projectDetailHref(project) : "";
+        return `
+        <article class="project-card reveal${isFeatured(project, project.index) ? " is-featured" : ""}${detailHref ? " is-clickable" : ""}" data-inline-project-card="${project.index}"${detailHref ? ` data-project-detail-href="${attr(detailHref)}" role="link" tabindex="0" aria-label="查看${attr(project.title)}详情"` : ""}>
           ${renderInlineProjectToolbar(project.index)}
           <div class="project-media"${renderImageStyle(project)}>
             <img src="${attr(project.image)}" alt="${attr(project.title)}" loading="lazy" />
@@ -1673,7 +1679,8 @@ function renderProjects(active = "all") {
             ${renderProjectActions(project)}
           </div>
         </article>
-      `
+      `;
+      }
     )
     .join("");
 }
@@ -1693,7 +1700,7 @@ function renderProjectActions(project, options = {}) {
   return `
     <div class="project-actions">
       ${showDetail ? `<a class="project-action is-primary" href="${attr(projectDetailHref(project))}">查看详情</a>` : ""}
-      ${website ? `<a class="project-action" href="${attr(website)}" target="_blank" rel="noopener">跳转网站</a>` : ""}
+      ${website ? `<a class="project-action is-external" href="${attr(website)}" target="_blank" rel="noopener">跳转网站 ↗</a>` : ""}
       ${!website && showWebsiteSlot ? `<span class="project-action is-disabled">暂无网站</span>` : ""}
     </div>
   `;
@@ -1733,16 +1740,12 @@ function renderSteamLibrary() {
   const totalMinutes = games.reduce((sum, game) => sum + Number(game.playtimeMinutes || 0), 0);
   summary.innerHTML = `
     <article>
-      <strong>${escapeHtml(games.length)}</strong>
-      <span>已导入 Steam 游戏</span>
+      <strong>${escapeHtml(formatGameCount(games.length))}</strong>
+      <span>Steam 游戏</span>
     </article>
     <article>
       <strong>${escapeHtml(formatPlaytime(totalMinutes))}</strong>
       <span>累计游玩</span>
-    </article>
-    <article>
-      <strong>${escapeHtml(formatSteamDate(library.updatedAt))}</strong>
-      <span>最近更新</span>
     </article>
   `;
 
@@ -1815,7 +1818,7 @@ function renderGamePlatformModule(platform) {
           </div>
         </div>
         <div class="platform-stats">
-          <span>${escapeHtml(games.length)} 款</span>
+          <span>${escapeHtml(formatGameCount(games.length))}</span>
           <span>${escapeHtml(formatPlaytime(totalMinutes))}</span>
         </div>
       </div>
@@ -2484,6 +2487,32 @@ function setupFilters() {
     activeSteamPage = 1;
     renderSteamLibrary();
     observeReveals();
+  });
+}
+
+function isProjectCardInteractiveTarget(target) {
+  return Boolean(target.closest("a, button, input, textarea, select, label, [contenteditable='true'], [data-inline-editable], .project-actions, .inline-toolbar"));
+}
+
+function openProjectCardFromEvent(event) {
+  if (inlineEditMode) return;
+  if (isProjectCardInteractiveTarget(event.target)) return;
+  const card = event.target.closest("[data-project-detail-href]");
+  if (!card) return;
+  const href = card.dataset.projectDetailHref;
+  if (href) window.location.href = href;
+}
+
+function setupProjectCardLinks() {
+  const grid = document.getElementById("project-grid");
+  if (!grid) return;
+  grid.addEventListener("click", openProjectCardFromEvent);
+  grid.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    const card = event.target.closest("[data-project-detail-href]");
+    if (!card || event.target !== card) return;
+    event.preventDefault();
+    openProjectCardFromEvent(event);
   });
 }
 
@@ -4869,6 +4898,7 @@ async function init() {
   siteData = await loadInitialData();
   renderAll();
   setupFilters();
+  setupProjectCardLinks();
   setupTimelineTabs();
   setupTheme();
   setupDevMode();
