@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-14T16:30:45.423Z",
+  "updatedAt": "2026-06-15T06:42:30.312Z",
   "sections": {
     "about": {
       "nav": "介绍",
@@ -3237,9 +3237,7 @@
       "navTitle": "原型设计",
       "kicker": "prototype",
       "title": "原型设计",
-      "body": [
-        ""
-      ],
+      "body": [],
       "layout": "cards",
       "cards": [
         {
@@ -3474,7 +3472,7 @@
               "order": 2,
               "title": "UE57_AI战斗调度算法说明",
               "src": "assets/uploads/documents/legacy-435c2ea89567de65.pdf",
-              "description": "这里写文档说明。",
+              "description": "",
               "fileName": "UE57_AI战斗调度算法说明.pdf",
               "preview": "auto"
             },
