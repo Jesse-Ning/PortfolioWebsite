@@ -33,8 +33,8 @@
     }
   },
   "cv": {
-    "src": "assets/uploads/documents/1781533755407-_.pdf",
-    "fileName": "庞振宁_简历.pdf",
+    "src": "assets/uploads/documents/1781541476177-_-_.pdf",
+    "fileName": "庞振宁_简历_作品集版.pdf",
     "label": "下载 CV"
   },
   "profile": {
@@ -256,6 +256,7 @@
           "src": "https://portfolio-1443651172.cos.ap-shanghai.myqcloud.com/assets/videos/yinyang-demo.mp4",
           "description": "",
           "poster": "",
+          "fileName": "",
           "controls": true,
           "loop": false,
           "muted": false,
