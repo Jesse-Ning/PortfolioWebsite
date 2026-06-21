@@ -101,28 +101,29 @@
         color: #fff;
       }
       main { padding: 74px clamp(20px, 6vw, 80px) 96px; }
-      .article-shell { width: min(980px, 100%); margin: 0 auto; }
+      .article-shell { width: min(1160px, 100%); margin: 0 auto; }
       .kicker {
-        margin: 0 0 12px;
+        width: min(820px, 100%);
+        margin: 0 auto 12px;
         color: var(--jade);
         font-size: 0.82rem;
         font-weight: 900;
         text-transform: uppercase;
       }
       h1 {
-        max-width: 920px;
-        margin: 0;
+        width: min(820px, 100%);
+        margin: 0 auto;
         font-size: clamp(2.45rem, 6vw, 5rem);
         line-height: 1.05;
         letter-spacing: 0;
       }
       .subtitle {
-        max-width: 760px;
-        margin: 24px 0 0;
+        width: min(820px, 100%);
+        margin: 24px auto 0;
         color: var(--muted);
         font-size: clamp(1.08rem, 2vw, 1.32rem);
       }
-      .author { margin: 14px 0 0; color: color-mix(in srgb, var(--jade) 68%, var(--muted)); font-weight: 780; }
+      .author { width: min(820px, 100%); margin: 14px auto 0; color: color-mix(in srgb, var(--jade) 68%, var(--muted)); font-weight: 780; }
       .hero-image {
         display: block;
         width: min(820px, 100%);
@@ -135,9 +136,48 @@
         box-shadow: var(--shadow);
       }
       .hero-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
-      .article-body {
-        width: min(820px, 100%);
+      .article-layout {
+        display: grid;
+        grid-template-columns: minmax(180px, 220px) minmax(0, 820px);
+        gap: 28px;
+        align-items: start;
+        justify-content: center;
+        width: min(1068px, 100%);
         margin: 58px auto 0;
+      }
+      .article-toc {
+        position: sticky;
+        top: 92px;
+        max-height: calc(100svh - 116px);
+        overflow: auto;
+        padding: 18px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(23, 28, 34, 0.68);
+        box-shadow: 0 18px 44px rgba(0,0,0,0.18);
+      }
+      .article-toc-title {
+        margin: 0 0 8px;
+        color: var(--jade);
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0;
+      }
+      .article-toc a {
+        display: block;
+        padding: 9px 0;
+        border-top: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+        color: color-mix(in srgb, var(--ink) 72%, var(--muted));
+        font-size: 0.9rem;
+        font-weight: 760;
+        line-height: 1.38;
+        text-decoration: none;
+      }
+      .article-toc a:hover,
+      .article-toc a:focus-visible { color: var(--ink); }
+      .article-body {
+        width: 100%;
+        margin: 0;
         padding: clamp(26px, 4vw, 44px);
         border: 1px solid var(--line);
         border-radius: 8px;
@@ -145,6 +185,7 @@
         box-shadow: 0 18px 44px rgba(0,0,0,0.22);
       }
       .article-body h2 {
+        scroll-margin-top: 104px;
         margin: 56px 0 20px;
         padding-top: 12px;
         border-top: 1px solid color-mix(in srgb, var(--line) 76%, transparent);
@@ -154,12 +195,18 @@
       .article-body h2:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
       .article-body h3 { margin: 34px 0 10px; color: var(--jade); font-size: 1.16rem; line-height: 1.35; }
       .article-body p { margin: 14px 0 0; color: color-mix(in srgb, var(--ink) 84%, var(--muted)); font-size: 1.02rem; }
+      @media (max-width: 980px) {
+        .article-shell { width: min(820px, 100%); }
+        .article-layout { display: block; width: min(820px, 100%); }
+        .article-toc { position: static; max-height: none; margin: 0 0 24px; }
+      }
       @media (max-width: 720px) {
         .site-header { align-items: flex-start; flex-direction: column; }
         .header-actions { width: 100%; justify-content: stretch; }
         .button { flex: 1 1 140px; }
         main { padding-top: 52px; }
-        .article-body { padding: 22px; }
+        .article-layout { margin-top: 38px; }
+        .article-body, .article-toc { padding: 22px; }
       }
     </style>
   </head>
@@ -178,13 +225,26 @@
         <p class="subtitle">一次关于战斗设计的深度解析</p>
         <p class="author">庞振宁 | jessepang.cn</p>
         <figure class="hero-image"><img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/814380/header.jpg?t=1762888662" alt="Sekiro: Shadows Die Twice" /></figure>
-        <div class="article-body">
-        <h2>引言</h2>
+        <div class="article-layout">
+          <nav class="article-toc" aria-label="文章目录">
+            <p class="article-toc-title">目录</p>
+            <a href="#intro">引言</a>
+            <a href="#combat-loop">一、游戏循环——战斗节奏的解剖</a>
+            <a href="#growth-design">二、成长设计——如何让不同的玩家都找到自己的战斗方式</a>
+            <a href="#emotion-arc">三、情绪弧线——为什么打赢只狼的Boss会让你热泪盈眶</a>
+            <a href="#combat-depth">四、战斗深度——玩家的选择是否有意义</a>
+            <a href="#difficulty-design">五、难度设计——如何让玩家觉得「难但公平」</a>
+            <a href="#multi-enemy">六、多敌人战斗——压力的编排艺术</a>
+            <a href="#implementation">七、技术落地——从设计到可玩的完整链路</a>
+            <a href="#closing">八、结语——将减法做到极致</a>
+          </nav>
+          <div class="article-body">
+        <h2 id="intro">引言</h2>
         <p>大多数游戏会告诉你「你死了，再试一次」。</p>
         <p>只狼告诉你的是「你死了，因为你还没理解这场战斗」。</p>
         <p>这一个字之差，是只狼和其他所有动作游戏最根本的区别。它不是一个让你变强来碾压敌人的游戏，而是一个让你理解战斗、读懂对手、最终在精神层面完全掌控这场战斗的游戏。从世界观到3C，从战斗机制到AI设计，从游戏循环到难度曲线，只狼的每一个设计决策都在服务同一件事——让玩家经历一段完整的情绪旅程，从被压制到彻底掌控。</p>
         <p>这篇文章试图回答一个问题：只狼为什么是完美的？</p>
-        <h2>一、游戏循环——战斗节奏的解剖</h2>
+        <h2 id="combat-loop">一、游戏循环——战斗节奏的解剖</h2>
         <p>要理解只狼为什么好玩，必须先理解什么是战斗节奏。</p>
         <p>一个敌人的动作节奏由六个要素构成：前摇、判定、后摇、连段、停顿和反击窗口。这六个要素不是孤立的技术参数，而是构成整场战斗对话的语言。</p>
         <h3>前摇</h3>
@@ -203,7 +263,7 @@
         <h3>架势条——驱动这场对话的核心机制</h3>
         <p>常规游戏的韧性系统往往是静态的——一个固定数值，被打空就进入硬直。只狼的架势条是动态的：它会根据敌人的血量动态调整恢复速度，血量越低架势条恢复越慢。这个设计让弹反机制在整场战斗里始终有意义——不会因为敌人血量充足就让弹反显得低效，也不会因为进入后期就失去价值。更重要的是，架势条是一个持续可读的视觉信号，玩家始终能看到自己距离处决还有多远，这既是打击感的正反馈，也是推动玩家持续弹反的内在动力。</p>
         <p>还有一个细节值得注意：只狼的敌人在玩家主动攻击时会进行反制——主动格挡、闪避、识破。这个设计让玩家始终处于被动压迫的状态，不能无脑输出。但当敌人攻击时，玩家可以通过弹反和忍义手进行反制，将风险转化为收益。攻守之间的这种对称性，是只狼战斗节奏最深层的设计逻辑——双方都在攻击对方的同时承担被反制的风险，战斗因此成为一场真正的博弈。</p>
-        <h2>二、成长设计——如何让不同的玩家都找到自己的战斗方式</h2>
+        <h2 id="growth-design">二、成长设计——如何让不同的玩家都找到自己的战斗方式</h2>
         <p>只狼的成长设计解决了一个动作游戏里最难的问题：如何让小白玩家能通关，同时让高手玩家觉得有深度。</p>
         <p>答案不是做两套系统，而是让同一套系统服务于不同层级的玩家。</p>
         <p>忍义手——同一套系统，两种用法</p>
@@ -214,7 +274,7 @@
         <p>具体到敌人设计的层面，每一个敌人都在教玩家一件事。以闪避机制为例——投技让玩家明白格挡无效，只能闪避；强力攻击让玩家发现格挡会陷入巨大硬直，但闪避可以直接从防御姿态切回攻击状态；远程攻击则让玩家学会用连续闪避来控制距离和接近敌人。这三种招式设计的目的不是为了让玩家死，而是为了让玩家在死亡中理解「闪避在这种情况下比格挡更有价值」。</p>
         <p>蓄力攻击的敌人设计同样如此。突进攻击鼓励玩家用蓄力打断敌人的冲刺；防御姿态告诉玩家蓄力攻击可以击破盾牌并获得巨大的攻击窗口；蓄力碰撞则引入了一个对峙阶段，双方同时蓄力时通过连续快速按键来决定胜负——这是把蓄力从一个单纯的攻击手段变成了博弈工具。</p>
         <p>这正是只狼成长设计最聪明的地方：每一个新机制的引入，都通过专门设计的敌人来完成教学。玩家不是在读说明书，而是在死亡和胜利之间自然地学会了这个机制应该在什么时候使用。成长因此不只是数值的提升，而是玩家自身战斗理解的真实进步。</p>
-        <h2>三、情绪弧线——为什么打赢只狼的Boss会让你热泪盈眶</h2>
+        <h2 id="emotion-arc">三、情绪弧线——为什么打赢只狼的Boss会让你热泪盈眶</h2>
         <p>大多数游戏的战斗是这样的：你变强，敌人变弱，你赢了。</p>
         <p>只狼的战斗是这样的：你没有变强，但你理解了这场战斗，然后你赢了。</p>
         <p>这是两种完全不同的胜利。前者是数值碾压，后者是真正意义上的成长。只狼能让玩家在击败Boss的瞬间热泪盈眶，原因就在于此——那个胜利是属于玩家自己的，不是装备给的，不是等级给的，是一次次死亡之后真实积累下来的理解和判断力。</p>
@@ -233,7 +293,7 @@
         <p>最终的处决是整条情绪弧线的顶点。不是因为敌人血量归零，而是因为玩家在那一刻对这场战斗有了完整的理解和掌控。那个处决动画不只是一个结束动画，而是一场完整情绪旅程的终点符号。</p>
         <p>这条弧线能成立，依赖一个核心设计原则：每一个让玩家死亡的机制，同时也是让玩家学习的机制。只狼从不设计「不讲理」的死亡——每一次失误都有信号可以追溯，每一个难点都有对应的反制手段，每一次死亡都在推动玩家往弧线的下一个阶段前进。</p>
         <p>这就是为什么打赢只狼的Boss会让人热泪盈眶。那个胜利是玩家自己一步一步走出来的。</p>
-        <h2>四、战斗深度——玩家的选择是否有意义</h2>
+        <h2 id="combat-depth">四、战斗深度——玩家的选择是否有意义</h2>
         <p>判断一个战斗设计是否有深度，核心标准只有一个：玩家的选择是否有意义，以及选择的后果是否清晰可感。</p>
         <p>这两个条件缺一不可。选择有意义但后果模糊，玩家会感到困惑；后果清晰但选择无意义，玩家会感到无聊。只狼两者都做到了极致。</p>
         <h3>机制优先级的设计</h3>
@@ -257,7 +317,7 @@
         <p>七，兼顾不同层级的玩家——对小白有保底手段，对高手有足够的深度支撑无伤挑战。</p>
         <p>八，学习曲线健康——新手阶段建立直觉，中期引入攻击模式变化，后期让高手玩家主动规划资源和路线，最好的结果是让玩家有「顿悟」的感觉。</p>
         <p>只狼八项全中。这不是巧合，而是FromSoftware对战斗设计理解深度的体现。</p>
-        <h2>五、难度设计——如何让玩家觉得「难但公平」</h2>
+        <h2 id="difficulty-design">五、难度设计——如何让玩家觉得「难但公平」</h2>
         <p>提高游戏难度最简单的方法是增加血量和伤害。这也是最糟糕的方法。</p>
         <p>血量和伤害的堆叠只是在延长战斗时间和放大惩罚，它不会让战斗变得更有趣，只会让玩家感到疲惫。只狼选择了一条截然不同的路——通过设计的复杂度来提高难度，而不是通过数值的膨胀。</p>
         <h3>如何在不堆数值的情况下提高难度</h3>
@@ -275,7 +335,7 @@
         <p>但三阶段设计还有一个常被忽视的价值：它是给玩家的资源规划提示。玩家在战斗开始前就知道这是一个三阶段Boss，因此会提前规划手上的道具、忍义手和葫芦使用节奏。什么时候用鞭炮，什么时候喝葫芦，什么时候留复活机会——这些决策让战斗从单纯的反应游戏升级为策略游戏。</p>
         <p>阶段切换的视觉仪式也至关重要。只狼的Boss进入新阶段时往往伴随着明显的演出——动画、台词、特效。这不只是戏剧效果，而是在给玩家一个明确的信号：「规则改变了，重新调整你的策略。」同时也是情绪上的重置，让玩家在精神紧绷了一段时间后有一个短暂的喘息，然后以新的心态迎接下一阶段的挑战。</p>
         <p>难度设计的终极目标是让玩家觉得「难但公平」。只狼做到了这一点——每一个让你死亡的设计，同时也是让你学习的设计。难度是对玩家能力的挑战，不是对玩家耐心的消耗。</p>
-        <h2>六、多敌人战斗——压力的编排艺术</h2>
+        <h2 id="multi-enemy">六、多敌人战斗——压力的编排艺术</h2>
         <p>多敌人战斗是动作游戏里最难设计的内容之一。难点不在于让敌人变强，而在于让多个敌人同时存在的情况下，战斗仍然清晰可读、公平可应对。</p>
         <p>只狼对多敌人战斗的解法从关卡设计层面就开始了。</p>
         <h3>敌人在关卡里的职能</h3>
@@ -290,7 +350,7 @@
         <h3>多种通关思路的并存</h3>
         <p>只狼的多人关卡同时支持忍杀、潜行和莽杀三种通关思路。这不是为了增加玩法多样性而强行设计的，而是从关卡的空间结构和敌人部署里自然生长出来的。高台的哨兵位置鼓励玩家寻找潜行路线；单独巡逻的精英怪适合忍杀处理；近战和远程的混合部署则在考验玩家的莽杀能力。</p>
         <p>空间告诉玩家可以怎么打，攻击调度告诉玩家必须怎么应对，通关思路的多样性告诉玩家可以选择怎么赢。战场的每一个元素都在传达信息，玩家的每一个决策都有意义。</p>
-        <h2>七、技术落地——从设计到可玩的完整链路</h2>
+        <h2 id="implementation">七、技术落地——从设计到可玩的完整链路</h2>
         <p>战斗设计最终要变成玩家能玩到的内容。这个过程需要策划、程序、动画、特效和音频的协作，而策划的职责不只是写文档，而是能够驱动这条链路高效运转。</p>
         <h3>装配一个敌人的完整流程</h3>
         <p>装配一个敌人从3C开始。首先通过算法确定角色的方向、加速度和镜头构图；然后建立角色的动画状态机，用状态机和BlendSpace定义起步、停步、Loop、折返跑和Shuffle等运动状态——现在这部分逐步向Motion Matching过渡，让动画过渡更自然。</p>
@@ -310,7 +370,7 @@
         <p>对音频，验收标准是三层音效是否完整——接触的瞬间音、命中后的回响、收招的尾音。缺少任何一层，打击感都会显得「干」。</p>
         <p>对测试，验收标准是：玩家第一次遇到这个敌人能不能在三次死亡内理解它的攻击逻辑；玩家熟练后能不能主动利用它的攻击节奏来反制；不同水平的玩家都能找到适合自己的应对方式。</p>
         <p>这套落地流程的核心是：策划不只是提需求，而是能够提供足够清晰的参考和验收标准，让每一个协作方都知道「做到什么程度算完成」。</p>
-        <h2>八、结语——将减法做到极致</h2>
+        <h2 id="closing">八、结语——将减法做到极致</h2>
         <p>分析完只狼的每一个设计层面之后，最终的答案出奇地简单。</p>
         <p>只狼是完美的，因为它将减法做到了极致。</p>
         <p>它没有装备系统、没有职业选择、没有多武器切换、没有复杂的属性词条。它把所有的设计资源集中在一件事上——让弹反这个核心机制足够深、足够有趣、足够值得反复钻研。</p>
@@ -318,6 +378,7 @@
         <p>这就是只狼的设计哲学——不是做更多，而是把一件事做到没有人能超越。</p>
         <p>大多数游戏在问「我还能加什么」。只狼在问「我还能去掉什么」。</p>
         <p>这个问题的答案，造就了一款完美的游戏。</p>
+          </div>
         </div>
       </article>
     </main>
