@@ -1320,13 +1320,22 @@ body[data-theme="dark"] .filter-button.is-active {
 }
 
 #case-study .custom-card-grid {
-  width: min(760px, 100%);
-  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+  grid-template-columns: minmax(0, min(760px, 100%));
+  justify-content: center;
+  justify-items: center;
   margin: 32px auto 0;
 }
 
+#case-study .custom-card-shell,
+#case-study .custom-card-link,
+#case-study .custom-card {
+  width: min(760px, 100%);
+  max-width: 760px;
+}
+
 #case-study .custom-card .project-media {
-  width: min(100%, var(--project-image-width, 760px));
+  width: 100%;
   margin: 0 auto;
 }
 
