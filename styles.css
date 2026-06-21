@@ -1201,8 +1201,8 @@ body[data-theme="dark"] .filter-button.is-active {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  min-height: 38px;
-  padding: 8px 10px;
+  min-height: 42px;
+  padding: 9px 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: color-mix(in srgb, var(--surface) 78%, transparent);
@@ -1215,14 +1215,16 @@ body[data-theme="dark"] .filter-button.is-active {
 
 .project-keyword-label {
   flex: 0 0 auto;
-  color: var(--muted);
-  font-size: 0.74rem;
-  font-weight: 850;
+  color: color-mix(in srgb, var(--ink) 66%, var(--muted));
+  font-size: 0.86rem;
+  font-weight: 880;
+  line-height: 1.15;
 }
 
 .project-keyword strong {
   color: var(--ink);
-  font-size: 0.88rem;
+  font-size: 0.92rem;
+  line-height: 1.15;
   text-align: right;
 }
 
