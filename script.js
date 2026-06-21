@@ -1,7 +1,7 @@
 const STORAGE_KEY = "portfolio-site-data-v1";
 const DEV_MODE_KEY = "portfolio-dev-mode";
 const DEBUG_LOG_LIMIT = 80;
-const APP_BUILD_VERSION = "20260616-cv-cta";
+const APP_BUILD_VERSION = "20260621-case-study";
 const debugLogs = [];
 let debugCaptureReady = false;
 let debugLogFilter = "";
@@ -399,7 +399,7 @@ function getNextOrder(items) {
 }
 
 function isFeatured(item, index = 0) {
-  return orderValue(item, index) === 1;
+  return item?.featured === true || orderValue(item, index) === 1;
 }
 
 function isCurrentTimelineItem(item) {
@@ -1389,10 +1389,13 @@ function renderNav() {
     id: section.id,
     label: section.navTitle || section.title || "新页签"
   }));
-  const contactItem = baseItems.find((item) => item.id === "contact");
-  const steamItem = baseItems.find((item) => item.id === "steam");
-  const mainItems = baseItems.filter((item) => item.id !== "contact" && item.id !== "steam");
-  const navItems = [...mainItems, ...customItems, steamItem, contactItem].filter(Boolean);
+  const byId = (id) => baseItems.find((item) => item.id === id);
+  const frontItems = [byId("about"), byId("projects")];
+  const middleItems = baseItems.filter((item) => !["about", "projects", "experience", "steam", "contact"].includes(item.id));
+  const experienceItem = byId("experience");
+  const steamItem = byId("steam");
+  const contactItem = byId("contact");
+  const navItems = [...frontItems, ...middleItems, ...customItems, experienceItem, steamItem, contactItem].filter(Boolean);
 
   document.querySelector(".site-nav").innerHTML = navItems
     .map((item) => `<a href="#${attr(item.id)}">${escapeHtml(item.label)}</a>`)
@@ -1919,8 +1922,10 @@ function renderCustomCard(card, section, sectionIndex = -1) {
   const image = card.image || "assets/recovery-preview.png";
   const cardIndex = card.index ?? 0;
   const isPrototype = isPrototypeSection(section);
+  const cardHref = extractActionHref(card.link || card.href || card.website);
+  const isLinked = Boolean(cardHref);
   const cardMarkup = `
-    <article class="project-card custom-card reveal" data-inline-custom-card="${sectionIndex}:${cardIndex}">
+    <article class="project-card custom-card reveal${isLinked ? " is-clickable" : ""}" data-inline-custom-card="${sectionIndex}:${cardIndex}">
       <div class="project-media"${renderImageStyle(card)}>
         <img src="${attr(image)}" alt="${attr(card.title)}" loading="lazy" />
       </div>
@@ -1935,6 +1940,7 @@ function renderCustomCard(card, section, sectionIndex = -1) {
           ${toTags(card.tags).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}
         </div>
         ${isPrototype ? `<div class="project-actions custom-card-actions"><span class="project-action is-primary prototype-detail-button">查看详情</span></div>` : ""}
+        ${!isPrototype && isLinked ? `<div class="project-actions custom-card-actions"><span class="project-action is-primary">阅读全文</span></div>` : ""}
         <input class="inline-tags-input" value="${attr(toTags(card.tags).join(", "))}" data-inline-custom-card-field="tags" data-section-index="${sectionIndex}" data-card-index="${cardIndex}" aria-label="卡片标签" />
       </div>
     </article>
@@ -1942,6 +1948,17 @@ function renderCustomCard(card, section, sectionIndex = -1) {
 
   const toolbar = renderInlineCardToolbar(sectionIndex, cardIndex);
   if (!isPrototype) {
+    if (isLinked) {
+      return `
+        <div class="custom-card-shell linked-card-shell">
+          ${toolbar}
+          <a class="custom-card-link" href="${attr(cardHref)}" aria-label="查看 ${attr(card.title)}">
+            ${cardMarkup}
+          </a>
+        </div>
+      `;
+    }
+
     return `<div class="custom-card-shell">${toolbar}${cardMarkup}</div>`;
   }
 

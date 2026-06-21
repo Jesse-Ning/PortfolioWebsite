@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-15T06:42:30.312Z",
+  "updatedAt": "2026-06-21T11:21:25.849Z",
   "sections": {
     "about": {
       "nav": "介绍",
@@ -284,9 +284,9 @@
       "language": "Blueprint",
       "gameType": "ARPG",
       "image": "assets/uploads/images/legacy-1332a40c2c1fa2ef.jpg",
-      "imageWidth": "",
-      "imageAspect": "",
-      "imageFit": "scale-down",
+      "imageWidth": "1000",
+      "imageAspect": "16 / 9",
+      "imageFit": "contain",
       "description": "所有人都将错误和苦难归结到你的身上，认为你的存在是带给他们苦厄的根源。他们以为把你杀死就能换取和平？但他们没想到正是他们的咄咄逼人给世界带来了灭顶之灾。\n复仇吧，化作愤怒的火焰；复仇吧，将世界的恶洗刷殆尽。",
       "detailBlocks": [
         {
@@ -299,7 +299,8 @@
       "tags": [
         "Soul-Like"
       ],
-      "details": "所有人都将错误和苦难归结到你的身上，认为你的存在是带给他们苦厄的根源。他们以为把你杀死就能换取和平？但他们没想到正是他们的咄咄逼人给世界带来了灭顶之灾。\n复仇吧，化作愤怒的火焰；复仇吧，将世界的恶洗刷殆尽。"
+      "details": "所有人都将错误和苦难归结到你的身上，认为你的存在是带给他们苦厄的根源。他们以为把你杀死就能换取和平？但他们没想到正是他们的咄咄逼人给世界带来了灭顶之灾。\n复仇吧，化作愤怒的火焰；复仇吧，将世界的恶洗刷殆尽。",
+      "featured": true
     },
     {
       "order": 3,
@@ -3763,6 +3764,35 @@
             "Behaviour Tree",
             "AI State",
             "EQS"
+          ]
+        }
+      ],
+      "images": []
+    },
+    {
+      "id": "case-study",
+      "navTitle": "Case Study",
+      "kicker": "CASE STUDY",
+      "title": "为什么只狼是一个完美作品",
+      "body": [
+        "一次关于《只狼》战斗节奏、成长曲线和难度公平性的系统拆解。"
+      ],
+      "layout": "cards",
+      "cards": [
+        {
+          "order": 1,
+          "slug": "sekiro-combat-design",
+          "title": "深度剖析只狼的战斗设计",
+          "description": "大多数游戏会告诉你「你死了，再试一次」。\n只狼告诉你的是「你死了，因为你还没理解这场战斗」。",
+          "image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/814380/header.jpg?t=1762888662",
+          "imageWidth": "760",
+          "imageAspect": "16 / 9",
+          "imageFit": "cover",
+          "link": "sekiro-case-study.html",
+          "tags": [
+            "Case Study",
+            "Combat Design",
+            "Sekiro"
           ]
         }
       ],
