@@ -2780,6 +2780,21 @@ body[data-theme="dark"] .dev-action.primary {
 
 .steam-genre-row {
   margin-top: 0;
+  gap: 7px;
+}
+
+.steam-genre-row .tag {
+  justify-content: center;
+  min-width: 48px;
+  min-height: 26px;
+  padding: 0 10px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.platform-game-body .steam-genre-row .tag {
+  min-width: 52px;
 }
 
 .steam-empty {
@@ -2863,14 +2878,15 @@ body[data-theme="dark"] .dev-action.primary {
   flex: 0 0 auto;
 }
 
-.platform-logo svg {
+.platform-logo svg,
+.platform-logo img {
   width: 18px;
   height: 18px;
 }
 
-.platform-symbol-playstation,
-.platform-symbol-nintendo {
-  transform: translateY(0.5px);
+.platform-logo img {
+  display: block;
+  object-fit: contain;
 }
 
 .platform-logo-playstation {
@@ -2913,6 +2929,12 @@ body[data-theme="dark"] .dev-action.primary {
 .platform-title-row .platform-logo {
   width: 38px;
   height: 38px;
+}
+
+.platform-title-row .platform-logo img,
+.platform-title-row .platform-logo svg {
+  width: 20px;
+  height: 20px;
 }
 
 .platform-title-row h3,

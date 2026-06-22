@@ -1,7 +1,7 @@
 const STORAGE_KEY = "portfolio-site-data-v1";
 const DEV_MODE_KEY = "portfolio-dev-mode";
 const DEBUG_LOG_LIMIT = 80;
-const APP_BUILD_VERSION = "20260622-clean-experience-library";
+const APP_BUILD_VERSION = "20260622-platform-icons-tags";
 const debugLogs = [];
 let debugCaptureReady = false;
 let debugLogFilter = "";
@@ -1785,16 +1785,22 @@ function platformLogoMarkup(platform, label = platform) {
   const id = String(platform || "platform").toLowerCase();
   const text = String(label || platform || "").trim();
   const steamMark = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="15.5" r="3.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="16.3" cy="7.7" r="3.4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10.7 13.4 14 10M4 13.8l2.6 1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
-  const playstationMark = '<svg viewBox="0 0 24 24" aria-hidden="true" class="platform-symbol platform-symbol-playstation"><path d="M8 5.2v13.6M8 5.2c3.7.2 5.7 1.3 5.7 3.7 0 2.2-1.6 3.5-4.1 3.8M8 18.8c-2.7-.1-4.4-.8-4.4-1.9 0-1 1.6-1.7 4.4-2M11.6 14.4c5 .2 8.8 1 8.8 2.4 0 1.2-2.6 2-6.7 2.3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  const nintendoMark = '<svg viewBox="0 0 24 24" aria-hidden="true" class="platform-symbol platform-symbol-nintendo"><rect x="4" y="3.5" width="7" height="17" rx="3.2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="13" y="3.5" width="7" height="17" rx="3.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="8" cy="8" r="1.2" fill="currentColor"/><circle cx="16" cy="16" r="1.2" fill="currentColor"/></svg>';
+  const logoAssets = {
+    playstation: "assets/icons/playstation.svg",
+    nintendo: "assets/icons/nintendoswitch.svg",
+    nintendoswitch: "assets/icons/nintendoswitch.svg"
+  };
   const initials = text.slice(0, 2).toUpperCase() || "--";
+  const asset = id.includes("playstation")
+    ? logoAssets.playstation
+    : id.includes("nintendo")
+      ? logoAssets.nintendo
+      : "";
   const mark = id.includes("steam")
     ? steamMark
-    : id.includes("playstation")
-      ? playstationMark
-      : id.includes("nintendo")
-        ? nintendoMark
-        : escapeHtml(initials);
+    : asset
+      ? '<img src="' + attr(asset) + '" alt="" loading="lazy" />'
+      : escapeHtml(initials);
   return '<span class="platform-logo platform-logo-' + attr(id) + '" title="' + attr(text) + '">' + mark + '</span>';
 }
 
