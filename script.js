@@ -1,7 +1,7 @@
 const STORAGE_KEY = "portfolio-site-data-v1";
 const DEV_MODE_KEY = "portfolio-dev-mode";
 const DEBUG_LOG_LIMIT = 80;
-const APP_BUILD_VERSION = "20260621-keyword-labels";
+const APP_BUILD_VERSION = "20260622-clean-experience-library";
 const debugLogs = [];
 let debugCaptureReady = false;
 let debugLogFilter = "";
@@ -1580,9 +1580,7 @@ function renderTimelineGroup(type, items, compact = false) {
         <div>
           <p>${escapeHtml(kicker)}</p>
           <h3>${escapeHtml(title)}</h3>
-          <span class="timeline-group-count">${items.length}</span>
         </div>
-        ${renderInlineTimelineGroupToolbar(type)}
       </div>
       <div class="timeline-list${items.length ? "" : " is-empty"}">
         ${
@@ -1786,15 +1784,18 @@ function renderSteamGameCard(game) {
 function platformLogoMarkup(platform, label = platform) {
   const id = String(platform || "platform").toLowerCase();
   const text = String(label || platform || "").trim();
-  const initials = id.includes("playstation") ? "PS" : id.includes("nintendo") ? "N" : id.includes("steam") ? "S" : text.slice(0, 2).toUpperCase();
-  const steamMark = `
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="8" cy="15.5" r="3.2" fill="none" stroke="currentColor" stroke-width="2"/>
-      <circle cx="16.3" cy="7.7" r="3.4" fill="none" stroke="currentColor" stroke-width="2"/>
-      <path d="M10.7 13.4 14 10M4 13.8l2.6 1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-    </svg>
-  `;
-  return `<span class="platform-logo platform-logo-${attr(id)}" title="${attr(text)}">${id.includes("steam") ? steamMark : escapeHtml(initials)}</span>`;
+  const steamMark = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="15.5" r="3.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="16.3" cy="7.7" r="3.4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10.7 13.4 14 10M4 13.8l2.6 1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+  const playstationMark = '<svg viewBox="0 0 24 24" aria-hidden="true" class="platform-symbol platform-symbol-playstation"><path d="M8 5.2v13.6M8 5.2c3.7.2 5.7 1.3 5.7 3.7 0 2.2-1.6 3.5-4.1 3.8M8 18.8c-2.7-.1-4.4-.8-4.4-1.9 0-1 1.6-1.7 4.4-2M11.6 14.4c5 .2 8.8 1 8.8 2.4 0 1.2-2.6 2-6.7 2.3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const nintendoMark = '<svg viewBox="0 0 24 24" aria-hidden="true" class="platform-symbol platform-symbol-nintendo"><rect x="4" y="3.5" width="7" height="17" rx="3.2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="13" y="3.5" width="7" height="17" rx="3.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="8" cy="8" r="1.2" fill="currentColor"/><circle cx="16" cy="16" r="1.2" fill="currentColor"/></svg>';
+  const initials = text.slice(0, 2).toUpperCase() || "--";
+  const mark = id.includes("steam")
+    ? steamMark
+    : id.includes("playstation")
+      ? playstationMark
+      : id.includes("nintendo")
+        ? nintendoMark
+        : escapeHtml(initials);
+  return '<span class="platform-logo platform-logo-' + attr(id) + '" title="' + attr(text) + '">' + mark + '</span>';
 }
 
 function renderGamePlatformModules() {
@@ -2768,7 +2769,7 @@ function renderInlineMainToolbars() {
 function renderInlineMainToolbar(sectionId) {
   const controls = {
     about: `<button type="button" data-inline-action="open-panel" data-editor-tab-target="profile">高级字段</button>`,
-    experience: `<button type="button" data-inline-action="add-timeline" data-timeline-type="work">添加工作</button><button type="button" data-inline-action="add-timeline" data-timeline-type="education">添加教育</button><button type="button" data-inline-action="open-panel" data-editor-tab-target="experience">高级字段</button>`,
+    experience: `<button type="button" data-inline-action="open-panel" data-editor-tab-target="experience">高级字段</button>`,
     projects: `<button type="button" data-inline-action="add-project">添加作品</button><button type="button" data-inline-action="open-panel" data-editor-tab-target="projects">高级字段</button>`,
     steam: `<button type="button" data-inline-action="open-panel" data-editor-tab-target="games">高级字段</button>`
   };
