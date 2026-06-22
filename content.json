@@ -33,8 +33,8 @@
     }
   },
   "cv": {
-    "src": "assets/uploads/documents/1781541778575-_.pdf",
-    "fileName": "简历_庞振宁.pdf",
+    "src": "assets/uploads/documents/1782122489607-_-_.pdf",
+    "fileName": "庞振宁_战斗策划_求职信+简历.pdf",
     "label": "下载 CV"
   },
   "profile": {
@@ -3255,7 +3255,9 @@
       "navTitle": "原型设计",
       "kicker": "prototype",
       "title": "原型设计",
-      "body": [],
+      "body": [
+        ""
+      ],
       "layout": "cards",
       "cards": [
         {
