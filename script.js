@@ -1,7 +1,7 @@
 const STORAGE_KEY = "portfolio-site-data-v1";
 const DEV_MODE_KEY = "portfolio-dev-mode";
 const DEBUG_LOG_LIMIT = 80;
-const APP_BUILD_VERSION = "20260622-detail-page-polish";
+const APP_BUILD_VERSION = "20260622-video-link-support";
 const debugLogs = [];
 let debugCaptureReady = false;
 let debugLogFilter = "";
@@ -1225,6 +1225,15 @@ function assetKindForDetailType(type) {
   if (type === "video") return "videos";
   return "files";
 }
+function uploadFailureMessage(kind = "\u6587\u4ef6") {
+  const errorText = String(uploadAssetFile.lastError || "");
+  const status = uploadAssetFile.lastStatus || 0;
+  if (errorText === "NOT_LOCAL_SERVER") return kind + "\u4e0a\u4f20\u5931\u8d25\uff1a\u8bf7\u7528 OpenEditor.bat \u6253\u5f00\u7684 127.0.0.1:4173 \u7f16\u8f91\u9875\u4e0a\u4f20";
+  if (/too large/i.test(errorText) || status === 413) return kind + "\u4e0a\u4f20\u5931\u8d25\uff1a\u6587\u4ef6\u592a\u5927\uff0c\u5efa\u8bae\u4e0a\u4f20\u5230\u817e\u8baf COS \u540e\u7c98 mp4 \u76f4\u94fe";
+  if (/Unsupported/i.test(errorText)) return kind + "\u4e0a\u4f20\u5931\u8d25\uff1a\u683c\u5f0f\u4e0d\u652f\u6301\uff0c\u8bf7\u4f7f\u7528 MP4 / WebM / MOV";
+  if (errorText) return kind + "\u4e0a\u4f20\u5931\u8d25\uff1a" + errorText;
+  return kind + "\u4e0a\u4f20\u5931\u8d25\uff0c\u8bf7\u786e\u8ba4\u672c\u5730\u7f16\u8f91\u670d\u52a1\u5668\u6b63\u5728\u8fd0\u884c";
+}
 
 function debugTime() {
   return new Date().toLocaleTimeString("zh-CN", { hour12: false });
@@ -2409,9 +2418,10 @@ function documentDisplayName(source) {
 
 function renderPrototypeDetailVideoModule(block, sectionIndex = -1, cardIndex = -1) {
   const source = String(block.src || "").trim();
+  const canPlayInline = isDirectVideoSource(source);
   const title = block.title || videoDisplayName(source) || "视频";
   const rawDescription = String(block.description || "").trim();
-  const description = /^本地视频路径[:：]/.test(rawDescription) ? "" : rawDescription;
+  const description = new RegExp("^本地视频路径[:?]").test(rawDescription) ? "" : rawDescription;
   const poster = String(block.poster || "").trim();
   const controls = block.controls !== false;
   const loop = block.loop !== false;
@@ -2425,12 +2435,18 @@ function renderPrototypeDetailVideoModule(block, sectionIndex = -1, cardIndex = 
           <h2>${escapeHtml(title)}</h2>
           ${description ? `<p>${escapeHtml(description)}</p>` : ""}
         </div>
+        ${source ? `<div class="prototype-video-actions"><a href="${attr(source)}" target="_blank" rel="noopener">打开视频链接</a></div>` : ""}
       </div>
-      ${source ? `
+      ${source && canPlayInline ? `
         <video class="prototype-video-player"${booleanVideoAttribute(controls, "controls")}${booleanVideoAttribute(loop, "loop")}${booleanVideoAttribute(muted, "muted")}${booleanVideoAttribute(autoplay, "autoplay")} playsinline preload="metadata"${poster ? ` poster="${attr(poster)}"` : ""}>
           <source src="${attr(source)}" type="${attr(videoMimeType(source))}" />
           你的浏览器不支持视频播放。
         </video>
+      ` : source ? `
+        <div class="prototype-video-placeholder">
+          <strong>这是外部视频链接</strong>
+          <span>当前链接不是 mp4/webm/mov 直链，请点击上方按钮打开。</span>
+        </div>
       ` : `
         <div class="prototype-video-placeholder">
           <strong>视频暂未配置</strong>
@@ -2440,15 +2456,20 @@ function renderPrototypeDetailVideoModule(block, sectionIndex = -1, cardIndex = 
     </article>
   `;
 }
-
 function booleanVideoAttribute(condition, name) {
   return condition ? ` ${name}` : "";
+}
+
+function isDirectVideoSource(source) {
+  const text = String(source || "").split(/[?#]/)[0].toLowerCase();
+  return text.startsWith("data:video/") || /\.(mp4|webm|mov|m4v|ogg|ogv)$/.test(text);
 }
 
 function videoMimeType(source) {
   const text = String(source || "").split(/[?#]/)[0].toLowerCase();
   if (text.endsWith(".webm") || text.startsWith("data:video/webm")) return "video/webm";
   if (text.endsWith(".mov") || text.startsWith("data:video/quicktime")) return "video/quicktime";
+  if (text.endsWith(".ogg") || text.endsWith(".ogv") || text.startsWith("data:video/ogg")) return "video/ogg";
   return "video/mp4";
 }
 
@@ -2930,10 +2951,14 @@ function renderInlineDetailPageToolbar(sectionIndex, cardIndex) {
 function renderInlineDetailBlockToolbar(sectionIndex, cardIndex, blockIndex, type) {
   if ((sectionIndex < 0 && sectionIndex !== PROJECT_DETAIL_SECTION_INDEX) || cardIndex < 0 || blockIndex < 0) return "";
   const textStyleControls = type === "text" ? renderInlineTextStyleControls(sectionIndex, cardIndex, blockIndex) : "";
+  const currentRank = inlineDetailBlockRank(sectionIndex, cardIndex, blockIndex);
   return `
     <div class="inline-edit-toolbar inline-block-toolbar" data-inline-toolbar>
       <button type="button" data-inline-action="move-detail-up" data-section-index="${sectionIndex}" data-card-index="${cardIndex}" data-block-index="${blockIndex}">上移</button>
       <button type="button" data-inline-action="move-detail-down" data-section-index="${sectionIndex}" data-card-index="${cardIndex}" data-block-index="${blockIndex}">下移</button>
+      <button type="button" data-inline-action="pin-detail-top" data-section-index="${sectionIndex}" data-card-index="${cardIndex}" data-block-index="${blockIndex}">\u7f6e\u9876</button>
+      <label class="inline-order-control">\u6392\u5e8f<input class="inline-order-input" type="number" min="1" step="1" inputmode="numeric" value="${attr(currentRank)}" data-inline-detail-order data-section-index="${sectionIndex}" data-card-index="${cardIndex}" data-block-index="${blockIndex}" /></label>
+      <button type="button" data-inline-action="apply-detail-order" data-section-index="${sectionIndex}" data-card-index="${cardIndex}" data-block-index="${blockIndex}">\u5e94\u7528</button>
       ${textStyleControls}
       ${type === "image" ? `<label>换图<input type="file" accept="image/*" data-inline-detail-image-file data-section-index="${sectionIndex}" data-card-index="${cardIndex}" data-block-index="${blockIndex}" /></label>` : ""}
       ${type === "document" ? `<label>换文档<input type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" data-inline-detail-document-file data-section-index="${sectionIndex}" data-card-index="${cardIndex}" data-block-index="${blockIndex}" /></label>` : ""}
@@ -3017,6 +3042,28 @@ function moveOrderedItem(items, itemIndex, direction) {
   return true;
 }
 
+function setOrderedItemPosition(items, itemIndex, targetPosition) {
+  if (!Array.isArray(items) || !items[itemIndex]) return false;
+  const ordered = sortByOrder(items.map((item, index) => ({ item, index })));
+  const currentPosition = ordered.findIndex((entry) => entry.index === itemIndex);
+  if (currentPosition < 0) return false;
+
+  const clampedTarget = Math.max(0, Math.min(Number(targetPosition) || 0, ordered.length - 1));
+  const [current] = ordered.splice(currentPosition, 1);
+  ordered.splice(clampedTarget, 0, current);
+  ordered.forEach((entry, position) => {
+    items[entry.index].order = position + 1;
+  });
+  return true;
+}
+
+function inlineDetailBlockRank(sectionIndex, cardIndex, blockIndex) {
+  const blocks = getInlineCard(sectionIndex, cardIndex)?.detailBlocks;
+  if (!Array.isArray(blocks)) return 1;
+  const position = sortByOrder(blocks.map((block, index) => ({ ...block, index }))).findIndex((block) => block.index === blockIndex);
+  return Math.max(1, position + 1);
+}
+
 function refreshInlineEdit() {
   renderAll();
   renderEditor();
@@ -3081,6 +3128,11 @@ function handleInlineEditClick(event) {
     moveOrderedItem(getInlineCard(sectionIndex, cardIndex)?.detailBlocks, blockIndex, -1);
   } else if (action === "move-detail-down") {
     moveOrderedItem(getInlineCard(sectionIndex, cardIndex)?.detailBlocks, blockIndex, 1);
+  } else if (action === "pin-detail-top") {
+    setOrderedItemPosition(getInlineCard(sectionIndex, cardIndex)?.detailBlocks, blockIndex, 0);
+  } else if (action === "apply-detail-order") {
+    applyInlineDetailOrder(sectionIndex, cardIndex);
+    return;
   } else if (action === "set-detail-text-style") {
     setInlineDetailTextStyle(sectionIndex, cardIndex, blockIndex, control.dataset.textStyle);
   } else if (action === "delete-section-image") {
@@ -3193,6 +3245,8 @@ function updateInlineTextField(target) {
 }
 
 function handleInlineEditInput(event) {
+  if (event.target.closest("[data-inline-detail-order]")) return;
+
   const textInput = event.target.closest("[data-inline-detail-text]");
   if (textInput) {
     updateInlineDetailTextField(textInput);
@@ -3204,6 +3258,8 @@ function handleInlineEditInput(event) {
 }
 
 async function handleInlineEditChange(event) {
+  if (event.target.closest("[data-inline-detail-order]")) return;
+
   const projectImageInput = event.target.closest("[data-inline-project-image-file]");
   if (projectImageInput) {
     await updateInlineImageField(projectImageInput, (input) => siteData.projects[Number(input.dataset.projectIndex)], "image");
@@ -3240,6 +3296,42 @@ async function handleInlineEditChange(event) {
   }
 }
 
+function applyInlineDetailOrder(sectionIndex, cardIndex) {
+  syncInlineEditsFromDom();
+  const card = getInlineCard(sectionIndex, cardIndex);
+  const blocks = card?.detailBlocks;
+  if (!Array.isArray(blocks) || !blocks.length) return;
+
+  const ordered = sortByOrder(blocks.map((block, index) => ({ block, index })));
+  const orderInputs = Array.from(document.querySelectorAll("[data-inline-detail-order]"))
+    .filter((input) => Number(input.dataset.sectionIndex) === sectionIndex && Number(input.dataset.cardIndex) === cardIndex);
+  const requestedRankByIndex = new Map(orderInputs.map((input) => [Number(input.dataset.blockIndex), Number(input.value)]));
+
+  const entries = ordered.map((entry, currentPosition) => {
+    const currentRank = currentPosition + 1;
+    const requestedRank = requestedRankByIndex.get(entry.index);
+    const targetRank = Math.max(1, Math.min(ordered.length, Math.round(Number.isFinite(requestedRank) && requestedRank > 0 ? requestedRank : currentRank)));
+    return {
+      ...entry,
+      currentRank,
+      targetRank,
+      changed: targetRank !== currentRank
+    };
+  });
+
+  entries.sort((left, right) => {
+    if (left.targetRank !== right.targetRank) return left.targetRank - right.targetRank;
+    if (left.changed !== right.changed) return left.changed ? -1 : 1;
+    return left.currentRank - right.currentRank;
+  });
+
+  entries.forEach((entry, position) => {
+    blocks[entry.index].order = position + 1;
+  });
+  card.details = detailBlocksToText(blocks);
+  refreshInlineEdit();
+}
+
 async function updateInlineImageField(input, getTarget, fieldName) {
   const file = input.files?.[0];
   const target = getTarget(input);
@@ -3269,6 +3361,10 @@ async function updateInlineDetailFile(input, type) {
 
   try {
     const uploadedPath = await uploadAssetFile(file, assetKindForDetailType(type));
+    if (!uploadedPath && type === "video") {
+      showToast(uploadFailureMessage("\u89c6\u9891"));
+      return;
+    }
     block.src = uploadedPath || await readFileAsDataUrl(file);
     if (type === "document" || type === "video") {
       block.fileName = file.name;
@@ -4098,7 +4194,7 @@ function renderDetailDocumentBlockEditor(block, sectionIndex, cardIndex, blockIn
 function renderDetailVideoBlockEditor(block, sectionIndex, cardIndex, blockIndex) {
   return `
     ${field("视频标题", "detail-block-video-title", block.title, `data-detail-block-field="title"`)}
-    ${videoField("视频路径", block.src, `data-detail-block-field="src"`, "detail-video", `${sectionIndex}-${cardIndex}`, blockIndex)}
+    ${videoField("视频链接/路径", block.src, `data-detail-block-field="src"`, "detail-video", `${sectionIndex}-${cardIndex}`, blockIndex)}
     ${field("封面图", "detail-block-video-poster", block.poster, `data-detail-block-field="poster" placeholder="assets/prototype/poster.jpg"`)}
     ${textarea("视频说明", "detail-block-video-description", block.description, 3, `data-detail-block-field="description"`)}
   `;
@@ -4319,8 +4415,8 @@ function videoField(label, value, extra, target, index, blockIndex = "") {
   return `
     <label class="dev-field wide">
       <span>${escapeHtml(label)}</span>
-      <input id="${attr(videoInputId)}" value="${attr(value || "")}" ${extra} placeholder="assets/uploads/videos/demo.mp4" />
-      <span class="dev-help">可以填 assets 路径；选择本地 MP4 / WebM 会自动复制到 assets/uploads/videos。</span>
+      <input id="${attr(videoInputId)}" value="${attr(value || "")}" ${extra} placeholder="https://example.com/demo.mp4 / assets/uploads/videos/demo.mp4" />
+      <span class="dev-help">可以填 mp4/webm/mov 直链或 assets 路径；普通网页链接会显示为打开按钮。选择本地 MP4 / WebM 会自动复制到 assets/uploads/videos。</span>
       <input type="file" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov" data-video-upload data-video-target="${target}" data-video-index="${attr(index)}" data-sub-video-index="${attr(blockIndex)}" />
     </label>
   `;

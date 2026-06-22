@@ -1624,8 +1624,33 @@ body[data-route="prototype-detail"] #prototype-detail-route {
 
 .prototype-video-head {
   display: grid;
-  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 12px;
   max-width: 860px;
+}
+
+.prototype-video-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.prototype-video-actions a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  font-weight: 800;
+  text-decoration: none;
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+}
+
+.prototype-video-actions a:hover {
+  border-color: color-mix(in srgb, var(--accent) 62%, var(--line));
+  color: var(--accent);
 }
 
 .prototype-video-head h2 {
@@ -2057,6 +2082,31 @@ body[data-inline-edit="1"] .inline-edit-toolbar {
 .inline-edit-toolbar label {
   display: inline-flex;
   align-items: center;
+}
+
+.inline-edit-toolbar .inline-order-control {
+  gap: 7px;
+  padding-right: 7px;
+  cursor: default;
+}
+
+.inline-edit-toolbar .inline-order-input {
+  width: 54px;
+  min-height: 24px;
+  padding: 0 6px;
+  border: 1px solid color-mix(in srgb, var(--jade) 44%, var(--line));
+  border-radius: 6px;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--surface-strong) 96%, transparent);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 900;
+  text-align: center;
+}
+
+.inline-edit-toolbar .inline-order-input:focus {
+  border-color: var(--jade);
+  outline: 2px solid color-mix(in srgb, var(--jade) 26%, transparent);
 }
 
 .inline-edit-toolbar input[type="file"] {
