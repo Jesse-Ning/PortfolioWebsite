@@ -1,7 +1,7 @@
 const STORAGE_KEY = "portfolio-site-data-v1";
 const DEV_MODE_KEY = "portfolio-dev-mode";
 const DEBUG_LOG_LIMIT = 80;
-const APP_BUILD_VERSION = "20260622-cv-upload-port-fix";
+const APP_BUILD_VERSION = "20260622-detail-page-polish";
 const debugLogs = [];
 let debugCaptureReady = false;
 let debugLogFilter = "";
@@ -2216,9 +2216,7 @@ function renderPrototypeDetailPage(section, card) {
             <img src="${attr(image)}" alt="${attr(card.title)}" loading="lazy" />
           </div>
         </div>
-        <div class="prototype-detail-content reveal">
-          ${renderPrototypeDetailContent(card, sectionIndex, cardIndex)}
-        </div>
+        ${renderPrototypeDetailLayout(card, sectionIndex, cardIndex)}
       </div>
     </section>
   `;
@@ -2247,12 +2245,60 @@ function renderProjectDetailPage(project) {
             <img src="${attr(image)}" alt="${attr(project.title)}" loading="lazy" />
           </div>
         </div>
-        <div class="prototype-detail-content reveal">
-          ${renderPrototypeDetailContent(project, PROJECT_DETAIL_SECTION_INDEX, projectIndex)}
-        </div>
+        ${renderPrototypeDetailLayout(project, PROJECT_DETAIL_SECTION_INDEX, projectIndex)}
       </div>
     </section>
   `;
+}
+
+function renderPrototypeDetailLayout(card, sectionIndex = -1, cardIndex = -1) {
+  return `
+    <div class="prototype-detail-layout reveal">
+      ${renderPrototypeDetailToc(card)}
+      <div class="prototype-detail-content">
+        ${renderPrototypeDetailContent(card, sectionIndex, cardIndex)}
+      </div>
+    </div>
+  `;
+}
+
+function renderPrototypeDetailToc(card) {
+  const items = getPrototypeDetailTocItems(card);
+  if (!items.length) return "";
+
+  return `
+    <aside class="prototype-detail-toc" aria-label="\u8be6\u60c5\u76ee\u5f55">
+      <p class="prototype-detail-toc-title">\u76ee\u5f55</p>
+      <nav>
+        ${items
+          .map((item) => `<button class="prototype-detail-toc-link" type="button" data-detail-toc-target="${attr(item.id)}">${escapeHtml(item.label)}</button>`)
+          .join("")}
+      </nav>
+    </aside>
+  `;
+}
+
+function getPrototypeDetailTocItems(card) {
+  return getOrderedDetailBlocks(card)
+    .map((block, fallbackIndex) => ({ block, fallbackIndex, label: prototypeDetailHeadingText(block) }))
+    .filter((item) => item.label && item.block.type === "text" && normalizeDetailTextStyle(item.block.textStyle) === "heading")
+    .map((item) => ({
+      id: detailBlockAnchorId(item.block, item.fallbackIndex),
+      label: item.label
+    }));
+}
+
+function prototypeDetailHeadingText(block) {
+  return String(block?.text || "")
+    .split(/\n+/g)
+    .map((line) => line.trim())
+    .filter(Boolean)[0] || "";
+}
+
+function detailBlockAnchorId(block, fallbackIndex = 0) {
+  const order = orderValue(block, fallbackIndex);
+  const label = prototypeDetailHeadingText(block) || block?.title || block?.caption || `section-${fallbackIndex + 1}`;
+  return `detail-${order}-${slugify(label)}`;
 }
 
 function renderPrototypeDetailContent(card, sectionIndex = -1, cardIndex = -1) {
@@ -2291,7 +2337,7 @@ function renderPrototypeDetailModule(block, card, sectionIndex = -1, cardIndex =
     return `
       <figure class="prototype-detail-block prototype-detail-image-block" data-inline-detail-block="${block.index}">
         ${renderInlineDetailBlockToolbar(sectionIndex, cardIndex, block.index, block.type)}
-        <a class="prototype-detail-image project-media" href="${attr(image)}" target="_blank" rel="noopener"${renderImageStyle({ imageWidth: block.imageWidth })}>
+        <a class="prototype-detail-image project-media" href="${attr(image)}" target="_blank" rel="noopener"${renderImageStyle({ imageWidth: block.imageWidth, imageAspect: block.imageAspect, imageFit: block.imageFit || "contain" })}>
           <img src="${attr(image)}" alt="${attr(alt)}" loading="lazy" />
         </a>
         <figcaption>
@@ -2310,7 +2356,7 @@ function renderPrototypeDetailModule(block, card, sectionIndex = -1, cardIndex =
   }
 
   return `
-    <section class="prototype-detail-block prototype-detail-text-block" data-inline-detail-block="${block.index}">
+    <section class="prototype-detail-block prototype-detail-text-block" id="${attr(detailBlockAnchorId(block, block.index))}" data-inline-detail-block="${block.index}">
       ${renderInlineDetailBlockToolbar(sectionIndex, cardIndex, block.index, block.type)}
       <div class="prototype-detail-rendered prototype-detail-text-${attr(normalizeDetailTextStyle(block.textStyle))}">${renderPrototypeDetailBlock(block.text, block.textStyle)}</div>
       <textarea class="inline-detail-textarea" data-inline-detail-text="${sectionIndex}:${cardIndex}:${block.index}">${escapeHtml(block.text || "")}</textarea>
@@ -2426,6 +2472,9 @@ function renderPrototypeDetailBlock(block, textStyle = "body") {
   }
 
   if (style === "subheading") {
+    if (lines.length > 1 || lines[0].length > 48) {
+      return `<div class="prototype-text-subheading-copy">${lines.map((line) => `<p>${escapeHtml(line)}</p>`).join("")}</div>`;
+    }
     return `<h3 class="prototype-text-subheading">${escapeHtml(lines.join(" "))}</h3>`;
   }
 
@@ -2439,17 +2488,28 @@ function renderPrototypeDetailBlock(block, textStyle = "body") {
 
   if (lines.length === 1) return `<p>${escapeHtml(lines[0])}</p>`;
 
-  const firstIsPoint = isListPoint(lines[0]);
-  const lead = !firstIsPoint ? lines[0] : "";
-  const points = lead ? lines.slice(1) : lines;
-  return `
-    ${lead ? `<h2>${escapeHtml(lead)}</h2>` : ""}
-    <ol class="project-points prototype-detail-points">
-      ${points.map((point) => `<li>${escapeHtml(stripListMarker(point))}</li>`).join("")}
-    </ol>
-  `;
+  const pointCount = lines.filter(isListPoint).length;
+  if (pointCount && pointCount >= lines.length - 1) {
+    const lead = isListPoint(lines[0]) ? "" : lines[0];
+    const points = lead ? lines.slice(1) : lines;
+    return `
+      ${lead ? `<p class="project-points-lead prototype-detail-lead">${escapeHtml(lead)}</p>` : ""}
+      <ol class="project-points prototype-detail-points">
+        ${points.map((point) => `<li>${escapeHtml(stripListMarker(point))}</li>`).join("")}
+      </ol>
+    `;
+  }
+
+  return lines.map((line) => `<p>${escapeHtml(line)}</p>`).join("");
 }
 function setupPrototypeDetailRoutes() {
+  document.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-detail-toc-target]");
+    if (!button) return;
+    event.preventDefault();
+    document.getElementById(button.dataset.detailTocTarget)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
   window.addEventListener("hashchange", () => {
     const wasDetailRoute = document.body.dataset.route === "prototype-detail";
     renderCurrentDetailRoute({ scroll: true });
