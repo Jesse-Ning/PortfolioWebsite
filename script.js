@@ -1,7 +1,7 @@
 const STORAGE_KEY = "portfolio-site-data-v1";
 const DEV_MODE_KEY = "portfolio-dev-mode";
 const DEBUG_LOG_LIMIT = 80;
-const APP_BUILD_VERSION = "20260622-platform-icons-tags";
+const APP_BUILD_VERSION = "20260622-cv-upload-port-fix";
 const debugLogs = [];
 let debugCaptureReady = false;
 let debugLogFilter = "";
@@ -1190,7 +1190,13 @@ async function saveServerData(data) {
 
 
 async function uploadAssetFile(file, kind = "files") {
-  if (!file || !["http:", "https:"].includes(window.location.protocol)) return "";
+  uploadAssetFile.lastError = "";
+  uploadAssetFile.lastStatus = 0;
+  if (!file) return "";
+  if (!["http:", "https:"].includes(window.location.protocol)) {
+    uploadAssetFile.lastError = "NOT_LOCAL_SERVER";
+    return "";
+  }
 
   try {
     debugLog("upload", "start", { kind, fileName: file.name, size: file.size, type: file.type });
@@ -1202,9 +1208,12 @@ async function uploadAssetFile(file, kind = "files") {
     });
     const result = await response.json().catch(() => null);
     const path = response.ok && result?.ok && result.path ? result.path : "";
+    uploadAssetFile.lastStatus = response.status;
+    uploadAssetFile.lastError = path ? "" : result?.error || ("HTTP " + response.status);
     debugLog("upload", path ? "success" : "failed response", { status: response.status, path, result }, path ? "info" : "warn");
     return path;
   } catch (error) {
+    uploadAssetFile.lastError = debugString(error);
     debugLog("upload", "failed exception", { error: debugString(error) }, "error");
     return "";
   }
@@ -3462,7 +3471,11 @@ async function handleCvUpload(input) {
     showToast("正在上传 CV...");
     const uploadedPath = await uploadAssetFile(file, "documents");
     if (!uploadedPath) {
-      showToast("CV 上传失败：请双击 OpenEditor.bat，用 127.0.0.1:4173 打开后再传");
+      const errorText = String(uploadAssetFile.lastError || "");
+      const permissionBlocked = /EPERM|EACCES|operation not permitted|permission/i.test(errorText);
+      showToast(permissionBlocked
+        ? "CV \u4e0a\u4f20\u5931\u8d25\uff1a\u65e7\u670d\u52a1\u6216\u6743\u9650\u963b\u6b62\u5199\u5165\uff0c\u8bf7\u91cd\u65b0\u53cc\u51fb OpenEditor.bat \u540e\u518d\u4f20"
+        : "CV \u4e0a\u4f20\u5931\u8d25\uff1a\u8bf7\u786e\u8ba4\u7528 127.0.0.1:4173 \u7684\u672c\u5730\u7f16\u8f91\u9875\u4e0a\u4f20");
       return;
     }
     siteData.cv = normalizeCvDocument({
