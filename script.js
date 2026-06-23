@@ -1,7 +1,7 @@
 const STORAGE_KEY = "portfolio-site-data-v1";
 const DEV_MODE_KEY = "portfolio-dev-mode";
 const DEBUG_LOG_LIMIT = 80;
-const APP_BUILD_VERSION = "20260622-video-link-support";
+const APP_BUILD_VERSION = "20260623-case-study-link-fix";
 const debugLogs = [];
 let debugCaptureReady = false;
 let debugLogFilter = "";
@@ -2202,6 +2202,19 @@ function renderCurrentDetailRoute(options = {}) {
   renderPrototypeDetailRoute(options);
 }
 
+function scrollToHashSection(options = {}) {
+  const hash = window.location.hash.replace(/^#/, "");
+  if (!hash || hash.includes("/")) return false;
+  if (hash === "top") {
+    window.scrollTo({ top: 0, behavior: options.smooth ? "smooth" : "auto" });
+    return true;
+  }
+  const target = document.getElementById(decodeURIComponent(hash));
+  if (!target) return false;
+  target.scrollIntoView({ behavior: options.smooth ? "smooth" : "auto", block: "start" });
+  return true;
+}
+
 function renderPrototypeDetailPage(section, card) {
   const image = card.image || "assets/recovery-preview.png";
   const heroImageStyle = renderImageStyle({ imageAspect: "16 / 9", imageFit: "cover" });
@@ -2535,10 +2548,9 @@ function setupPrototypeDetailRoutes() {
     const wasDetailRoute = document.body.dataset.route === "prototype-detail";
     renderCurrentDetailRoute({ scroll: true });
 
-    if (wasDetailRoute && !getPrototypeHashSlug() && !getProjectHashSlug()) {
-      const targetId = window.location.hash.replace(/^#/, "");
+    if (!getPrototypeHashSlug() && !getProjectHashSlug()) {
       window.requestAnimationFrame(() => {
-        document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth" });
+        scrollToHashSection({ smooth: true });
       });
     }
   });
@@ -5090,6 +5102,7 @@ async function init() {
   setupDebugCapture();
   siteData = await loadInitialData();
   renderAll();
+  window.requestAnimationFrame(() => scrollToHashSection({ smooth: false }));
   setupFilters();
   setupProjectCardLinks();
   setupTimelineTabs();
