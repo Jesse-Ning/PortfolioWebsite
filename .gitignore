@@ -5,3 +5,10 @@ content.backup-*.json
 assets/prototype/gravity-ball.gif
 assets/uploads/images/legacy-66adc0d8622b6ad6.gif
 assets/videos/yinyang-demo.mp4
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
