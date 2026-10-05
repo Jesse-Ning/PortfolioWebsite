@@ -1,0 +1,30 @@
+quicksnap | Fujifilm QuickSnap | 5
+mju | Olympus mju II | 6
+ixy | Canon IXY digital camera | 4
+cybershot | Sony Cyber-shot DSC-P | 4
+finepix | Fujifilm FinePix compact | 3
+exilim | Casio Exilim | 3
+pixpro | Kodak PIXPRO | 3
+pentax17 | Pentax 17 | 3
+x100 | Fujifilm X100V | 3
+instax | Instax mini | 4
+filmroll | 35mm film canister | 4
+portra | Kodak Portra 400 film | 3
+negative | film negative strip | 4
+contact | contact sheet photography | 3
+shinjuku | Shinjuku at night | 5
+shibuya | Shibuya crossing | 4
+camshop | used camera shop Japan | 5
+mapcamera | Map Camera Shinjuku | 2
+nakano | Nakano Broadway | 3
+smartphone | smartphone rear camera lenses | 3
+iphone | taking photo with smartphone | 4
+gara | Japanese flip phone | 4
+showa | Tokyo 1950s street photograph | 5
+ginza | Ginza 1960s | 3
+purikura | purikura | 3
+youngcam | woman with film camera | 5
+tokyopeople | Tokyo street people candid | 5
+harajuku | Harajuku Takeshita street | 3
+developing | photo lab film developing | 3
+flash | compact camera flash photo party | 3

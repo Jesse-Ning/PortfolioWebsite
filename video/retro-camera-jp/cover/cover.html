@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Cover</title>
+<link rel="stylesheet" href="../node_modules/@fontsource/noto-sans-sc/900.css">
+<link rel="stylesheet" href="../node_modules/@fontsource/noto-serif-sc/900.css">
+<link rel="stylesheet" href="../node_modules/@fontsource/ma-shan-zheng/400.css">
+<link rel="stylesheet" href="../node_modules/@fontsource/long-cang/400.css">
+<link rel="stylesheet" href="../node_modules/@fontsource/zcool-qingke-huangyou/400.css">
+<link rel="stylesheet" href="../node_modules/@fontsource/dela-gothic-one/400.css">
+<link rel="stylesheet" href="../node_modules/@fontsource/zen-old-mincho/700.css">
+<link rel="stylesheet" href="../node_modules/@fontsource/special-elite/400.css">
+<link rel="stylesheet" href="../node_modules/@fontsource/permanent-marker/400.css">
+<style>
+  :root {
+    --ink: #161616; --mustard: #e6a422; --teal: #1f5f74; --red: #d8432a; --paper: #f4f4f0;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: #2a2b2d; }
+  .page { position: absolute; inset: 0; background: url(../assets/tex/grid.jpg) center/cover; overflow: hidden; }
+  .abs { position: absolute; }
+  .shadow { filter: drop-shadow(0 10px 14px rgba(0,0,0,.28)) drop-shadow(0 2px 3px rgba(0,0,0,.25)); }
+  .soft { filter: drop-shadow(0 6px 8px rgba(0,0,0,.2)); }
+  img { display: block; }
+  .tape { position: absolute; width: 190px; height: 50px; background-size: 100% 100%; opacity: .92; }
+
+  /* top strip */
+  .kicker { left: 70px; top: 96px; width: 560px; height: 96px; transform: rotate(-2.5deg); }
+  .kicker img { width: 100%; height: 100%; }
+  .kicker span { position: absolute; left: 44px; top: 24px; font: 40px 'Special Elite', monospace; color: var(--ink); letter-spacing: 3px; white-space: nowrap; }
+  .kicker span b { font: 900 34px 'Noto Sans SC'; letter-spacing: 6px; margin-left: 10px; }
+
+  /* postmark */
+  .postmark { right: 70px; top: 70px; width: 210px; height: 210px; border: 6px solid var(--red); border-radius: 50%; transform: rotate(14deg); color: var(--red); text-align: center; opacity: .88; mix-blend-mode: multiply; }
+  .postmark::before { content: ""; position: absolute; inset: 12px; border: 3px solid var(--red); border-radius: 50%; }
+  .postmark .a { position: absolute; top: 50px; width: 100%; font: 22px 'Special Elite'; letter-spacing: 3px; }
+  .postmark .b { position: absolute; top: 82px; width: 100%; font: 900 46px 'Noto Sans SC'; letter-spacing: 2px; }
+  .postmark .c { position: absolute; top: 140px; width: 100%; font: 22px 'Special Elite'; letter-spacing: 3px; }
+
+  .film { position:absolute; height:200px; background:#141414; padding:30px 18px; display:flex; gap:18px; }
+  .film::before, .film::after { content:""; position:absolute; left:0; right:0; height:14px; background: repeating-linear-gradient(90deg, transparent 0 14px, #e9e9e4 14px 30px, transparent 30px 44px); opacity:.9; border-radius:3px; }
+  .film::before { top:8px; } .film::after { bottom:8px; }
+  .film img { height:140px; width:210px; object-fit:cover; filter: sepia(.15) saturate(.85); }
+  .film .edge { position:absolute; bottom:-2px; left:40px; font:16px 'Special Elite'; color:#e6a422; letter-spacing:6px; white-space:nowrap; }
+  .vtext { writing-mode: vertical-rl; font: 700 40px 'Zen Old Mincho'; color: var(--ink); letter-spacing: 10px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- newsprint column with vertical Japanese -->
+  <img class="abs soft" src="../assets/img/pc_news.png" style="left:868px;top:300px;width:180px;height:700px;transform:rotate(2deg)">
+  <div class="abs vtext" style="left:928px;top:350px;transform:rotate(2deg)">フィルムの、ノイズ。</div>
+
+  <!-- mustard block behind photo -->
+  <img class="abs soft" src="../assets/img/pc_mustard.png" style="left:40px;top:205px;width:720px;height:600px;transform:rotate(-4deg)">
+
+  <!-- B&W Kabukicho print -->
+  <img class="abs shadow" src="../assets/img/bw_kabukicho.png" style="left:150px;top:235px;width:650px;transform:rotate(3deg)">
+  <div class="tape" style="left:150px;top:238px;background-image:url(../assets/tex/tape_teal.png);transform:rotate(-30deg)"></div>
+  <div class="tape" style="left:672px;top:262px;background-image:url(../assets/tex/tape_stripe.png);transform:rotate(28deg)"></div>
+
+  <!-- kicker label -->
+  <div class="abs kicker soft" style="top:80px"><img src="../assets/img/pc_strip.png"><span>VOL.01 /<b>东京观察</b></span></div>
+
+  <!-- postmark -->
+  <div class="abs postmark" style="top:56px"><div class="a">SHINJUKU</div><div class="b">新宿</div><div class="c">2025 · 10</div></div>
+
+  <!-- stamp -->
+  <img class="abs shadow" src="../assets/img/stamp_mju.png" style="left:820px;top:860px;width:180px;transform:rotate(-8deg)">
+
+  <!-- Title block -->
+  <div class="abs soft" style="left:60px;top:850px;transform:rotate(-3deg);background:var(--ink);padding:14px 28px 18px;">
+    <span style="font:900 68px 'Noto Sans SC';color:#f4f4f0;letter-spacing:6px">为什么日本年轻人</span>
+  </div>
+  <div class="abs" style="left:96px;top:968px;font:128px 'Ma Shan Zheng';color:var(--ink);transform:rotate(-1deg)">开始迷上</div>
+
+  <!-- ransom letters -->
+  <div class="abs" style="left:50px;top:1140px;width:980px;height:300px">
+    <span class="abs" style="left:0;top:10px;font:150px 'Ma Shan Zheng';color:var(--red)">“</span>
+    <div class="abs shadow" style="left:62px;top:4px;width:270px;height:270px;transform:rotate(-6deg)">
+      <img src="../assets/img/pc_mustard_s.png" style="position:absolute;inset:0;width:100%;height:100%">
+      <span style="position:absolute;left:32px;top:30px;font:205px 'Dela Gothic One';color:var(--ink);line-height:1">拍</span>
+    </div>
+    <div class="abs shadow" style="left:322px;top:34px;width:250px;height:250px;transform:rotate(4deg)">
+      <img src="../assets/img/pc_black.png" style="position:absolute;inset:0;width:100%;height:100%">
+      <span style="position:absolute;left:24px;top:2px;font:900 200px 'Noto Serif SC';color:#f4f4f0">不</span>
+    </div>
+    <div class="abs shadow" style="left:562px;top:-2px;width:270px;height:280px;transform:rotate(-3deg)">
+      <img src="../assets/img/pc_red.png" style="position:absolute;inset:0;width:100%;height:100%">
+      <span style="position:absolute;left:28px;top:20px;font:220px 'Ma Shan Zheng';color:#f4f4f0;line-height:1">好</span>
+    </div>
+    <span class="abs" style="left:826px;top:10px;font:150px 'Ma Shan Zheng';color:var(--red)">”</span>
+  </div>
+
+  <div class="abs" style="left:318px;top:1418px;font:900 118px 'Noto Serif SC';color:var(--ink);letter-spacing:4px">的相机？</div>
+  <svg class="abs" style="left:300px;top:1556px" width="560" height="50" viewBox="0 0 560 50">
+    <path d="M8 28 C 120 12, 260 38, 400 20 S 530 24, 552 16" stroke="#d8432a" stroke-width="11" fill="none" stroke-linecap="round"/>
+  </svg>
+
+  <!-- handmade film strip + cameras -->
+  <div class="film shadow" style="left:-60px;top:1690px;width:1240px;transform:rotate(-5deg)">
+    <img src="../assets/img/fr_shibuya_0.jpg"><img src="../assets/img/fr_shinjuku_2.jpg"><img src="../assets/img/fr_shibuya_2.jpg"><img src="../assets/img/fr_shinjuku_4.jpg"><img src="../assets/img/fr_shibuya_0.jpg">
+    <div class="edge">▶ 24 &nbsp; FUJI 400 &nbsp; ▶ 25 &nbsp; FUJI 400 &nbsp; ▶ 26 &nbsp; FUJI 400 &nbsp; ▶ 27</div>
+  </div>
+  <img class="abs shadow" src="../assets/img/st_quicksnap.png" style="left:10px;top:1560px;width:400px;transform:rotate(-11deg)">
+  <img class="abs shadow" src="../assets/img/st_mju_5.png" style="left:740px;top:1650px;width:330px;transform:rotate(9deg)">
+
+  <!-- handwritten note -->
+  <div class="abs" style="left:400px;top:1598px;font:44px 'Long Cang';color:var(--red);transform:rotate(-5deg);white-space:nowrap">← 一卷只有 27 张</div>
+
+  <!-- film grain + light leak -->
+  <div class="abs" style="inset:0;background:url(../assets/tex/leak_0.jpg) center/cover;mix-blend-mode:screen;opacity:.35"></div>
+  <div class="abs" style="inset:0;background:url(../assets/tex/grain_0.png) center/cover;mix-blend-mode:overlay;opacity:.22"></div>
+  <div class="abs" style="inset:0;box-shadow: inset 0 0 180px rgba(0,0,0,.28)"></div>
+</div>
+</body>
+</html>
