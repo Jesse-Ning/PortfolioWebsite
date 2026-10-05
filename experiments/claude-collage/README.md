@@ -8,6 +8,7 @@
 | `anim/` | 10 秒卡点动画（画面 + 合成配乐/音效） | `anim/claude_intro_10s.mp4` |
 | `cover/` | v2 极简封面 | `cover/cover.jpg` |
 | `cover2/` | v3《纸的另一面》拼贴封面 | `cover2/cover.jpg` |
+| `cover4/` | v4《撕开问题》：雕像 + 月面 + 深空（素材见 `cover4/CREDITS.md`） | `cover4/cover.jpg` |
 
 `fonts/` 是从 Google Fonts 下载到本地的字体（Anton、Abril Fatface、Space Mono、Caveat、Noto Serif SC 与 ZCOOL KuaiLe 子集）。
 `cover2/assets/deepfield.png` 由 scikit-image 自带的 NASA 哈勃深空照片（公共领域）处理而来。
@@ -27,7 +28,7 @@ python3 -m http.server 8000
 需要 Node + Playwright（Chromium）。在各子目录里运行：
 
 ```
-node render.mjs out.png          # poster/、cover/、cover2/
+node render.mjs out.png          # poster/、cover/、cover2/、cover4/
 node render.mjs all              # anim/：导出 300 帧到 frames/，并更新 cues.json
 python3 synth.py                 # anim/：按 cues.json 合成 audio.wav（需要 numpy、scipy）
 ffmpeg -framerate 30 -i frames/f%04d.png -i audio.wav -c:v libx264 -crf 17 \
