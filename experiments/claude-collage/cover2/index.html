@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Other Side Cover</title>
+<link rel="stylesheet" href="../fonts/fonts.css">
+<style>
+  html, body { margin: 0; height: 100%; background: #111; }
+  body { display: grid; place-items: center; }
+  canvas { display: block; height: 100vh; width: auto; max-width: 100vw; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+(async () => {
+  const W = 1080, H = 1920;
+  const q = new URLSearchParams(location.search);
+  const S = Number(q.get('scale') || 2);
+  const main = document.getElementById('c');
+  main.width = W * S; main.height = H * S;
+  let ctx = main.getContext('2d');
+  ctx.scale(S, S);
+
+  const C = {
+    ink: '#141210', news: '#E4DFD2', newsY: '#E8DCBC', xerox: '#F2F0EA', kraft: '#B98F5E',
+    fibre: '#FAF7EE', clay: '#E05A2B', clayDeep: '#B8401A', blue: '#2B44C9', space: '#0A0C14'
+  };
+
+  // ---------- rng ----------
+  let seed = Number(q.get('seed') || 77) >>> 0;
+  const rnd = () => { seed += 0x6D2B79F5; let t = seed; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  const R = (a, b) => a + rnd() * (b - a);
+  const pick = a => a[Math.floor(rnd() * a.length)];
+  const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+  const rgba = (h, a) => { const [r, g, b] = hex(h); return `rgba(${r},${g},${b},${a})`; };
+  const mix = (h1, h2, t) => { const a = hex(h1), b = hex(h2); return '#' + a.map((v, i) => Math.round(v + (b[i] - v) * t).toString(16).padStart(2, '0')).join(''); };
+
+  // ---------- geometry ----------
+  const rot = (pts, ang, cx, cy) => pts.map(([x, y]) => { const dx = x - cx, dy = y - cy, c = Math.cos(ang), n = Math.sin(ang); return [cx + dx * c - dy * n, cy + dx * n + dy * c]; });
+  const rect = (x, y, w, h, ang = 0) => rot([[x, y], [x + w, y], [x + w, y + h], [x, y + h]], ang, x + w / 2, y + h / 2);
+  function torn(pts, rough = 1, cap = 16, closed = true) {
+    const out = closed ? [] : [pts[0]];
+    const rec = (p, q2, d, amp) => {
+      if (d <= 0) { out.push(q2); return; }
+      const dx = q2[0] - p[0], dy = q2[1] - p[1], L = Math.hypot(dx, dy) || 1, off = R(-0.5, 0.5) * amp;
+      const m = [(p[0] + q2[0]) / 2 - dy / L * off, (p[1] + q2[1]) / 2 + dx / L * off];
+      rec(p, m, d - 1, amp * 0.56); rec(m, q2, d - 1, amp * 0.56);
+    };
+    const n = closed ? pts.length : pts.length - 1;
+    for (let i = 0; i < n; i++) {
+      const p = pts[i], q2 = pts[(i + 1) % pts.length], L = Math.hypot(q2[0] - p[0], q2[1] - p[1]);
+      rec(p, q2, Math.max(1, Math.min(8, Math.ceil(Math.log2(L / 3)))), Math.min(L * 0.09, cap) * rough);
+    }
+    return out.map(([x, y]) => [x + R(-0.6, 0.6), y + R(-0.6, 0.6)]);
+  }
+  const trace = pts => pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
+  const path = pts => { ctx.beginPath(); trace(pts); ctx.closePath(); };
+  const bbox = pts => { const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]); return { x: Math.min(...xs), y: Math.min(...ys), w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) }; };
+  const scalePts = (pts, k, cx, cy) => pts.map(([x, y]) => [cx + (x - cx) * k, cy + (y - cy) * k]);
+  const offscreen = () => { const c = document.createElement('canvas'); c.width = W * S; c.height = H * S; const g = c.getContext('2d'); g.scale(S, S); return [c, g]; };
+  const loadImg = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+
+  // ---------- materials ----------
+  function fibres(b, density = 1, dark = 0.08, light = 0.1) {
+    const n = Math.floor(b.w * b.h / 90 * density);
+    for (let i = 0; i < n; i++) {
+      ctx.fillStyle = rnd() < 0.5 ? `rgba(0,0,0,${R(0.01, dark)})` : `rgba(255,255,255,${R(0.02, light)})`;
+      ctx.fillRect(R(b.x, b.x + b.w), R(b.y, b.y + b.h), R(0.5, 2), R(0.5, 2));
+    }
+  }
+  function blotches(b, color, n, rMin, rMax, a) {
+    for (let i = 0; i < n; i++) {
+      const x = R(b.x, b.x + b.w), y = R(b.y, b.y + b.h), r = R(rMin, rMax);
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, rgba(color, a)); g.addColorStop(1, rgba(color, 0));
+      ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2);
+    }
+  }
+  function brushTex(color, b, ang, density, alpha = 1) {
+    const n = Math.floor(b.w * b.h / 300 * density);
+    ctx.lineCap = 'round';
+    for (let i = 0; i < n; i++) {
+      const x = R(b.x - 20, b.x + b.w + 20), y = R(b.y - 20, b.y + b.h + 20), len = R(20, 90), a = ang + R(-0.12, 0.12);
+      ctx.strokeStyle = rgba(rnd() < 0.5 ? mix(color, '#ffffff', 0.35) : mix(color, '#000000', 0.3), R(0.03, 0.1) * alpha);
+      ctx.lineWidth = R(1.5, 6);
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(a) * len, y + Math.sin(a) * len); ctx.stroke();
+    }
+  }
+  function halftoneDots(b, color, cell, toneFn, ang = Math.PI / 4) {
+    ctx.fillStyle = color;
+    const c = Math.cos(ang), s2 = Math.sin(ang), cx = b.x + b.w / 2, cy = b.y + b.h / 2, Rr = Math.hypot(b.w, b.h) / 2 + cell;
+    for (let v = -Rr; v < Rr; v += cell) for (let u = -Rr; u < Rr; u += cell) {
+      const x = cx + u * c - v * s2, y = cy + u * s2 + v * c;
+      if (x < b.x - cell || x > b.x + b.w + cell || y < b.y - cell || y > b.y + b.h + cell) continue;
+      const t = toneFn(x, y); if (t <= 0.02) continue;
+      ctx.beginPath(); ctx.arc(x, y, Math.sqrt(t) * cell * 0.62, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+
+  // ---------- typesetting ----------
+  const SENT = [
+    'Every question arrives folded.', 'You turn it over, find the crease, and pull.',
+    'Sometimes the paper gives way and there is a room behind it you did not know was there.',
+    'The archive does not answer; it waits.', 'Clippings stack on clippings until the page is so full of answers that none of them can be read.',
+    'We asked a hundred readers what they would do with one more hour of attention.', 'Most said they would spend it asking a better question.',
+    'A good answer is not found.', 'It is assembled, piece by piece, from things that were already lying around the room.',
+    'Notes from the night desk: the presses run until four.', 'Somewhere a reader tears out a column and keeps it in a wallet for twenty years.',
+    'Curiosity is not a mood.', 'It is a tool, like a pair of scissors, and it works best when it is a little dangerous.',
+    'The editor wants the draft by morning.', 'The draft wants to be something else entirely.',
+    'On the other side of the page, the light is a different colour.', 'Nobody remembers who cut the first hole.'
+  ];
+  const HEAD = ['THE QUESTION IS A DOOR', 'ON TEARING THINGS OPEN', 'ANSWERS, ASSEMBLED BY HAND', 'LETTERS FROM THE OTHER SIDE', 'NIGHT EDITION', 'WHAT IF WE ASKED AGAIN?', 'THE ROOM BEHIND THE PAPER'];
+  const words = n => { const out = []; while (out.length < n) out.push(...pick(SENT).split(' ')); return out; };
+  function column(x, y, w, h, fs, font = '"Liberation Serif", serif', color = 'rgba(22,19,15,.86)') {
+    ctx.font = `${fs}px ${font}`; ctx.fillStyle = color; ctx.textBaseline = 'alphabetic';
+    const lh = fs * 1.22; let yy = y + fs, line = '';
+    const ws = words(Math.ceil(w * h / (fs * fs * 2.6)));
+    let para = 0;
+    for (const wd of ws) {
+      const test = line ? line + ' ' + wd : wd;
+      if (ctx.measureText(test).width > w) {
+        // justify
+        const parts = line.split(' '), gap = (w - ctx.measureText(parts.join('')).width) / Math.max(1, parts.length - 1);
+        let xx = x + (para === 0 ? fs * 1.2 : 0);
+        if (parts.length > 3 && gap < fs) parts.forEach(p => { ctx.fillText(p, xx, yy); xx += ctx.measureText(p).width + gap; });
+        else ctx.fillText(line, xx, yy);
+        line = wd; yy += lh; para++;
+        if (rnd() < 0.08) { yy += lh * 0.4; para = 0; }
+        if (yy > y + h) return;
+      } else line = test;
+    }
+  }
+  function newsSheet(x, y, w, h, ang, tone, o = {}) {
+    const pts = rect(x, y, w, h, ang);
+    const face = o.cut ? pts : torn(pts, o.rough ?? 0.9, 18);
+    ctx.save();
+    ctx.shadowColor = 'rgba(20,14,6,.28)'; ctx.shadowBlur = o.blur ?? 10; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 4;
+    path(face); ctx.fillStyle = tone; ctx.fill(); ctx.restore();
+    ctx.save(); path(face); ctx.clip();
+    const b = bbox(face);
+    blotches(b, '#9c7a3c', 6, 80, 260, o.age ?? 0.07);
+    blotches(b, '#ffffff', 4, 80, 200, 0.12);
+    ctx.translate(x + w / 2, y + h / 2); ctx.rotate(ang); ctx.translate(-w / 2, -h / 2);
+    const pad = 18; let cy = pad;
+    if (o.mast) {
+      ctx.fillStyle = 'rgba(20,18,14,.9)';
+      ctx.font = `400 ${o.mast.size}px "Abril Fatface", serif`; ctx.textAlign = 'center';
+      ctx.fillText(o.mast.text, w / 2, cy + o.mast.size * 0.85); ctx.textAlign = 'left';
+      cy += o.mast.size + 6;
+      ctx.fillRect(pad, cy, w - pad * 2, 2); ctx.fillRect(pad, cy + 5, w - pad * 2, 0.8);
+      ctx.font = `700 10px "Liberation Sans", sans-serif`;
+      ctx.fillText('VOL. CXII · No. 41 · MONDAY, OCTOBER 5, 2026', pad, cy + 18);
+      ctx.textAlign = 'right'; ctx.fillText('NIGHT EDITION · PRICE 2¢', w - pad, cy + 18); ctx.textAlign = 'left';
+      ctx.fillRect(pad, cy + 24, w - pad * 2, 0.8);
+      cy += 34;
+    }
+    if (o.head) {
+      ctx.fillStyle = 'rgba(18,16,12,.92)';
+      ctx.font = `${o.head.weight || 700} ${o.head.size}px ${o.head.font || '"Liberation Serif", serif'}`;
+      const lines = o.head.text.split('\n');
+      lines.forEach((ln, i) => ctx.fillText(ln, pad, cy + o.head.size * (0.9 + i * 1.02)));
+      cy += o.head.size * (lines.length * 1.02 + 0.3);
+    }
+    const cols = o.cols ?? 3, gut = 12, cw = (w - pad * 2 - gut * (cols - 1)) / cols;
+    for (let i = 0; i < cols; i++) {
+      const cx = pad + i * (cw + gut);
+      if (o.photoCol === i) {
+        const ph = Math.min(h * 0.35, cw * 1.1);
+        ctx.fillStyle = 'rgba(30,26,20,.85)'; ctx.fillRect(cx, cy + 4, cw, ph);
+        halftoneDots({ x: cx, y: cy + 4, w: cw, h: ph }, 'rgba(230,224,210,.9)', 4.5, (xx, yy) => 0.25 + 0.6 * Math.abs(Math.sin(xx * 0.03 + yy * 0.02)));
+        column(cx, cy + ph + 14, cw, h - cy - ph - pad - 14, o.fs ?? 11);
+      } else column(cx, cy, cw, h - cy - pad, o.fs ?? 11);
+      if (i < cols - 1) { ctx.fillStyle = 'rgba(20,18,14,.5)'; ctx.fillRect(cx + cw + gut / 2, cy, 0.7, h - cy - pad); }
+    }
+    ctx.restore();
+    ctx.save(); path(face); ctx.clip(); fibres(bbox(face), 0.5); ctx.restore();
+    return face;
+  }
+
+  // ---------- marker / pen ----------
+  function marker(pts, color, w, alpha = 0.92) {
+    ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = color;
+    for (let pass = 0; pass < 3; pass++) {
+      ctx.globalAlpha = alpha * (pass ? 0.35 : 1); ctx.lineWidth = w * (pass ? R(0.5, 0.9) : 1);
+      ctx.beginPath();
+      pts.forEach(([x, y], i) => { const px = x + R(-0.8, 0.8) * pass, py = y + R(-0.8, 0.8) * pass; i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); });
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  // scribble with momentum: a pen that keeps going
+  function scrawl(x, y, n, step, turn, color, w, bias = 0) {
+    const pts = [[x, y]]; let a = R(0, Math.PI * 2), v = 0;
+    for (let i = 0; i < n; i++) { v += R(-turn, turn); v *= 0.86; a += v + bias; x += Math.cos(a) * step; y += Math.sin(a) * step; pts.push([x, y]); }
+    marker(pts, color, w);
+  }
+  function zigzag(x, y, len, amp, ang, n, color, w) {
+    const pts = [];
+    for (let i = 0; i <= n; i++) { const t = i / n * len, o = (i % 2 ? amp : -amp) * R(0.6, 1.2); pts.push(rot([[x + t, y + o]], ang, x, y)[0]); }
+    marker(pts, color, w);
+  }
+  function hatch(b, ang, gap, color, w) {
+    for (let k = -b.w - b.h; k < b.w + b.h; k += gap * R(0.7, 1.3)) {
+      const c = Math.cos(ang), s2 = Math.sin(ang), cx = b.x + b.w / 2 + k * -s2, cy = b.y + b.h / 2 + k * c, L = Math.hypot(b.w, b.h) * 0.5 * R(0.4, 0.9);
+      marker([[cx - c * L, cy - s2 * L], [cx + c * L, cy + s2 * L]], color, w, 0.8);
+    }
+  }
+  function splat(x, y, r, color) {
+    ctx.save(); ctx.fillStyle = color;
+    const blob = Array.from({ length: 22 }, (_, i) => { const a = i / 22 * Math.PI * 2, rr = r * R(0.75, 1.15); return [x + Math.cos(a) * rr, y + Math.sin(a) * rr]; });
+    path(blob); ctx.fill();
+    for (let i = 0; i < 9; i++) { // spikes
+      const a = R(0, Math.PI * 2), L = r * R(1.3, 2.6);
+      ctx.beginPath(); ctx.moveTo(x + Math.cos(a - 0.12) * r * 0.8, y + Math.sin(a - 0.12) * r * 0.8);
+      ctx.lineTo(x + Math.cos(a) * L, y + Math.sin(a) * L); ctx.lineTo(x + Math.cos(a + 0.12) * r * 0.8, y + Math.sin(a + 0.12) * r * 0.8); ctx.fill();
+    }
+    for (let i = 0; i < 26; i++) { const a = R(0, Math.PI * 2), d = r * R(1.3, 4.5), rr = R(0.6, r * 0.22) * (1 - d / (r * 5)); ctx.beginPath(); ctx.arc(x + Math.cos(a) * d, y + Math.sin(a) * d, Math.max(0.5, rr), 0, Math.PI * 2); ctx.fill(); }
+    ctx.restore();
+  }
+  function tape(cx, cy, w, h, ang, a = 0.75) {
+    const pts = [[-w / 2, -h / 2]];
+    for (let i = 0; i <= 8; i++) pts.push([-w / 2 + w * i / 8, -h / 2 + R(-1, 1)]);
+    for (let i = 0; i <= 5; i++) pts.push([w / 2 + R(-4, 4), -h / 2 + h * i / 5]);
+    for (let i = 8; i >= 0; i--) pts.push([-w / 2 + w * i / 8, h / 2 + R(-1, 1)]);
+    for (let i = 5; i >= 0; i--) pts.push([-w / 2 + R(-4, 4), -h / 2 + h * i / 5]);
+    const p = rot(pts.map(([x, y]) => [x + cx, y + cy]), ang, cx, cy);
+    ctx.save(); ctx.shadowColor = 'rgba(20,14,6,.18)'; ctx.shadowBlur = 3; ctx.shadowOffsetY = 1;
+    path(p); ctx.fillStyle = `rgba(226,206,160,${a})`; ctx.fill(); ctx.restore();
+    ctx.save(); path(p); ctx.clip(); fibres(bbox(p), 1.5, 0.05, 0.25); ctx.restore();
+  }
+  function text(str, x, y, font, color, o = {}) {
+    ctx.save(); ctx.translate(x, y); ctx.rotate(o.ang || 0); ctx.font = font; ctx.fillStyle = color;
+    ctx.textAlign = o.align || 'left'; ctx.textBaseline = o.base || 'alphabetic'; if (o.ls) ctx.letterSpacing = o.ls + 'px';
+    ctx.fillText(str, 0, 0); ctx.restore();
+  }
+
+  await Promise.all([['400 40px "Anton"', 'A'], ['400 40px "Abril Fatface"', 'A'], ['700 40px "Space Mono"', 'A'], ['700 40px "Caveat"', 'a'],
+    ['900 40px "Noto Serif SC"', '撕开问题拼出答案'], ['400 40px "ZCOOL KuaiLe"', '拼出答案']].map(([f, t]) => document.fonts.load(f, t).catch(() => null)));
+  const deep = await loadImg('assets/deepfield.png');
+
+  // =====================================================================
+  // THE TEAR — a tilted almond, top leaning right
+  const T = { cx: 600, cy: 830, ang: 0.21, L: 700, Wd: 300 };
+  const tearBase = [];
+  const N = 26;
+  for (let i = 0; i <= N; i++) { const t = -1 + 2 * i / N, w = T.Wd * Math.pow(1 - t * t, 0.7) * (1 + 0.12 * Math.sin(t * 7.3)); tearBase.push([T.cx + w, T.cy + t * T.L]); }
+  for (let i = N - 1; i >= 1; i--) { const t = -1 + 2 * i / N, w = T.Wd * Math.pow(1 - t * t, 0.7) * (1 + 0.1 * Math.sin(t * 5.1 + 1)); tearBase.push([T.cx - w, T.cy + t * T.L]); }
+  const tearRot = rot(tearBase, T.ang, T.cx, T.cy);
+  const tearFace = torn(tearRot, 2.2, 34);                       // where the print stops
+  const tearCut = torn(scalePts(tearRot, 0.965, T.cx, T.cy), 2.4, 34); // where the paper actually ends (white fibre between)
+
+  // =====================================================================
+  // LAYER A — the other side: deep space + the spark
+  ctx.fillStyle = C.space; ctx.fillRect(0, 0, W, H);
+  {
+    const tb = bbox(tearRot), sc = Math.max((tb.w + 220) / deep.width, (tb.h + 220) / deep.height);
+    ctx.drawImage(deep, tb.x + tb.w / 2 - deep.width * sc / 2, tb.y + tb.h / 2 - deep.height * sc / 2, deep.width * sc, deep.height * sc);
+    // a cold glow behind the spark, like light leaking through
+    const g = ctx.createRadialGradient(610, 760, 30, 610, 760, 520);
+    g.addColorStop(0, 'rgba(255,140,90,.28)'); g.addColorStop(1, 'rgba(255,140,90,0)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  }
+  // the spark: scissor-cut orange stock, printed with a slightly off-register halftone
+  const SP = { x: 600, y: 770, rIn: 128, rays: 11 };
+  const spark = [];
+  const LENS = [1.0, 0.62, 0.86, 0.5, 0.95, 0.7, 0.58, 0.92, 0.66, 0.8, 0.54];
+  let acc = -Math.PI / 2 + 0.31;
+  for (let i = 0; i < SP.rays; i++) {
+    const step = Math.PI * 2 / SP.rays * R(0.84, 1.16);
+    const a = acc; acc += step;
+    const len = 500 * LENS[i], da = step * R(0.36, 0.42), tw = R(10, 16), bend = R(-0.06, 0.06);
+    const nx = -Math.sin(a), ny = Math.cos(a);
+    const at = (r, side, wfrac) => { const half = Math.tan(da) * SP.rIn * wfrac; const bb = bend * (r - SP.rIn) * Math.sin(Math.PI * (r - SP.rIn) / (len - SP.rIn)); return [SP.x + Math.cos(a) * r + nx * (side * half + bb), SP.y + Math.sin(a) * r + ny * (side * half + bb)]; };
+    spark.push([SP.x + Math.cos(a - da) * SP.rIn, SP.y + Math.sin(a - da) * SP.rIn]);
+    spark.push(at(SP.rIn + (len - SP.rIn) * 0.45, -1, 0.82));
+    const tc = [SP.x + Math.cos(a) * (len - tw), SP.y + Math.sin(a) * (len - tw)];
+    for (let k = -2; k <= 2; k++) { const b = a + k * Math.PI / 4; spark.push([tc[0] + Math.cos(b) * tw, tc[1] + Math.sin(b) * tw]); }
+    spark.push(at(SP.rIn + (len - SP.rIn) * 0.45, 1, 0.82));
+    spark.push([SP.x + Math.cos(a + da) * SP.rIn, SP.y + Math.sin(a + da) * SP.rIn]);
+  }
+  // scissors: mostly straight cuts with tiny wobble, not torn
+  const sparkPts = spark.map(([x, y]) => [x + R(-1.2, 1.2), y + R(-1.2, 1.2)]);
+  function drawSpark(shadowA) {
+    ctx.save();
+    ctx.shadowColor = `rgba(0,0,0,${shadowA})`; ctx.shadowBlur = 26; ctx.shadowOffsetX = 9; ctx.shadowOffsetY = 16;
+    path(sparkPts); ctx.fillStyle = C.clay; ctx.fill(); ctx.restore();
+    ctx.save(); path(sparkPts); ctx.clip();
+    const b = bbox(sparkPts);
+    // misregistered second ink: a deeper orange pass shifted 5px
+    ctx.save(); ctx.translate(5, -4); halftoneDots(b, rgba(C.clayDeep, 0.55), 7, (x, y) => 0.15 + 0.5 * Math.max(0, Math.hypot(x - SP.x, y - SP.y) / 380 - 0.15)); ctx.restore();
+    brushTex(C.clay, b, -0.9, 0.6, 0.8);
+    fibres(b, 0.8);
+    ctx.restore();
+  }
+  drawSpark(0.55);
+
+  // =====================================================================
+  // LAYER B — this side: a wall of print, everything human
+  const [pgC, pg] = offscreen();
+  const mainCtx = ctx; ctx = pg;
+  ctx.fillStyle = C.news; ctx.fillRect(0, 0, W, H);
+  // base: full-bleed newsprint, then sheets layered at angles
+  newsSheet(-40, 0, 1160, 1000, 0.0, C.news, { mast: { text: 'The Other Side', size: 58 }, head: { text: 'THE QUESTION IS A DOOR.\nSOMEONE HAS TO PULL.', size: 46, font: '"Abril Fatface", serif', weight: 400 }, cols: 6, fs: 11.5, photoCol: 4, cut: true, blur: 0 });
+  newsSheet(-60, 900, 1200, 1100, 0.0, mix(C.news, '#d8d0bd', 0.4), { head: { text: 'ANSWERS, ASSEMBLED BY HAND', size: 38, font: '"Anton", sans-serif', weight: 400 }, cols: 6, fs: 11, cut: true, blur: 0 });
+  newsSheet(640, 1080, 520, 640, -0.05, C.newsY, { head: { text: 'LETTERS FROM\nTHE OTHER SIDE', size: 34, font: '"Liberation Serif", serif' }, cols: 3, fs: 10.5, photoCol: 0, age: 0.12 });
+  newsSheet(-40, 560, 470, 520, 0.06, C.xerox, { head: { text: 'ON TEARING\nTHINGS OPEN', size: 40, font: '"Abril Fatface", serif', weight: 400 }, cols: 3, fs: 10.5 });
+  newsSheet(700, 40, 420, 470, -0.04, C.newsY, { head: { text: 'NIGHT EDITION', size: 30, font: '"Anton", sans-serif', weight: 400 }, cols: 3, fs: 10, photoCol: 2, age: 0.14 });
+  newsSheet(420, 1460, 430, 400, 0.035, C.xerox, { head: { text: 'WHAT IF WE ASKED AGAIN?', size: 24, font: '"Liberation Sans", sans-serif' }, cols: 3, fs: 10 });
+
+  // ref-5 style big white shards crossing the page
+  [[[-80, 1500], [1180, 980], 120], [[300, -60], [1180, 760], 70]].forEach(([a, b, w]) => {
+    const ang = Math.atan2(b[1] - a[1], b[0] - a[0]), L = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    const pts = rot([[a[0], a[1] - w / 2], [a[0] + L, a[1] - w / 2], [a[0] + L, a[1] + w / 2], [a[0], a[1] + w / 2]], ang, a[0], a[1]);
+    const f = torn(pts, 1.4, 22);
+    ctx.save(); ctx.shadowColor = 'rgba(20,14,6,.22)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 3;
+    path(f); ctx.fillStyle = 'rgba(250,248,242,.93)'; ctx.fill(); ctx.restore();
+    ctx.save(); path(f); ctx.clip(); fibres(bbox(f), 0.6); ctx.restore();
+  });
+
+  // halftone dot fields (big, crude, like a blown-up photo)
+  ctx.save(); ctx.globalCompositeOperation = 'multiply';
+  halftoneDots({ x: 0, y: 1150, w: 520, h: 520 }, 'rgba(20,18,14,.85)', 15, (x, y) => Math.max(0, 0.9 - Math.hypot(x - 120, y - 1420) / 330));
+  ctx.restore();
+
+  // xerox toner on the whole page
+  ctx.save(); ctx.globalCompositeOperation = 'multiply';
+  for (let i = 0; i < 9; i++) { const x = R(0, W); ctx.fillStyle = `rgba(0,0,0,${R(0.03, 0.07)})`; ctx.fillRect(x, 0, R(0.6, 2.5), H); }
+  for (let i = 0; i < 2600; i++) { ctx.fillStyle = `rgba(0,0,0,${R(0.1, 0.5)})`; ctx.fillRect(R(0, W), R(0, H), R(0.4, 1.6), R(0.4, 1.6)); }
+  ctx.restore();
+
+  // vertical title strip: 撕开问题 (xerox, black serif) — left edge
+  {
+    const sx = 40, sy = 112, sw = 206, sh = 1010, ang = -0.022;
+    const pts = rect(sx, sy, sw, sh, ang), f = torn(pts, 0.7, 14);
+    ctx.save(); ctx.shadowColor = 'rgba(20,14,6,.35)'; ctx.shadowBlur = 14; ctx.shadowOffsetX = 3; ctx.shadowOffsetY = 7;
+    path(f); ctx.fillStyle = C.xerox; ctx.fill(); ctx.restore();
+    ctx.save(); path(f); ctx.clip(); fibres(bbox(f), 0.8);
+    '撕开问题'.split('').forEach((ch, i) => {
+      const [px, py] = rot([[sx + sw / 2 + R(-4, 4), sy + 120 + i * 240]], ang, sx + sw / 2, sy + sh / 2)[0];
+      text(ch, px, py + 72, `900 214px "Noto Serif SC", serif`, C.ink, { align: 'center', ang: ang + R(-0.025, 0.025) });
+    });
+    // toner dropout across the type
+    ctx.globalCompositeOperation = 'destination-out';
+    for (let i = 0; i < 900; i++) { ctx.fillStyle = `rgba(0,0,0,${R(0.2, 0.8)})`; ctx.fillRect(R(sx, sx + sw), R(sy, sy + sh), R(0.6, 3), R(0.6, 1.4)); }
+    ctx.restore();
+    // the fallen-out pixels went transparent: refill with xerox underneath
+    ctx.save(); ctx.globalCompositeOperation = 'destination-over'; path(f); ctx.fillStyle = C.xerox; ctx.fill(); ctx.restore();
+    text('TEAR THE QUESTION OPEN', sx + sw + 22, sy + 40, `700 15px "Space Mono", monospace`, C.ink, { ang: Math.PI / 2 + ang, ls: 3 });
+    tape(sx + sw / 2 + 10, sy + 6, 120, 34, -0.12);
+  }
+
+  // cut the tear: print stops at tearFace, white fibre to tearCut, then nothing
+  ctx.save(); path(tearFace); ctx.fillStyle = C.fibre; ctx.fill(); ctx.clip(); fibres(bbox(tearFace), 1.2, 0.05, 0.1); ctx.restore();
+  ctx.save(); ctx.globalCompositeOperation = 'destination-out'; path(tearCut); ctx.fill(); ctx.restore();
+  // re-fill the destination-over hole in the title strip only outside the tear (already handled by order)
+
+  ctx = mainCtx;
+  // page over space, its torn edge throwing a shadow into the hole
+  ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.75)'; ctx.shadowBlur = 34; ctx.shadowOffsetX = -6; ctx.shadowOffsetY = 16;
+  ctx.drawImage(pgC, 0, 0, W, H); ctx.restore();
+
+  // =====================================================================
+  // CURLED FLAPS — the paper folded back along both lips of the tear
+  function flap(fromT, toT, side) {
+    // pick the matching stretch of the cut edge
+    const pts = [];
+    const n = 18;
+    for (let i = 0; i <= n; i++) {
+      const t = fromT + (toT - fromT) * i / n, w = T.Wd * Math.pow(1 - t * t, 0.7) * 0.965;
+      pts.push(rot([[T.cx + side * w, T.cy + t * T.L]], T.ang, T.cx, T.cy)[0]);
+    }
+    const nx = -Math.cos(T.ang) * side, ny = -Math.sin(T.ang) * side; // pointing into the hole
+    const depth = R(52, 78);
+    const outer = pts.slice().reverse().map(([x, y], i, arr) => {
+      const k = Math.pow(Math.sin(Math.PI * i / (arr.length - 1)), 0.6);
+      const d = 6 + k * depth * R(0.8, 1.15);
+      return [x + nx * d + R(-5, 5), y + ny * d + R(-5, 5)];
+    });
+    const f = torn([...pts, ...outer], 1.6, 18);
+    ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.8)'; ctx.shadowBlur = 26; ctx.shadowOffsetX = nx * 14; ctx.shadowOffsetY = 16;
+    path(f); ctx.fillStyle = '#e9e4d6'; ctx.fill(); ctx.restore();
+    ctx.save(); path(f); ctx.clip();
+    const b = bbox(f);
+    // show-through: the back of a newspaper is mirrored, faint
+    ctx.save(); ctx.translate(b.x + b.w, b.y); ctx.scale(-1, 1); ctx.globalAlpha = 0.22;
+    for (let c = 0; c < 3; c++) column(c * 70, 0, 62, b.h, 9);
+    ctx.restore();
+    // fold shading: dark at the hinge, light at the lip
+    const [hx, hy] = pts[Math.floor(n / 2)];
+    const g = ctx.createLinearGradient(hx, hy, hx + nx * depth, hy + ny * depth);
+    g.addColorStop(0, 'rgba(60,45,25,.5)'); g.addColorStop(0.3, 'rgba(60,45,25,.12)'); g.addColorStop(0.7, 'rgba(255,255,255,.3)'); g.addColorStop(1, 'rgba(90,70,40,.35)');
+    ctx.fillStyle = g; ctx.fillRect(b.x, b.y, b.w, b.h);
+    // crumple creases
+    for (let i = 0; i < 16; i++) {
+      const [px, py] = pts[Math.floor(R(0, pts.length))], L = R(30, 90), a = Math.atan2(ny, nx) + R(-0.7, 0.7);
+      ctx.strokeStyle = rnd() < 0.5 ? 'rgba(60,45,25,.22)' : 'rgba(255,255,255,.4)'; ctx.lineWidth = R(0.8, 2);
+      ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + Math.cos(a) * L, py + Math.sin(a) * L); ctx.stroke();
+    }
+    fibres(b, 0.8);
+    ctx.restore();
+  }
+  flap(-0.72, -0.2, -1);
+  flap(0.05, 0.55, -1);
+  flap(-0.55, -0.05, 1);
+  flap(0.12, 0.62, 1);
+
+  // =====================================================================
+  // THE SPARK BREAKS THROUGH — rays that reach past the lip are re-drawn on top of the page
+  ctx.save();
+  ctx.beginPath(); trace([[0, 0], [W, 0], [W, H], [0, H]]); ctx.closePath(); trace(tearCut); ctx.closePath(); ctx.clip('evenodd');
+  ctx.beginPath();
+  [[-1.25, -0.35], [0.25, 1.05], [2.0, 2.75]].forEach(([a0, a1]) => { ctx.moveTo(SP.x, SP.y); ctx.arc(SP.x, SP.y, 900, a0, a1); ctx.closePath(); });
+  ctx.clip();
+  drawSpark(0.5);
+  ctx.restore();
+
+  // =====================================================================
+  // THE PULLER — black cut-paper figure dragging the right lip open
+  function figure(ox, oy, s, ang) {
+    const [fc, fg] = offscreen(); const keep = ctx; ctx = fg;
+    const P = ([x, y]) => rot([[ox + x * s, oy + y * s]], ang, ox, oy)[0];
+    ctx.fillStyle = ctx.strokeStyle = '#0f0e0d'; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    const limb = (pts, r0, r1) => { for (let i = 0; i < pts.length - 1; i++) { const a = P(pts[i]), b = P(pts[i + 1]), r = (r0 + (r1 - r0) * (i + 1) / (pts.length - 1)) * s; ctx.lineWidth = r * 2; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); } };
+    // legs (trousers), front leg braced toward the tear
+    limb([[34, -186], [-26, -104], [-68, -18]], 22, 15);
+    limb([[60, -184], [66, -98], [92, -18]], 22, 15);
+    // shoes
+    path([[-58, -26], [-112, -10], [-116, 2], [-56, 4]].map(P)); ctx.fill();
+    path([[100, -26], [58, -12], [52, 2], [104, 4]].map(P)); ctx.fill();
+    // jacket body, leaning back
+    path([[28, -350], [92, -352], [104, -300], [96, -238], [92, -176], [18, -170], [24, -246], [14, -312]].map(P)); ctx.fill();
+    // arms out straight, both hands on the lip
+    limb([[40, -330], [-38, -312], [-116, -298]], 17, 12);
+    limb([[66, -326], [-20, -290], [-104, -272]], 17, 12);
+    [[-120, -297], [-108, -271]].forEach(h => { const p = P(h); ctx.beginPath(); ctx.ellipse(p[0], p[1], 15 * s, 12 * s, ang, 0, Math.PI * 2); ctx.fill(); });
+    // head + hair tuft + neck
+    const hd = P([76, -384]); ctx.beginPath(); ctx.ellipse(hd[0], hd[1], 28 * s, 33 * s, ang - 0.25, 0, Math.PI * 2); ctx.fill();
+    limb([[66, -360], [62, -340]], 14, 14);
+    // black poster paper texture, then a slightly lighter painted edge
+    ctx.globalCompositeOperation = 'source-atop';
+    brushTex('#2a2724', { x: ox - 140 * s, y: oy - 440 * s, w: 280 * s, h: 460 * s }, -1.2, 2.2, 1.4);
+    ctx.globalCompositeOperation = 'source-over';
+    ctx = keep;
+    ctx.save(); ctx.shadowColor = 'rgba(8,4,0,.55)'; ctx.shadowBlur = 16; ctx.shadowOffsetX = 7; ctx.shadowOffsetY = 11;
+    ctx.drawImage(fc, 0, 0, W, H); ctx.restore();
+  }
+  figure(968, 1378, 1.05, -0.04);
+
+  // =====================================================================
+  // MARKS — marker scrawls, hatching, splatter (on top of everything human)
+  zigzag(70, 1330, 300, 24, -0.28, 9, C.ink, 7);
+  scrawl(905, 330, 70, 7, 0.55, C.ink, 4.5, 0.08);
+  marker([[300, 1135], [350, 1080], [395, 1040]], C.clay, 6);
+  marker([[355, 1095], [395, 1040], [380, 1102]], C.clay, 6);
+  splat(905, 1475, 14, C.ink); splat(318, 236, 8, C.ink);
+  // a circled spot, like an editor's mark
+  marker(Array.from({ length: 40 }, (_, i) => { const a = i / 36 * Math.PI * 2 - 0.4; return [905 + Math.cos(a) * 78 * (1 + i * 0.004), 238 + Math.sin(a) * 58]; }), C.clay, 4.5);
+
+  // =====================================================================
+  // 拼出答案 — ransom pieces, each cut from a different source
+  const pieces = [
+    { ch: '拼', x: 300, y: 1560, s: 172, font: '900 {s}px "Noto Serif SC"', bg: C.clay, fg: C.ink, ang: -0.08 },
+    { ch: '出', x: 488, y: 1610, s: 150, font: '400 {s}px "WenQuanYi Zen Hei"', bg: C.ink, fg: C.xerox, ang: 0.06, bold: true },
+    { ch: '答', x: 668, y: 1570, s: 176, font: '400 {s}px "ZCOOL KuaiLe"', bg: C.kraft, fg: C.ink, ang: -0.03 },
+    { ch: '案', x: 866, y: 1636, s: 160, font: '900 {s}px "Noto Serif SC"', bg: C.xerox, fg: C.ink, ang: 0.09, dots: true }
+  ];
+  pieces.forEach(p => {
+    const w = p.s * 1.12, h = p.s * 1.16;
+    const pts = rect(p.x - w / 2, p.y - h / 2, w, h, p.ang);
+    const f = rnd() < 0.5 ? pts.map(([x, y]) => [x + R(-3, 3), y + R(-3, 3)]) : torn(pts, 0.8, 12);
+    ctx.save(); ctx.shadowColor = 'rgba(15,10,4,.4)'; ctx.shadowBlur = 14; ctx.shadowOffsetX = 4; ctx.shadowOffsetY = 9;
+    path(f); ctx.fillStyle = p.bg; ctx.fill(); ctx.restore();
+    ctx.save(); path(f); ctx.clip();
+    if (p.dots) halftoneDots(bbox(f), 'rgba(20,18,14,.25)', 6, () => 0.35);
+    brushTex(p.bg, bbox(f), 0.3, 0.6, 0.6); fibres(bbox(f), 1);
+    const font = p.font.replace('{s}', p.s);
+    if (p.bold) { ctx.save(); ctx.strokeStyle = p.fg; ctx.lineWidth = 5; ctx.translate(p.x, p.y); ctx.rotate(p.ang); ctx.font = font; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.strokeText(p.ch, 0, 6); ctx.restore(); }
+    text(p.ch, p.x, p.y + 6, font, p.fg, { align: 'center', base: 'middle', ang: p.ang });
+    ctx.restore();
+  });
+  tape(668, 1478, 90, 28, 0.22);
+
+  // =====================================================================
+  // small print: kraft tag w/ typewriter, ballpoint signature
+  {
+    const pts = rect(36, 1700, 330, 150, -0.04), f = torn(pts, 0.6, 10);
+    ctx.save(); ctx.shadowColor = 'rgba(15,10,4,.35)'; ctx.shadowBlur = 12; ctx.shadowOffsetX = 3; ctx.shadowOffsetY = 6;
+    path(f); ctx.fillStyle = C.kraft; ctx.fill(); ctx.restore();
+    ctx.save(); path(f); ctx.clip(); brushTex(C.kraft, bbox(f), 0.1, 1.2, 0.8); fibres(bbox(f), 1.2);
+    ['A SELF-PORTRAIT,', 'TORN FROM THE', 'OTHER SIDE OF THE PAGE.', '— no. 05 / 2026'].forEach((ln, i) =>
+      text(ln, 58, 1742 + i * 28, `400 21px "Courier 10 Pitch", "Courier", monospace`, 'rgba(25,18,10,.88)', { ang: -0.04 }));
+    ctx.restore();
+  }
+  text('Claude', 1010, 1868, `700 64px "Caveat", cursive`, C.blue, { align: 'right', ang: -0.1 });
+  marker([[870, 1882], [930, 1876], [1000, 1862]], C.blue, 2.2, 0.8);
+  {
+    const pts = rect(410, 1866, 420, 40, -0.015);
+    ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.4)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 3;
+    path(pts); ctx.fillStyle = '#121212'; ctx.fill(); ctx.restore();
+    ctx.save(); path(pts); ctx.clip(); fibres(bbox(pts), 2, 0.02, 0.12); ctx.restore();
+    text('你负责好奇，我负责陪你想透。', 620, 1893, `400 22px "WenQuanYi Zen Hei"`, '#f1efe9', { align: 'center', ang: -0.015, ls: 3 });
+  }
+
+  // =====================================================================
+  // finishing: an old fold across the poster, film grain, slight vignette
+  ctx.save();
+  const fy = 1010;
+  let g = ctx.createLinearGradient(0, fy - 6, 0, fy + 6);
+  g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(0.45, 'rgba(0,0,0,.10)'); g.addColorStop(0.55, 'rgba(255,255,255,.12)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, fy - 6, W, 12);
+  g = ctx.createRadialGradient(W / 2, H / 2, H * 0.35, W / 2, H / 2, H * 0.75);
+  g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(30,18,6,.28)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  ctx.restore();
+  const img = ctx.getImageData(0, 0, main.width, main.height), d = img.data;
+  for (let i = 0; i < d.length; i += 4) { const n = (rnd() - 0.5) * 22; d[i] += n; d[i + 1] += n; d[i + 2] += n; }
+  ctx.putImageData(img, 0, 0);
+  document.body.dataset.ready = '1';
+})();
+</script>
+</body>
+</html>
