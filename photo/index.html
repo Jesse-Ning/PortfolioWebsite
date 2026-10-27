@@ -541,12 +541,12 @@ function onMotion(e){
   // 仰角：镜头往上仰为正。iOS 的重力读数和标准相反，要翻一下符号
   const zs = IOS ? -gz : gz;
   const pitch = Math.atan2(zs, Math.hypot(gx, gy)) * 180 / Math.PI;
-  S.pitch = S.pitch == null ? pitch : S.pitch + (pitch - S.pitch) * .15;
+  S.pitch = S.pitch == null ? pitch : S.pitch + (pitch - S.pitch) * .25;
   const flat = Math.abs(gz) / Math.hypot(gx, gy, gz || 1e-6);
   if (flat > .85){ S.roll = 'flat'; return; }       // 手机朝天/朝地平放时，水平线没有意义
   const a = Math.atan2(gx, gy) * 180 / Math.PI;      // iOS 与安卓符号相反，但取「离最近 90° 的偏差」后结果一致
   const dev = a - Math.round(a / 90) * 90;
-  S.roll = S.roll == null || S.roll === 'flat' ? dev : S.roll + (dev - S.roll) * .1;
+  S.roll = S.roll == null || S.roll === 'flat' ? dev : S.roll + (dev - S.roll) * .2;
 }
 
 /* ---------- 人物框 ---------- */
@@ -882,14 +882,9 @@ function updateLevelChip(){
 }
 /* ---------- 风景：地平线、引导线、对称（纯计算，不用模型） ---------- */
 const LW = 160; let lcv = null, lctx = null;
-function landAnalyze(){
-  if (!video.videoWidth) return;
-  const m = coverMap(), LH = Math.round(LW * H / W);
-  if (!lcv){ lcv = document.createElement('canvas'); lctx = lcv.getContext('2d', { willReadFrequently: true }); }
-  if (lcv.width !== LW || lcv.height !== LH){ lcv.width = LW; lcv.height = LH; }
-  lctx.save(); if (S.facing === 'user'){ lctx.translate(LW, 0); lctx.scale(-1, 1); }
-  lctx.drawImage(video, -m.ox / m.s, -m.oy / m.s, W / m.s, H / m.s, 0, 0, LW, LH); lctx.restore();
-  const d = lctx.getImageData(0, 0, LW, LH).data, N = LW * LH;
+// 纯计算，放在后台线程（Web Worker）里跑，不卡取景画面
+function landCompute(d, LW, LH, roll, ASP){
+  const N = LW * LH;
   const L = new Float32Array(N), B = new Float32Array(N);
   for (let i = 0, j = 0; i < N; i++, j += 4){ L[i] = .2126 * d[j] + .7152 * d[j + 1] + .0722 * d[j + 2]; B[i] = d[j + 2] - (d[j] + d[j + 1]) / 2; }
   const GY = new Float32Array(N), GX = new Float32Array(N), G = new Float32Array(N);
@@ -932,7 +927,7 @@ function landAnalyze(){
     if (dL < 22 && dB < 18) hzOK = false;
   }
   // 以水平仪为准：画面里找到的线和手机的倾斜对不上，就不是地平线（城市里的楼顶、马路边）
-  if (hzOK && typeof S.roll === 'number' && Math.min(Math.abs(best.a - S.roll), Math.abs(best.a + S.roll)) > 2.5) hzOK = false;
+  if (hzOK && typeof roll === 'number' && Math.min(Math.abs(best.a - roll), Math.abs(best.a + roll)) > 2.5) hzOK = false;
 
   // 2) 天空：地平线以上的部分平不平（有没有云、晚霞），过不过曝
   let skyStd = 0, skyClip = 0, skyEdge = 0;
@@ -992,7 +987,7 @@ function landAnalyze(){
     }
     let bestN = 0;
     for (const p of pts){
-      const near = pts.filter(q => Math.hypot((q.x - p.x) * W / H, q.y - p.y) < .05);
+      const near = pts.filter(q => Math.hypot((q.x - p.x) * ASP, q.y - p.y) < .05);
       if (near.length > bestN){ bestN = near.length; vp = { x: near.reduce((s, q) => s + q.x, 0) / near.length, y: near.reduce((s, q) => s + q.y, 0) / near.length, n: near.length }; }
     }
     if (bestN < 2 && lines.length > 2) vp = null;
@@ -1009,14 +1004,47 @@ function landAnalyze(){
     if (mx > 0){ const sc = mn / mx; if (sc > sym.score) sym = { score: sc, x: (c + .5) / LW }; }
   }
 
-  // 平滑地平线
-  if (hzOK){
-    const y = (best.y0 + .5) / LH, a = best.a;
-    if (!S.hz || Math.abs(S.hz.y - y) > .08) S.hz = { y, ang: a, seen: performance.now() };
-    else { S.hz.y += (y - S.hz.y) * .45; S.hz.ang += (a - S.hz.ang) * .45; S.hz.seen = performance.now(); }
-  } else if (S.hz && performance.now() - S.hz.seen > 600) S.hz = null;
-
-  S.land = { lines: lines.map(l => ({ c: l.c, s: l.s, rho: l.rho })), verts, vp, sym, skyStd, skyClip, skyEdge, LH };
+  return { hz: hzOK ? { y: (best.y0 + .5) / LH, a: best.a } : null,
+           land: { lines: lines.map(l => ({ c: l.c, s: l.s, rho: l.rho })), verts, vp, sym, skyStd, skyClip, skyEdge, LH } };
+}
+let landWorker = null, landBusy = false, landSent = null;
+try{
+  const src = landCompute.toString() + '\nonmessage = e => { const m = e.data; postMessage(landCompute(new Uint8ClampedArray(m.buf), m.LW, m.LH, m.roll, m.ASP)); };';
+  landWorker = new Worker(URL.createObjectURL(new Blob([src], { type: 'text/javascript' })));
+  landWorker.onmessage = e => { landBusy = false; landApply(e.data, landSent); };
+  landWorker.onerror = () => { landWorker = null; landBusy = false; };
+}catch{ landWorker = null; }
+const VFOV = 70;   // 主摄竖拍时的大致垂直视角（度），用来按陀螺仪预测地平线上下移动
+function landApply(r, at){
+  const now = performance.now();
+  if (r.hz){
+    const y = r.hz.y, a = r.hz.a;
+    if (!S.hz || Math.abs(S.hz.y - y) > .08) S.hz = { y, ang: a };
+    else { S.hz.y += (y - S.hz.y) * .6; S.hz.ang += (a - S.hz.ang) * .6; }
+    S.hz.seen = now; S.hz.rollAt = at.roll; S.hz.pitchAt = at.pitch;
+  } else if (S.hz && now - S.hz.seen > 600) S.hz = null;
+  S.land = r.land;
+}
+// 两次分析之间，用陀螺仪实时推算地平线的角度和位置：转手机，线马上跟着动
+function hzView(){
+  const h = S.hz; if (!h) return null;
+  let ang = h.ang, y = h.y;
+  if (typeof S.roll === 'number' && typeof h.rollAt === 'number') ang = h.ang + (S.roll - h.rollAt);
+  if (typeof S.pitch === 'number' && typeof h.pitchAt === 'number') y = h.y + (S.pitch - h.pitchAt) / VFOV;
+  return { y, ang };
+}
+function landAnalyze(){
+  if (!video.videoWidth || landBusy) return;
+  const m = coverMap(), LH = Math.round(LW * H / W);
+  if (!lcv){ lcv = document.createElement('canvas'); lctx = lcv.getContext('2d', { willReadFrequently: true }); }
+  if (lcv.width !== LW || lcv.height !== LH){ lcv.width = LW; lcv.height = LH; }
+  lctx.save(); if (S.facing === 'user'){ lctx.translate(LW, 0); lctx.scale(-1, 1); }
+  lctx.drawImage(video, -m.ox / m.s, -m.oy / m.s, W / m.s, H / m.s, 0, 0, LW, LH); lctx.restore();
+  const d = lctx.getImageData(0, 0, LW, LH).data;
+  const roll = typeof S.roll === 'number' ? S.roll : null;
+  landSent = { roll, pitch: typeof S.pitch === 'number' ? S.pitch : null };
+  if (landWorker){ landBusy = true; landWorker.postMessage({ buf: d.buffer, LW, LH, roll, ASP: W / H }, [d.buffer]); }
+  else landApply(landCompute(d, LW, LH, roll, W / H), landSent);
 }
 // 推荐的地平线位置
 function hzGoal(){
@@ -1029,7 +1057,7 @@ function hzGoal(){
   return (Ld.skyStd > 22 || Ld.skyEdge > .05) ? 2/3 : 1/3;
 }
 function landJudge(){
-  const Ld = S.land, hz = S.hz;
+  const Ld = S.land, hz = hzView();
   if (!Ld) return { text: '对准风景', sub: '正在找地平线、线条和对称', state: '' };
   // 1) 手机歪了：没有地平线时用水平仪
   if (!hz && typeof S.roll === 'number'){
@@ -1074,7 +1102,7 @@ function landJudge(){
   return { text: '没找到明显的线条', sub: '城市里试试「街拍」模式：选好舞台，等主角经过', state: '' };
 }
 function drawLand(j){
-  const Ld = S.land, hz = S.hz; if (!Ld) return;
+  const Ld = S.land, hz = hzView(); if (!Ld) return;
   ctx.save(); ctx.lineCap = 'round';
   // 引导线
   for (const l of Ld.lines){
@@ -1125,7 +1153,7 @@ function drawLand(j){
 }
 let landOk = false;
 function landLoop(now){
-  if (now - lastAna > 110){ lastAna = now; try{ landAnalyze(); }catch(e){ console.warn(e); } }
+  if (now - lastAna > 70){ lastAna = now; try{ landAnalyze(); }catch(e){ console.warn(e); } }
   const j = stable(landJudge(), now);
   ctx.clearRect(0, 0, W, H);
   drawGridLevel();
