@@ -73,6 +73,16 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .tg{padding:6px 11px;border-radius:99px;font-size:12px;background:var(--glass);border:1px solid var(--glass-line);color:var(--muted);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
 .tg[aria-pressed="true"]{color:var(--accent);border-color:rgba(255,212,59,.45)}
 
+/* 模式切换：系统相机式的文字标签 */
+.modes{display:flex;gap:22px;font-size:13px;font-weight:600;letter-spacing:.08em}
+.modes button{color:rgba(255,255,255,.75);padding:4px 2px}
+.modes button[aria-pressed="true"]{color:var(--accent)}
+#arm{height:40px;padding:0 22px;border-radius:99px;background:var(--accent);color:#1A1500;font-weight:700;font-size:15px}
+#arm.on{background:#FF5B5B;color:#fff}
+#viewer .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;width:min(100%,520px);max-height:70vh;overflow:auto}
+#viewer .grid img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:8px;max-height:none}
+#viewer .grid img.one{grid-column:1/-1;aspect-ratio:auto}
+
 /* 启动页 */
 #intro{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;justify-content:flex-end;gap:18px;padding:calc(var(--sat) + 28px) max(24px,var(--sar)) calc(var(--sab) + 32px) max(24px,var(--sal));background:
   radial-gradient(120% 70% at 50% 18%, rgba(255,212,59,.16), transparent 60%),
@@ -122,20 +132,32 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 <div class="bottom">
   <div class="toggles">
     <button class="tg" id="tgGrid" aria-pressed="true">三分线</button>
-    <button class="tg" id="tgAuto" aria-pressed="false">对准自动拍</button>
-    <button class="tg" id="tgSkel" aria-pressed="false">骨架</button>
+    <button class="tg pOnly" id="tgAuto" aria-pressed="false">对准自动拍</button>
+    <button class="tg pOnly" id="tgSkel" aria-pressed="false">骨架</button>
   </div>
-  <div class="seg" id="segPos" role="group" aria-label="人物位置">
+  <div class="seg sOnly" id="segWhat" role="group" aria-label="等待对象" hidden>
+    <button data-v="person" aria-pressed="true">人</button>
+    <button data-v="ride" aria-pressed="false">骑车的人</button>
+    <button data-v="vehicle" aria-pressed="false">车</button>
+    <button data-v="animal" aria-pressed="false">动物</button>
+    <button data-v="any" aria-pressed="false">都行</button>
+  </div>
+  <button id="arm" class="sOnly" hidden>开始等待</button>
+  <div class="seg pOnly" id="segPos" role="group" aria-label="人物位置">
     <button data-v="A" aria-pressed="true">自动</button>
     <button data-v="L" aria-pressed="false">左三分</button>
     <button data-v="C" aria-pressed="false">居中</button>
     <button data-v="R" aria-pressed="false">右三分</button>
     <button data-v="off" aria-pressed="false">不设</button>
   </div>
-  <div class="seg" id="segShot" role="group" aria-label="景别">
+  <div class="seg pOnly" id="segShot" role="group" aria-label="景别">
     <button data-v="full" aria-pressed="true">全身</button>
     <button data-v="half" aria-pressed="false">半身</button>
     <button data-v="close" aria-pressed="false">特写</button>
+  </div>
+  <div class="modes" role="group" aria-label="拍摄模式">
+    <button data-v="portrait" aria-pressed="true">人像</button>
+    <button data-v="street" aria-pressed="false">街拍</button>
   </div>
   <div class="row">
     <div class="side"><button id="thumb" aria-label="查看刚拍的照片"></button></div>
@@ -159,19 +181,20 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
     <li><span>02</span>光线：顺光、侧光还是逆光，脸是不是太暗</li>
     <li><span>03</span>背景：头顶有没有「长出」电线杆，背景乱不乱</li>
     <li><span>04</span>抓拍：闭眼不算，对准了才叮一声</li>
+    <li><span>05</span>街拍：框出一个「舞台」，等路人走进去自动连拍</li>
   </ul>
   <div id="err"></div>
   <button id="go">打开相机</button>
 </section>
 
 <section id="viewer" hidden>
-  <img id="vimg" alt="刚拍的照片">
+  <div class="grid" id="vgrid"></div>
   <p>长按图片可以保存到相册</p>
   <button id="vclose">返回取景</button>
 </section>
 
 <script type="module">
-import {FilesetResolver, PoseLandmarker, FaceLandmarker} from './vendor/vision_bundle.mjs';
+import {FilesetResolver, PoseLandmarker, FaceLandmarker, ObjectDetector} from './vendor/vision_bundle.mjs';
 
 const $ = s => document.querySelector(s);
 const video = $('#video'), ov = $('#ov'), ctx = ov.getContext('2d');
@@ -193,6 +216,14 @@ const S = {
   light: null,          // {kind, dir, face, bg, clip}
   bg: null,             // {busy, pole, poleX, band}
   autoCx: .5,
+  mode: 'portrait',
+  files: null,
+  det: null, detLoading: false,
+  dets: [],             // 街拍：识别到的物体 [{x0,y0,x1,y1,label,kind}]
+  zone: { x0: .2, y0: .38, x1: .5, y1: .9 },   // 舞台
+  what: 'person',
+  armed: false, burstAt: 0, caught: 0, inZone: false,
+  shots: [],
   target: null,
   person: null,         // 平滑后的人物框 {cx, cy, h, top, bottom, left, right}
   personSeen: 0,
@@ -268,7 +299,9 @@ async function loadModel(){
     try { S.landmarker = await make('GPU'); } catch { S.landmarker = await make('CPU'); }
     tModel.textContent = '就绪';
     $('#cModel .dot').className = 'dot on';
+    S.files = files;
     loadFace(files);
+    if (S.mode === 'street') loadDet();
   }catch(e){
     console.error(e);
     tModel.textContent = '失败';
@@ -383,6 +416,104 @@ function analyze(){
     }
   }
   S.bg = { busy: busy / Math.max(1, nbb), pole, poleX, band: { x0: bx0 / AW, x1: bx1 / AW, y0: by0 / AH, y1: by1 / AH } };
+}
+
+/* ---------- 街拍：物体识别 ---------- */
+const KIND = {
+  person: 'person', bicycle: 'ride', motorcycle: 'ride',
+  car: 'vehicle', bus: 'vehicle', truck: 'vehicle', train: 'vehicle',
+  dog: 'animal', cat: 'animal', bird: 'animal', horse: 'animal',
+};
+const ZH = { person: '人', bicycle: '自行车', motorcycle: '摩托', car: '车', bus: '公交', truck: '货车', train: '火车', dog: '狗', cat: '猫', bird: '鸟', horse: '马', umbrella: '伞' };
+async function loadDet(){
+  if (S.det || S.detLoading || !S.files) return;
+  S.detLoading = true; $('#tModel').textContent = '街拍模型加载中';
+  try{
+    const make = delegate => ObjectDetector.createFromOptions(S.files, {
+      baseOptions: { modelAssetPath: new URL('./vendor/efficientdet_lite0.tflite', location.href).href, delegate },
+      runningMode: 'VIDEO', scoreThreshold: .35, maxResults: 12,
+    });
+    try { S.det = await make('GPU'); } catch { S.det = await make('CPU'); }
+    $('#tModel').textContent = '就绪';
+  }catch(e){ console.error(e); $('#tModel').textContent = '街拍模型失败'; }
+  S.detLoading = false;
+}
+function readDets(r, m){
+  const out = [];
+  for (const d of r.detections || []){
+    const c = d.categories && d.categories[0]; if (!c) continue;
+    const name = c.categoryName, kind = KIND[name]; if (!kind) continue;
+    const b = d.boundingBox;
+    let x0 = (m.ox + b.originX / m.vw * m.dw) / W, x1 = (m.ox + (b.originX + b.width) / m.vw * m.dw) / W;
+    const y0 = (m.oy + b.originY / m.vh * m.dh) / H, y1 = (m.oy + (b.originY + b.height) / m.vh * m.dh) / H;
+    if (S.facing === 'user'){ const a = 1 - x1; x1 = 1 - x0; x0 = a; }
+    if (x1 < 0 || x0 > 1 || y1 < 0 || y0 > 1) continue;
+    out.push({ x0, y0, x1, y1, label: ZH[name] || name, kind, score: c.score });
+  }
+  // 骑车的人：人和自行车/摩托重叠，算一个「骑车的人」
+  for (const p of out) if (p.kind === 'person'){
+    const ride = out.find(q => q.kind === 'ride' && q.x0 < p.x1 && q.x1 > p.x0 && q.y0 < p.y1 && q.y1 > p.y0);
+    if (ride){ p.riding = true; }
+  }
+  return out;
+}
+const wants = d => S.what === 'any' || (S.what === 'ride' ? (d.kind === 'ride' || d.riding) : d.kind === S.what);
+// 「进入舞台」：物体中心落在舞台的中间区域（左右各让出 20%，抓到的人更靠舞台中间）
+function inStage(d){
+  const z = S.zone, cx = (d.x0 + d.x1) / 2, cy = (d.y0 + d.y1) / 2, zw = z.x1 - z.x0;
+  return cx > z.x0 + zw * .2 && cx < z.x1 - zw * .2 && cy > z.y0 && cy < z.y1;
+}
+function streetJudge(now){
+  if (!S.det) return { text: '街拍模型加载中…', sub: '先拖一个框，圈出你想等人走进去的「舞台」', state: '' };
+  const edge = S.dets.filter(d => wants(d) && (d.x0 < .005 || d.x1 > .995) && (d.x1 - d.x0) < .5);
+  if (!S.armed){
+    if (edge.length) return { text: '构好图后，点「开始等待」', sub: `画面边缘有半个${edge[0].label}，等待时没关系，构图时注意`, state: '' };
+    return { text: '框出一个「舞台」', sub: '在画面上拖一个框：一束光、一扇门、一面墙', state: '' };
+  }
+  if (now - S.burstAt < 1200) return { text: '抓到了！', sub: `已经抓拍 ${S.caught} 组，继续等下一个`, state: 'ok' };
+  const near = S.dets.filter(wants).length;
+  return { text: '等人走进舞台…', sub: near ? `画面里有 ${near} 个目标，还没进舞台` : (S.caught ? `已经抓拍 ${S.caught} 组` : '手机拿稳，不用一直盯着屏幕'), state: '' };
+}
+function burst(){
+  S.burstAt = performance.now(); S.caught++;
+  ding();
+  capture(); setTimeout(capture, 160); setTimeout(capture, 320);
+}
+function drawStreet(j, now){
+  const z = S.zone;
+  const x = z.x0 * W, y = z.y0 * H, w = (z.x1 - z.x0) * W, h = (z.y1 - z.y0) * H;
+  const hit = now - S.burstAt < 600;
+  ctx.save();
+  // 舞台外压暗一点，让舞台更醒目
+  ctx.fillStyle = 'rgba(0,0,0,.28)';
+  ctx.fillRect(0, 0, W, y); ctx.fillRect(0, y + h, W, H - y - h); ctx.fillRect(0, y, x, h); ctx.fillRect(x + w, y, W - x - w, h);
+  ctx.lineWidth = hit ? 4 : 2;
+  ctx.strokeStyle = hit ? '#5BE38C' : S.armed ? '#FFD43B' : 'rgba(255,255,255,.95)';
+  if (hit){ ctx.shadowColor = '#5BE38C'; ctx.shadowBlur = 28; }
+  ctx.setLineDash(S.armed || hit ? [] : [10, 8]);
+  rr(x, y, w, h, 14); ctx.stroke(); ctx.shadowBlur = 0; ctx.setLineDash([]);
+  // 中间区域的两道刻度：人走到这里才拍
+  ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 1;
+  for (const f of [.2, .8]){ ctx.beginPath(); ctx.moveTo(x + w * f, y + 8); ctx.lineTo(x + w * f, y + 22); ctx.moveTo(x + w * f, y + h - 22); ctx.lineTo(x + w * f, y + h - 8); ctx.stroke(); }
+  // 等待中：一条扫描线
+  if (S.armed && !hit){
+    const t = (now / 1400) % 1, sx = x + w * t;
+    const g = ctx.createLinearGradient(sx - 40, 0, sx, 0); g.addColorStop(0, 'rgba(255,212,59,0)'); g.addColorStop(1, 'rgba(255,212,59,.35)');
+    ctx.fillStyle = g; ctx.fillRect(Math.max(x, sx - 40), y + 2, Math.min(40, sx - x), h - 4);
+  }
+  ctx.fillStyle = hit ? '#5BE38C' : S.armed ? '#FFD43B' : '#fff';
+  ctx.font = '600 12px ' + FONT;
+  ctx.fillText(S.armed ? '舞台 · 等待中' : '舞台', x + 10, y + 20);
+  // 识别到的物体
+  for (const d of S.dets){
+    const on = wants(d), inside = on && inStage(d);
+    ctx.strokeStyle = inside ? '#5BE38C' : on ? 'rgba(255,212,59,.9)' : 'rgba(255,255,255,.35)';
+    ctx.lineWidth = inside ? 2.5 : 1.5;
+    rr(d.x0 * W, d.y0 * H, (d.x1 - d.x0) * W, (d.y1 - d.y0) * H, 6); ctx.stroke();
+    ctx.fillStyle = ctx.strokeStyle; ctx.font = '600 11px ' + FONT;
+    ctx.fillText(d.riding ? '骑车的人' : d.label, d.x0 * W + 4, Math.max(12, d.y0 * H - 5));
+  }
+  ctx.restore();
 }
 
 /* ---------- 水平仪：用重力方向算相机绕镜头轴的倾斜 ---------- */
@@ -506,8 +637,7 @@ function updateChips(){
 const FONT = getComputedStyle(document.documentElement).getPropertyValue('--f');
 const BONES = [[11,12],[11,13],[13,15],[12,14],[14,16],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28],[27,31],[28,32]];
 function rr(x, y, w, h, r){ ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h); }
-function draw(j){
-  ctx.clearRect(0, 0, W, H);
+function drawGridLevel(){
   // 三分线
   if (S.grid){
     ctx.strokeStyle = 'rgba(255,255,255,.28)'; ctx.lineWidth = 1;
@@ -525,6 +655,10 @@ function draw(j){
     else { ctx.beginPath(); ctx.moveTo(-30, 0); ctx.lineTo(30, 0); ctx.stroke(); }
     ctx.restore();
   }
+}
+function draw(j){
+  ctx.clearRect(0, 0, W, H);
+  drawGridLevel();
   // 目标框
   const t = S.target, p = S.person;
   if (t){
@@ -628,7 +762,7 @@ function capture(){
   if (S.facing === 'user'){ g.translate(c.width, 0); g.scale(-1, 1); }
   g.drawImage(video, sx, sy, sw, sh, 0, 0, c.width, c.height);
   const url = c.toDataURL('image/jpeg', .92);
-  $('#vimg').src = url;
+  S.shots.unshift(url); if (S.shots.length > 24) S.shots.pop();
   const th = $('#thumb'); th.style.backgroundImage = `url(${url})`; th.classList.add('has');
   const f = $('#flash'); f.style.transition = 'none'; f.style.opacity = .85; requestAnimationFrame(() => { f.style.transition = ''; f.style.opacity = 0; });
   S.lastCapture = performance.now();
@@ -638,6 +772,7 @@ function capture(){
 let lastVT = -1, lastHint = '', frameN = 0, lastAna = 0;
 function loop(){
   const now = performance.now();
+  if (S.mode === 'street'){ streetLoop(now); requestAnimationFrame(loop); return; }
   if (S.landmarker && video.readyState >= 2 && video.currentTime !== lastVT){
     lastVT = video.currentTime;
     try{
@@ -681,8 +816,7 @@ function loop(){
   }
   $('#dPerson').className = 'dot' + (S.person ? ' on' : '');
   $('#tPerson').textContent = S.person ? '已识别' : '—';
-  if (S.roll === 'flat'){ $('#tLevel').textContent = '平放'; $('#dLevel').className = 'dot'; }
-  else if (typeof S.roll === 'number'){ $('#tLevel').textContent = (S.roll >= 0 ? '' : '−') + Math.abs(S.roll).toFixed(1) + '°'; $('#dLevel').className = 'dot' + (Math.abs(S.roll) < 1 ? ' on' : ' mid'); }
+  updateLevelChip();
 
   // 对准：叮一声；开了自动拍就保持 0.5 秒后自动按快门
   const ok = j.state === 'ok';
@@ -694,18 +828,60 @@ function loop(){
   requestAnimationFrame(loop);
 }
 
+function updateLevelChip(){
+  if (S.roll === 'flat'){ $('#tLevel').textContent = '平放'; $('#dLevel').className = 'dot'; }
+  else if (typeof S.roll === 'number'){ $('#tLevel').textContent = (S.roll >= 0 ? '' : '−') + Math.abs(S.roll).toFixed(1) + '°'; $('#dLevel').className = 'dot' + (Math.abs(S.roll) < 1 ? ' on' : ' mid'); }
+}
+function streetLoop(now){
+  if (S.det && video.readyState >= 2 && video.currentTime !== lastVT){
+    lastVT = video.currentTime;
+    try{ S.dets = readDets(S.det.detectForVideo(video, now), coverMap()); }catch(e){ console.warn(e); }
+    const inside = S.dets.some(d => wants(d) && inStage(d));
+    // 进入舞台的那一刻连拍；同一个人一直站在里面不会重复拍
+    if (S.armed && inside && !S.inZone && now - S.burstAt > 1500) burst();
+    S.inZone = inside;
+  }
+  const j = streetJudge(now);
+  ctx.clearRect(0, 0, W, H);
+  drawGridLevel();
+  drawStreet(j, now);
+  const key = j.text + '|' + j.sub + '|' + j.state;
+  if (key !== lastHint){ lastHint = key; const h = $('#hint'); h.className = j.state === 'ok' ? 'ok' : ''; h.innerHTML = `${j.text}<small>${j.sub}</small>`; }
+  $('#dPerson').className = 'dot' + (S.dets.length ? ' on' : '');
+  $('#tPerson').textContent = S.dets.length ? S.dets.length + ' 个' : '—';
+  updateLevelChip();
+}
+
 /* ---------- 拖动目标框（以后由 AI 来放） ---------- */
 let drag = null;
+let zdrag = null;
 stage.addEventListener('pointerdown', e => {
+  if (S.mode === 'street'){
+    const x = e.clientX / W, y = e.clientY / H, z = S.zone;
+    zdrag = (x > z.x0 && x < z.x1 && y > z.y0 && y < z.y1) ? { mode: 'move', ox: x - z.x0, oy: y - z.y0, w: z.x1 - z.x0, h: z.y1 - z.y0 } : { mode: 'draw', sx: x, sy: y };
+    stage.setPointerCapture(e.pointerId); return;
+  }
   if (!S.target) return;
   const x = e.clientX / W, y = e.clientY / H, t = S.target, R = targetRect(t);
   const inside = x > R.x - .06 && x < R.x + R.w + .06 && y > R.y - .04 && y < R.y + R.hh + .04;
   drag = inside ? { dx: x - t.cx, dy: y - t.top } : { dx: 0, dy: -.1 };
   move(e); stage.setPointerCapture(e.pointerId);
 });
-stage.addEventListener('pointermove', e => { if (drag) move(e); });
-stage.addEventListener('pointerup', () => { drag = null; });
-stage.addEventListener('pointercancel', () => { drag = null; });
+stage.addEventListener('pointermove', e => {
+  if (zdrag){
+    const x = Math.min(1, Math.max(0, e.clientX / W)), y = Math.min(1, Math.max(0, e.clientY / H)), z = S.zone;
+    if (zdrag.mode === 'move'){
+      z.x0 = Math.min(1 - zdrag.w, Math.max(0, x - zdrag.ox)); z.y0 = Math.min(1 - zdrag.h, Math.max(0, y - zdrag.oy));
+      z.x1 = z.x0 + zdrag.w; z.y1 = z.y0 + zdrag.h;
+    } else if (Math.abs(x - zdrag.sx) > .04 || Math.abs(y - zdrag.sy) > .03){
+      z.x0 = Math.min(x, zdrag.sx); z.x1 = Math.max(x, zdrag.sx); z.y0 = Math.min(y, zdrag.sy); z.y1 = Math.max(y, zdrag.sy);
+    }
+    return;
+  }
+  if (drag) move(e);
+});
+stage.addEventListener('pointerup', () => { drag = null; if (zdrag){ const z = S.zone; if (z.x1 - z.x0 < .12) z.x1 = Math.min(1, z.x0 + .12); if (z.y1 - z.y0 < .12) z.y1 = Math.min(1, z.y0 + .12); } zdrag = null; });
+stage.addEventListener('pointercancel', () => { drag = null; zdrag = null; });
 function move(e){
   const t = S.target, R = targetRect(t);
   t.cx = Math.min(1 - R.w/2, Math.max(R.w/2, e.clientX / W - drag.dx));
@@ -721,8 +897,32 @@ $('#segShot').addEventListener('click', e => { const b = e.target.closest('butto
 function tog(id, key){ $(id).addEventListener('click', () => { S[key] = !S[key]; $(id).setAttribute('aria-pressed', String(S[key])); }); }
 tog('#tgGrid', 'grid'); tog('#tgAuto', 'auto'); tog('#tgSkel', 'skel');
 $('#shutter').addEventListener('click', capture);
+document.querySelector('.modes').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  S.mode = b.dataset.v; setSeg('.modes', S.mode);
+  document.querySelectorAll('.pOnly').forEach(el => el.hidden = S.mode !== 'portrait');
+  document.querySelectorAll('.sOnly').forEach(el => el.hidden = S.mode !== 'street');
+  $('#ana').hidden = S.mode !== 'portrait';
+  $('#cFace').hidden = S.mode !== 'portrait';
+  S.armed = false; $('#arm').classList.remove('on'); $('#arm').textContent = '开始等待';
+  lastHint = '';
+  if (S.mode === 'street') loadDet();
+  else if (S.landmarker) $('#tModel').textContent = '就绪';
+  $('#tPerson').previousSibling.textContent = S.mode === 'street' ? '目标 ' : '人物 ';
+});
+$('#segWhat').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.what = b.dataset.v; setSeg('#segWhat', S.what); });
+$('#arm').addEventListener('click', () => {
+  S.armed = !S.armed; S.inZone = true;   // 开始时已经在舞台里的人不算，等下一个走进来
+  $('#arm').classList.toggle('on', S.armed); $('#arm').textContent = S.armed ? '停止等待' : '开始等待';
+  try{ AC && AC.resume(); }catch{}
+});
 $('#flip').addEventListener('click', async () => { S.facing = S.facing === 'user' ? 'environment' : 'user'; S.person = null; try{ await startCamera(); }catch(e){ console.warn(e); } });
-$('#thumb').addEventListener('click', () => { if ($('#thumb').classList.contains('has')) $('#viewer').hidden = false; });
+$('#thumb').addEventListener('click', () => {
+  if (!S.shots.length) return;
+  const g = $('#vgrid'); g.innerHTML = '';
+  S.shots.forEach((u, i) => { const im = new Image(); im.src = u; im.alt = '照片 ' + (i + 1); if (S.shots.length === 1) im.className = 'one'; g.appendChild(im); });
+  $('#viewer').hidden = false;
+});
 $('#vclose').addEventListener('click', () => { $('#viewer').hidden = true; });
 
 /* ---------- 启动：相机、陀螺仪、声音都要用户点一下才给权限 ---------- */
