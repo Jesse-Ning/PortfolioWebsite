@@ -400,7 +400,8 @@ function analyze(){
   if (faceL < 55) kind = 'dark';
   else if (bgL - faceL > 55 && faceL < 120) kind = 'back';
   else if (Math.abs(lL - rL) > 28){ kind = 'side'; dir = lL > rL ? -1 : 1; }   // dir：亮的那一侧（-1 左，1 右）
-  S.light = { kind, dir, face: faceL, bg: bgL, clip: clipR };
+  const kv = vote(hist.light, kind + ':' + dir, 5).split(':');   // 最近 5 次（约 1.5 秒）里最多的那个
+  S.light = { kind: kv[0], dir: +kv[1], face: faceL, bg: bgL, clip: clipR };
 
   // 背景杂乱度 + 头顶竖线：Sobel 边缘
   const G = new Float32Array(L.length), GX = new Float32Array(L.length);
@@ -428,7 +429,9 @@ function analyze(){
       if (r > pole){ pole = r; poleX = (x + .5) / AW; }
     }
   }
-  S.bg = { busy: busy / Math.max(1, nbb), pole, poleX, band: { x0: bx0 / AW, x1: bx1 / AW, y0: by0 / AH, y1: by1 / AH } };
+  const busyV = vote(hist.busy, busy / Math.max(1, nbb) > .2 ? 1 : 0, 5) ? .3 : .1;
+  const poleV = vote(hist.pole, pole > .7 ? 1 : 0, 5) ? Math.max(pole, .75) : Math.min(pole, .5);
+  S.bg = { busy: busyV, pole: poleV, poleX, band: { x0: bx0 / AW, x1: bx1 / AW, y0: by0 / AH, y1: by1 / AH } };
 }
 
 /* ---------- 街拍：物体识别 ---------- */
@@ -537,7 +540,7 @@ function onMotion(e){
   if (flat > .85){ S.roll = 'flat'; return; }       // 手机朝天/朝地平放时，水平线没有意义
   const a = Math.atan2(gx, gy) * 180 / Math.PI;      // iOS 与安卓符号相反，但取「离最近 90° 的偏差」后结果一致
   const dev = a - Math.round(a / 90) * 90;
-  S.roll = S.roll == null || S.roll === 'flat' ? dev : S.roll + (dev - S.roll) * .25;
+  S.roll = S.roll == null || S.roll === 'flat' ? dev : S.roll + (dev - S.roll) * .1;
 }
 
 /* ---------- 人物框 ---------- */
@@ -589,7 +592,7 @@ function judge(){
     if (P[i].v > .4 && y > .955 && y < 1.045) return { text: `画面边缘卡在${name}上`, sub: '避开关节裁切：多留一点，或者裁得更多', state: 'warn' };
   }
   if (S.eyesClosedSince && performance.now() - S.eyesClosedSince > 350) return { text: '闭眼了', sub: '等对方睁眼再拍', state: 'warn' };
-  if (typeof S.roll === 'number' && Math.abs(S.roll) > 3) return { text: S.roll > 0 ? '手机向右歪了' : '手机向左歪了', sub: `歪了 ${Math.abs(S.roll).toFixed(1)}°，对齐中间的水平线`, state: 'warn' };
+  if (typeof S.roll === 'number' && Math.abs(S.roll) > (stab.shown && /歪了/.test(stab.shown.text) ? 2 : 3.5)) return { text: S.roll > 0 ? '手机向右歪了' : '手机向左歪了', sub: `歪了约 ${Math.round(Math.abs(S.roll))}°，对齐中间的水平线`, state: 'warn' };
   const Lt = S.light, B = S.bg;
   if (Lt && Lt.kind === 'back') return { text: '逆光，脸太暗了', sub: '换个方向，让光照到脸上；或者绕到另一边拍', state: 'warn' };
   if (Lt && Lt.kind === 'dark') return { text: '脸太暗了', sub: '让对方面向窗户或灯光', state: 'warn' };
@@ -607,8 +610,9 @@ function judge(){
   else if (p.sw) dh = p.sw / t.sw - 1;
   const dx = p.cx - t.cx, dy = p.top - t.top;
   const ex = Math.abs(dx) / TOL.x, ey = Math.abs(dy) / TOL.y, eh = Math.abs(dh) / TOL.h;
-  const levelOk = typeof S.roll !== 'number' || Math.abs(S.roll) < 1.5;
-  if (ex < 1 && ey < 1 && eh < 1 && levelOk) return { text: '就是现在', sub: tipLine() || '按下快门', state: 'ok' };
+  const levelOk = typeof S.roll !== 'number' || Math.abs(S.roll) < (isOk() ? 2.5 : 1.5);
+  const k = isOk() ? 1.6 : 1;   // 已经对准时放宽，手抖一点不会马上掉出来
+  if (ex < k && ey < k && eh < k && levelOk) return { text: '就是现在', sub: tipLine() || '按下快门', state: 'ok' };
   const worst = Math.max(ex, ey, eh);
   if (worst === eh) return dh < 0 ? { text: '再靠近一点', sub: '人在画面里小了', state: '' } : { text: '后退一点', sub: '人在画面里太大了', state: '' };
   if (worst === ex) return dx > 0 ? { text: '镜头往右移一点', sub: '让人落到白框里', state: '' } : { text: '镜头往左移一点', sub: '让人落到白框里', state: '' };
@@ -645,6 +649,34 @@ function updateChips(){
     setChip('#aEyes', closed ? '眼睛 · 闭着' : '眼睛 · 睁开', closed ? 'bad' : 'good');
   } else { setChip('#aGaze', ''); setChip('#aEyes', ''); }
 }
+
+/* ---------- 防抖：手一抖，判断会来回跳；新提示要持续一会儿才换上去 ---------- */
+const stab = { shown: null, cand: null, since: 0, subAt: 0 };
+const isOk = () => stab.shown && stab.shown.state === 'ok';
+function stable(j, now){
+  if (!stab.shown){ stab.shown = j; stab.subAt = now; return j; }
+  if (j.text === stab.shown.text){
+    stab.cand = null;
+    // 同一句话，小字（比如角度数字）最多半秒更新一次
+    if (j.sub !== stab.shown.sub && now - stab.subAt > 500){ stab.shown = j; stab.subAt = now; }
+    return stab.shown;
+  }
+  if (!stab.cand || stab.cand.text !== j.text){ stab.cand = j; stab.since = now; }
+  // 进入「就是现在」要快一点（0.25 秒），离开它和其他提示之间切换要慢一点
+  const wait = j.state === 'ok' ? 250 : isOk() ? 700 : 600;
+  if (now - stab.since >= wait){ stab.shown = j; stab.cand = null; stab.subAt = now; }
+  return stab.shown;
+}
+function showHint(j){
+  const key = j.text + '|' + j.sub + '|' + j.state;
+  if (key === lastHint) return;
+  lastHint = key;
+  const h = $('#hint'); h.className = j.state === 'ok' ? 'ok' : j.state === 'warn' ? 'warn' : '';
+  h.innerHTML = `${j.text}<small>${j.sub}</small>`;
+}
+// 多数表决：最近几次分析里出现最多的结果
+function vote(arr, v, n){ arr.push(v); if (arr.length > n) arr.shift(); const c = {}; let best = v, bn = 0; for (const x of arr){ c[x] = (c[x] || 0) + 1; if (c[x] > bn){ bn = c[x]; best = x; } } return best; }
+const hist = { light: [], busy: [], pole: [] };
 
 /* ---------- 绘制 ---------- */
 const FONT = getComputedStyle(document.documentElement).getPropertyValue('--f');
@@ -793,7 +825,7 @@ function loop(){
       const r = S.landmarker.detectForVideo(video, now);
       const lm = r.landmarks && r.landmarks[0];
       const box = lm ? personBox(lm, coverMap()) : null;
-      if (box){ S.person = smooth(S.person, box, .35); S.person.P = box.P; S.personSeen = now; }
+      if (box){ S.person = smooth(S.person, box, .18); S.person.P = box.P; S.personSeen = now; }
       else if (now - S.personSeen > 400) S.person = null;
     }catch(e){ console.warn(e); }
   }
@@ -805,7 +837,9 @@ function loop(){
       if (fc){
         S.face = fc; S.faceSeen = now;
         // 视线方向带一点迟滞，避免来回跳
-        if (fc.yaw > .32) S.gaze = 1; else if (fc.yaw < -.32) S.gaze = -1; else if (Math.abs(fc.yaw) < .16) S.gaze = 0;
+        S.yawS = S.yawS == null ? fc.yaw : S.yawS + (fc.yaw - S.yawS) * .15;
+        const y = S.yawS;
+        if (y > .35) S.gaze = 1; else if (y < -.35) S.gaze = -1; else if (Math.abs(y) < .15) S.gaze = 0;
         if (fc.blink > .55){ if (!S.eyesClosedSince) S.eyesClosedSince = now; } else S.eyesClosedSince = 0;
       } else if (now - S.faceSeen > 500){ S.face = null; S.gaze = 0; S.eyesClosedSince = 0; }
     }catch(e){ console.warn(e); }
@@ -817,17 +851,10 @@ function loop(){
     S.autoCx += (goal - S.autoCx) * .08;
     S.target.cx = S.autoCx;
   }
-  const j = judge();
+  const j = stable(judge(), now);
   draw(j);
   updateChips();
-
-  // 顶部文字
-  const key = j.text + '|' + j.sub + '|' + j.state;
-  if (key !== lastHint){
-    lastHint = key;
-    const h = $('#hint'); h.className = j.state === 'ok' ? 'ok' : j.state === 'warn' ? 'warn' : '';
-    h.innerHTML = `${j.text}<small>${j.sub}</small>`;
-  }
+  showHint(j);
   $('#dPerson').className = 'dot' + (S.person ? ' on' : '');
   $('#tPerson').textContent = S.person ? '已识别' : '—';
   updateLevelChip();
@@ -976,7 +1003,7 @@ function landAnalyze(){
   if (hzOK){
     const y = (best.y0 + .5) / LH, a = best.a;
     if (!S.hz || Math.abs(S.hz.y - y) > .08) S.hz = { y, ang: a, seen: performance.now() };
-    else { S.hz.y += (y - S.hz.y) * .4; S.hz.ang += (a - S.hz.ang) * .4; S.hz.seen = performance.now(); }
+    else { S.hz.y += (y - S.hz.y) * .22; S.hz.ang += (a - S.hz.ang) * .22; S.hz.seen = performance.now(); }
   } else if (S.hz && performance.now() - S.hz.seen > 800) S.hz = null;
 
   S.land = { lines: lines.map(l => ({ c: l.c, s: l.s, rho: l.rho })), vp, sym, skyStd, skyClip, skyEdge, LH };
@@ -996,10 +1023,11 @@ function landJudge(){
   if (!Ld) return { text: '对准风景', sub: '正在找地平线、线条和对称', state: '' };
   if (hz){
     // 地平线歪了：画面里看到的，比陀螺仪更准
-    if (Math.abs(hz.ang) > .8) return { text: '地平线歪了 ' + Math.abs(hz.ang).toFixed(1) + '°', sub: hz.ang > 0 ? '手机向右转一点（顺时针）' : '手机向左转一点（逆时针）', state: 'warn' };
+    const tiltTh = stab.shown && /地平线歪了/.test(stab.shown.text) ? .6 : 1.2;
+    if (Math.abs(hz.ang) > tiltTh) return { text: '地平线歪了', sub: '约 ' + (Math.round(Math.abs(hz.ang) * 2) / 2) + '°，' + (hz.ang > 0 ? '手机向右转一点（顺时针）' : '手机向左转一点（逆时针）'), state: 'warn' };
     const goal = hzGoal(), dy = hz.y - goal;
     if (Ld.skyClip > .3) return { text: '天空过曝了', sub: '天上的细节会丢：换个角度，或等云遮一下太阳', state: 'warn' };
-    if (Math.abs(dy) > .045){
+    if (Math.abs(dy) > (isOk() ? .075 : .045)){
       const why = S.sky === 'auto' ? (goal > .5 ? '天空好看，多留一点天空' : '天空比较平淡，多留一点地面') : S.sky === 'mid' ? '对称构图，地平线放中间' : '';
       if (S.sky !== 'mid' && Math.abs(hz.y - .5) < .05) return { text: '地平线在正中间', sub: '画面被切成两半了。' + why, state: '' };
       return dy > 0 ? { text: '镜头往下压一点', sub: '让地平线往上走到虚线。' + why, state: '' } : { text: '镜头往上抬一点', sub: '让地平线往下走到虚线。' + why, state: '' };
@@ -1010,12 +1038,12 @@ function landJudge(){
   if (Ld.vp){
     const pts = [[1/3,1/3],[2/3,1/3],[1/3,2/3],[2/3,2/3],[.5,.5]];
     const near = pts.reduce((b, p) => { const dd = Math.hypot((Ld.vp.x - p[0]) * W / H, Ld.vp.y - p[1]); return dd < b.d ? { d: dd, p } : b; }, { d: 9, p: null });
-    if (near.d < .05) return { text: '就是现在', sub: '线条汇聚的点落在了' + (near.p[0] === .5 ? '画面正中' : '三分点上'), state: 'ok' };
+    if (near.d < (isOk() ? .08 : .05)) return { text: '就是现在', sub: '线条汇聚的点落在了' + (near.p[0] === .5 ? '画面正中' : '三分点上'), state: 'ok' };
     return { text: '线条汇聚到黄色圆点', sub: '移动镜头，把圆点放到三分点或正中间', state: '' };
   }
   if (Ld.sym.score > .55){
     const off = Ld.sym.x - .5;
-    if (Math.abs(off) < .02) return { text: '就是现在', sub: '对称构图，中轴对齐了', state: 'ok' };
+    if (Math.abs(off) < (isOk() ? .035 : .02)) return { text: '就是现在', sub: '对称构图，中轴对齐了', state: 'ok' };
     return { text: '这里适合对称构图', sub: off > 0 ? '镜头往右移一点，让中轴对齐中线' : '镜头往左移一点，让中轴对齐中线', state: '' };
   }
   if (typeof S.roll === 'number' && Math.abs(S.roll) > 1.5) return { text: S.roll > 0 ? '手机向右歪了' : '手机向左歪了', sub: '没找到地平线，先用水平仪放平', state: 'warn' };
@@ -1042,7 +1070,7 @@ function drawLand(j){
   if (hz){
     const ok = j.state === 'ok', t = Math.tan(hz.ang * Math.PI / 180);
     const y0 = hz.y * H - W / 2 * t, y1 = hz.y * H + W / 2 * t;
-    ctx.strokeStyle = ok ? '#5BE38C' : Math.abs(hz.ang) > .8 ? '#FF8A5B' : '#7FD8FF'; ctx.lineWidth = 3;
+    ctx.strokeStyle = ok ? '#5BE38C' : Math.abs(hz.ang) > 1.2 ? '#FF8A5B' : '#7FD8FF'; ctx.lineWidth = 3;
     if (ok){ ctx.shadowColor = '#5BE38C'; ctx.shadowBlur = 18; }
     ctx.beginPath(); ctx.moveTo(0, y0); ctx.lineTo(W, y1); ctx.stroke(); ctx.shadowBlur = 0;
     ctx.fillStyle = ctx.strokeStyle; ctx.font = '600 11px ' + FONT; ctx.fillText('地平线', 10, Math.min(y0, y1) - 8);
@@ -1064,12 +1092,11 @@ function drawLand(j){
 let landOk = false;
 function landLoop(now){
   if (now - lastAna > 220){ lastAna = now; try{ landAnalyze(); }catch(e){ console.warn(e); } }
-  const j = landJudge();
+  const j = stable(landJudge(), now);
   ctx.clearRect(0, 0, W, H);
   drawGridLevel();
   drawLand(j);
-  const key = j.text + '|' + j.sub + '|' + j.state;
-  if (key !== lastHint){ lastHint = key; const h = $('#hint'); h.className = j.state === 'ok' ? 'ok' : j.state === 'warn' ? 'warn' : ''; h.innerHTML = `${j.text}<small>${j.sub}</small>`; }
+  showHint(j);
   const ok = j.state === 'ok';
   $('#shutter').classList.toggle('ready', ok);
   if (ok && !landOk) ding();
@@ -1087,12 +1114,11 @@ function streetLoop(now){
     if (S.armed && inside && !S.inZone && now - S.burstAt > 1500) burst();
     S.inZone = inside;
   }
-  const j = streetJudge(now);
+  const j = stable(streetJudge(now), now);
   ctx.clearRect(0, 0, W, H);
   drawGridLevel();
   drawStreet(j, now);
-  const key = j.text + '|' + j.sub + '|' + j.state;
-  if (key !== lastHint){ lastHint = key; const h = $('#hint'); h.className = j.state === 'ok' ? 'ok' : ''; h.innerHTML = `${j.text}<small>${j.sub}</small>`; }
+  showHint(j);
   $('#dPerson').className = 'dot' + (S.dets.length ? ' on' : '');
   $('#tPerson').textContent = S.dets.length ? S.dets.length + ' 个' : '—';
   updateLevelChip();
