@@ -47,6 +47,11 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 #hint.ok{background:var(--ok);color:#06210F;border-color:transparent;transform:scale(1.06)}
 #hint.ok small{color:#0D3A1C}
 #hint.warn{border-color:var(--warn)}
+#ana{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;max-width:min(94vw,440px)}
+#ana .chip{font-size:11.5px;padding:4px 9px}
+#ana .chip.good{color:#C9F5D8;border-color:rgba(91,227,140,.45)}
+#ana .chip.bad{color:#FFD2C0;border-color:rgba(255,138,91,.6)}
+#ana .chip[hidden]{display:none}
 
 /* 底部：目标选择 + 快门 */
 .bottom{position:fixed;left:0;right:0;bottom:0;padding:0 max(14px,var(--sar)) calc(var(--sab) + 14px) max(14px,var(--sal));display:flex;flex-direction:column;align-items:center;gap:12px;background:linear-gradient(to top,rgba(0,0,0,.55),transparent);padding-top:40px}
@@ -103,8 +108,15 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
     <span class="chip"><span class="dot" id="dPerson"></span>人物 <b id="tPerson">—</b></span>
     <span class="chip"><span class="dot" id="dLevel"></span>水平 <b id="tLevel">—</b></span>
     <span class="chip" id="cModel"><span class="dot mid"></span>识别 <b id="tModel">加载中</b></span>
+    <span class="chip" id="cFace"><span class="dot mid" id="dFace"></span>脸部 <b id="tFace">等待</b></span>
   </div>
   <div id="hint">把人放进画面<small>拖动白色虚线框，设定你想要的构图</small></div>
+  <div id="ana" aria-live="polite">
+    <span class="chip" id="aLight" hidden></span>
+    <span class="chip" id="aBg" hidden></span>
+    <span class="chip" id="aGaze" hidden></span>
+    <span class="chip" id="aEyes" hidden></span>
+  </div>
 </div>
 
 <div class="bottom">
@@ -114,7 +126,8 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
     <button class="tg" id="tgSkel" aria-pressed="false">骨架</button>
   </div>
   <div class="seg" id="segPos" role="group" aria-label="人物位置">
-    <button data-v="L" aria-pressed="true">左三分</button>
+    <button data-v="A" aria-pressed="true">自动</button>
+    <button data-v="L" aria-pressed="false">左三分</button>
     <button data-v="C" aria-pressed="false">居中</button>
     <button data-v="R" aria-pressed="false">右三分</button>
     <button data-v="off" aria-pressed="false">不设</button>
@@ -140,11 +153,12 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
     <div class="tbox"></div>
   </div>
   <h1>取景助手</h1>
-  <p>给人拍照时，画面上会出现一个目标框。手机实时识别人在哪里，告诉你往哪边移、靠近还是后退，对准的那一刻会提示你按快门。</p>
+  <p>给人拍照时，手机实时看着画面：人在哪、往哪看、光从哪来、背景干不干净。它告诉你往哪边移、靠近还是后退，对准的那一刻提示你按快门。全部在手机上运算，画面不会上传。</p>
   <ul>
-    <li><span>01</span>水平仪：手机拿歪了会提示</li>
-    <li><span>02</span>构图：头顶被切、卡在膝盖脚踝处会提醒</li>
-    <li><span>03</span>目标框：选位置和景别，或者直接拖动它</li>
+    <li><span>01</span>构图：头顶被切、卡在关节处、视线前方没留空间</li>
+    <li><span>02</span>光线：顺光、侧光还是逆光，脸是不是太暗</li>
+    <li><span>03</span>背景：头顶有没有「长出」电线杆，背景乱不乱</li>
+    <li><span>04</span>抓拍：闭眼不算，对准了才叮一声</li>
   </ul>
   <div id="err"></div>
   <button id="go">打开相机</button>
@@ -157,7 +171,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 </section>
 
 <script type="module">
-import {FilesetResolver, PoseLandmarker} from './vendor/vision_bundle.mjs';
+import {FilesetResolver, PoseLandmarker, FaceLandmarker} from './vendor/vision_bundle.mjs';
 
 const $ = s => document.querySelector(s);
 const video = $('#video'), ov = $('#ov'), ctx = ov.getContext('2d');
@@ -170,7 +184,15 @@ const S = {
   landmarker: null,
   grid: true, auto: false, skel: false,
   // 目标：屏幕归一化坐标（0–1）。以后由 AI 返回同样结构：{cx, cy, h}
-  pos: 'L', shot: 'full',
+  pos: 'A', shot: 'full',
+  faceLm: null,         // 脸部模型
+  face: null,           // {box, yaw, blink, P}
+  faceSeen: 0,
+  gaze: 0,              // 视线方向：-1 朝画面左，1 朝画面右，0 正面
+  eyesClosedSince: 0,
+  light: null,          // {kind, dir, face, bg, clip}
+  bg: null,             // {busy, pole, poleX, band}
+  autoCx: .5,
   target: null,
   person: null,         // 平滑后的人物框 {cx, cy, h, top, bottom, left, right}
   personSeen: 0,
@@ -183,7 +205,8 @@ const POSX = { L:1/3, C:.5, R:2/3 };
 function presetTarget(){
   if (S.pos === 'off') return null;
   const s = SHOTS[S.shot];
-  return { cx: POSX[S.pos], top: s.top, h: s.h || null, sw: s.sw || null };
+  const cx = S.pos === 'A' ? S.autoCx : POSX[S.pos];
+  return { cx, top: s.top, h: s.h || null, sw: s.sw || null };
 }
 // 目标框在屏幕上的矩形（0–1）
 function targetRect(t){
@@ -245,11 +268,121 @@ async function loadModel(){
     try { S.landmarker = await make('GPU'); } catch { S.landmarker = await make('CPU'); }
     tModel.textContent = '就绪';
     $('#cModel .dot').className = 'dot on';
+    loadFace(files);
   }catch(e){
     console.error(e);
     tModel.textContent = '失败';
     $('#cModel .dot').className = 'dot';
   }
+}
+
+async function loadFace(files){
+  const t = $('#tFace');
+  try{
+    t.textContent = '加载中';
+    const make = delegate => FaceLandmarker.createFromOptions(files, {
+      baseOptions: { modelAssetPath: new URL('./vendor/face_landmarker.task', location.href).href, delegate },
+      runningMode: 'VIDEO', numFaces: 1, outputFaceBlendshapes: true,
+      minFaceDetectionConfidence: .5, minFacePresenceConfidence: .5, minTrackingConfidence: .5,
+    });
+    try { S.faceLm = await make('GPU'); } catch { S.faceLm = await make('CPU'); }
+    t.textContent = '就绪'; $('#dFace').className = 'dot on';
+  }catch(e){ console.error(e); t.textContent = '失败'; $('#dFace').className = 'dot'; }
+}
+
+/* ---------- 脸：朝向（视线方向）和闭眼 ---------- */
+function readFace(r, m){
+  const lm = r.faceLandmarks && r.faceLandmarks[0];
+  if (!lm) return null;
+  const P = lm.map(p => toScreen({ x: p.x, y: p.y, visibility: 1 }, m));
+  let x0 = 1, x1 = 0, y0 = 1, y1 = 0;
+  for (const p of P){ if (p.x < x0) x0 = p.x; if (p.x > x1) x1 = p.x; if (p.y < y0) y0 = p.y; if (p.y > y1) y1 = p.y; }
+  // 朝向：鼻尖相对两颊中点的偏移。屏幕坐标里算，前置镜头的镜像已经处理过
+  const a = P[234], b = P[454], nose = P[1];
+  const mid = (a.x + b.x) / 2, half = Math.abs(b.x - a.x) / 2 || 1e-3;
+  const yaw = (nose.x - mid) / half;            // >0：脸朝画面右边
+  const bs = r.faceBlendshapes && r.faceBlendshapes[0] ? r.faceBlendshapes[0].categories : [];
+  const sc = n => (bs.find(c => c.categoryName === n) || {}).score || 0;
+  const blink = Math.min(sc('eyeBlinkLeft'), sc('eyeBlinkRight'));
+  return { box: { x0, x1, y0, y1 }, yaw, blink, smile: (sc('mouthSmileLeft') + sc('mouthSmileRight')) / 2 };
+}
+
+/* ---------- 画面分析：光线、背景（每 0.3 秒一次，在缩小的画面上算） ---------- */
+const AW = 144; let acv = null, actx = null;
+function analyze(){
+  const p = S.person; if (!p || !video.videoWidth) { S.light = null; S.bg = null; return; }
+  const m = coverMap();
+  const AH = Math.round(AW * H / W);
+  if (!acv){ acv = document.createElement('canvas'); actx = acv.getContext('2d', { willReadFrequently: true }); }
+  if (acv.width !== AW || acv.height !== AH){ acv.width = AW; acv.height = AH; }
+  actx.save();
+  if (S.facing === 'user'){ actx.translate(AW, 0); actx.scale(-1, 1); }
+  actx.drawImage(video, -m.ox / m.s, -m.oy / m.s, W / m.s, H / m.s, 0, 0, AW, AH);
+  actx.restore();
+  const d = actx.getImageData(0, 0, AW, AH).data;
+  const L = new Float32Array(AW * AH);
+  for (let i = 0, j = 0; i < L.length; i++, j += 4) L[i] = .2126 * d[j] + .7152 * d[j + 1] + .0722 * d[j + 2];
+
+  // 脸的区域：优先用脸部模型，没有就用姿态模型的五官点估一个
+  let fb = S.face && S.face.box;
+  if (!fb){
+    const F = p.P.slice(0, 11).filter(q => q.v > .4); if (F.length < 3) { S.light = null; S.bg = null; return; }
+    const xs = F.map(q => q.x), ys = F.map(q => q.y), w = Math.max(...xs) - Math.min(...xs);
+    fb = { x0: Math.min(...xs) - w * .1, x1: Math.max(...xs) + w * .1, y0: Math.min(...ys) - w * .5, y1: Math.max(...ys) + w * .55 };
+  }
+  const fx0 = Math.max(0, Math.floor(fb.x0 * AW)), fx1 = Math.min(AW - 1, Math.ceil(fb.x1 * AW));
+  const fy0 = Math.max(0, Math.floor(fb.y0 * AH)), fy1 = Math.min(AH - 1, Math.ceil(fb.y1 * AH));
+  if (fx1 - fx0 < 3 || fy1 - fy0 < 3){ S.light = null; S.bg = null; return; }
+  // 只取脸中间那块（避开头发和背景），分左右两半
+  const ix0 = Math.round(fx0 + (fx1 - fx0) * .2), ix1 = Math.round(fx1 - (fx1 - fx0) * .2);
+  const iy0 = Math.round(fy0 + (fy1 - fy0) * .3), iy1 = Math.round(fy1 - (fy1 - fy0) * .15);
+  const xm = (ix0 + ix1) / 2;
+  let sl = 0, nl = 0, sr = 0, nr = 0;
+  for (let y = iy0; y <= iy1; y++) for (let x = ix0; x <= ix1; x++){ const v = L[y * AW + x]; if (x < xm){ sl += v; nl++; } else { sr += v; nr++; } }
+  const faceL = (sl + sr) / Math.max(1, nl + nr), lL = sl / Math.max(1, nl), rL = sr / Math.max(1, nr);
+
+  // 背景：人物框以外的像素
+  const px0 = (Math.max(0, p.left) - .04) * AW, px1 = (Math.min(1, p.right) + .04) * AW, py0 = (p.top - .03) * AH;
+  let sb = 0, nb = 0, clip = 0;
+  for (let y = 0; y < AH; y++) for (let x = 0; x < AW; x++){
+    if (x > px0 && x < px1 && y > py0) continue;
+    const v = L[y * AW + x]; sb += v; nb++; if (v > 248) clip++;
+  }
+  const bgL = sb / Math.max(1, nb), clipR = clip / Math.max(1, nb);
+
+  let kind = 'front', dir = 0;
+  if (faceL < 55) kind = 'dark';
+  else if (bgL - faceL > 55 && faceL < 120) kind = 'back';
+  else if (Math.abs(lL - rL) > 28){ kind = 'side'; dir = lL > rL ? -1 : 1; }   // dir：亮的那一侧（-1 左，1 右）
+  S.light = { kind, dir, face: faceL, bg: bgL, clip: clipR };
+
+  // 背景杂乱度 + 头顶竖线：Sobel 边缘
+  const G = new Float32Array(L.length), GX = new Float32Array(L.length);
+  for (let y = 1; y < AH - 1; y++) for (let x = 1; x < AW - 1; x++){
+    const i = y * AW + x;
+    const gx = -L[i - AW - 1] - 2 * L[i - 1] - L[i + AW - 1] + L[i - AW + 1] + 2 * L[i + 1] + L[i + AW + 1];
+    const gy = -L[i - AW - 1] - 2 * L[i - AW] - L[i - AW + 1] + L[i + AW - 1] + 2 * L[i + AW] + L[i + AW + 1];
+    GX[i] = Math.abs(gx); G[i] = Math.hypot(gx, gy);
+  }
+  let busy = 0, nbb = 0;
+  for (let y = 1; y < AH - 1; y++) for (let x = 1; x < AW - 1; x++){
+    if (x > px0 && x < px1 && y > py0) continue;
+    nbb++; if (G[y * AW + x] > 120) busy++;
+  }
+  // 头顶上方的一条窄带：找连续的竖向边缘（电线杆、门框、树干）
+  const fw = fx1 - fx0, fh = fy1 - fy0, cxp = (fx0 + fx1) / 2;
+  const bx0 = Math.max(1, Math.round(cxp - fw * .45)), bx1 = Math.min(AW - 2, Math.round(cxp + fw * .45));
+  const by1 = Math.max(1, Math.round(p.top * AH) - 1), by0 = Math.max(1, Math.round(by1 - fh * 1.1));
+  let pole = 0, poleX = null;
+  if (by1 - by0 >= 4){
+    for (let x = bx0; x <= bx1; x++){
+      let run = 0;
+      for (let y = by0; y <= by1; y++){ const g = Math.max(GX[y * AW + x], GX[y * AW + x - 1], GX[y * AW + x + 1]); if (g > 90) run++; }
+      const r = run / (by1 - by0 + 1);
+      if (r > pole){ pole = r; poleX = (x + .5) / AW; }
+    }
+  }
+  S.bg = { busy: busy / Math.max(1, nbb), pole, poleX, band: { x0: bx0 / AW, x1: bx1 / AW, y0: by0 / AH, y1: by1 / AH } };
 }
 
 /* ---------- 水平仪：用重力方向算相机绕镜头轴的倾斜 ---------- */
@@ -311,14 +444,19 @@ function judge(){
     const y = P[i].y;
     if (P[i].v > .4 && y > .955 && y < 1.045) return { text: `画面边缘卡在${name}上`, sub: '避开关节裁切：多留一点，或者裁得更多', state: 'warn' };
   }
+  if (S.eyesClosedSince && performance.now() - S.eyesClosedSince > 350) return { text: '闭眼了', sub: '等对方睁眼再拍', state: 'warn' };
   if (typeof S.roll === 'number' && Math.abs(S.roll) > 3) return { text: S.roll > 0 ? '手机向右歪了' : '手机向左歪了', sub: `歪了 ${Math.abs(S.roll).toFixed(1)}°，对齐中间的水平线`, state: 'warn' };
+  const Lt = S.light, B = S.bg;
+  if (Lt && Lt.kind === 'back') return { text: '逆光，脸太暗了', sub: '换个方向，让光照到脸上；或者绕到另一边拍', state: 'warn' };
+  if (Lt && Lt.kind === 'dark') return { text: '脸太暗了', sub: '让对方面向窗户或灯光', state: 'warn' };
+  if (B && B.pole > .7) return { text: '头顶「长出」了东西', sub: '背景里有竖线穿过头顶，左右挪一步避开', state: 'warn' };
 
   // 2) 对准目标框
   if (t && t.h){
     const feet = [27,28].some(i => P[i].v > VIS && P[i].y < 1);
     if (!feet) return { text: '后退几步', sub: '全身照要把脚拍进来', state: '' };
   }
-  if (!t) return { text: '构图没问题', sub: '想要更具体的构图，就选一个目标位置', state: 'okish' };
+  if (!t) return { text: '构图没问题', sub: tipLine() || '想要更具体的构图，就选一个目标位置', state: 'okish' };
   // 远近：全身看高度，半身/特写看肩宽
   let dh = 0;
   if (t.h) dh = p.h / t.h - 1;
@@ -326,12 +464,42 @@ function judge(){
   const dx = p.cx - t.cx, dy = p.top - t.top;
   const ex = Math.abs(dx) / TOL.x, ey = Math.abs(dy) / TOL.y, eh = Math.abs(dh) / TOL.h;
   const levelOk = typeof S.roll !== 'number' || Math.abs(S.roll) < 1.5;
-  if (ex < 1 && ey < 1 && eh < 1 && levelOk) return { text: '就是现在', sub: '按下快门', state: 'ok' };
+  if (ex < 1 && ey < 1 && eh < 1 && levelOk) return { text: '就是现在', sub: tipLine() || '按下快门', state: 'ok' };
   const worst = Math.max(ex, ey, eh);
   if (worst === eh) return dh < 0 ? { text: '再靠近一点', sub: '人在画面里小了', state: '' } : { text: '后退一点', sub: '人在画面里太大了', state: '' };
   if (worst === ex) return dx > 0 ? { text: '镜头往右移一点', sub: '让人落到白框里', state: '' } : { text: '镜头往左移一点', sub: '让人落到白框里', state: '' };
   if (!levelOk) return { text: '把手机放平', sub: '对齐中间的水平线', state: '' };
   return dy > 0 ? { text: '镜头往下压一点', sub: '头顶上方空得太多了', state: '' } : { text: '镜头往上抬一点', sub: '头顶离画面边缘太近了', state: '' };
+}
+
+// 对准以后再补一句「锦上添花」的建议（不挡快门）
+function tipLine(){
+  const Lt = S.light, B = S.bg;
+  if (Lt && Lt.kind === 'side') return `侧光从${Lt.dir < 0 ? '左' : '右'}边来，脸有立体感`;
+  if (B && B.busy > .2) return '背景有点乱：走近一点，或让人离背景远一些';
+  if (Lt && Lt.clip > .15) return '背景有大片过曝，可以降低一点亮度';
+  if (S.face && S.face.smile > .5) return '笑得很好，按快门';
+  return '';
+}
+// 分析结果小标签
+function setChip(id, text, cls){
+  const el = $(id);
+  if (!text){ el.hidden = true; return; }
+  el.hidden = false; el.textContent = text; el.className = 'chip' + (cls ? ' ' + cls : '');
+}
+function updateChips(){
+  const Lt = S.light, B = S.bg, p = S.person;
+  if (!p){ ['#aLight','#aBg','#aGaze','#aEyes'].forEach(i => setChip(i, '')); return; }
+  setChip('#aLight', !Lt ? '' : Lt.kind === 'back' ? '光线 · 逆光' : Lt.kind === 'dark' ? '光线 · 太暗' : Lt.kind === 'side' ? `光线 · ${Lt.dir < 0 ? '左' : '右'}侧光` : '光线 · 顺光均匀',
+    !Lt ? '' : (Lt.kind === 'back' || Lt.kind === 'dark') ? 'bad' : 'good');
+  setChip('#aBg', !B ? '' : B.pole > .7 ? '背景 · 头顶有竖线' : B.busy > .2 ? '背景 · 有点乱' : '背景 · 干净',
+    !B ? '' : B.pole > .7 ? 'bad' : B.busy > .2 ? '' : 'good');
+  if (S.face){
+    const g = S.gaze, onSide = g !== 0 && Math.sign(p.cx - .5) === g && Math.abs(p.cx - .5) > .08;
+    setChip('#aGaze', g === 0 ? '视线 · 正面' : `视线 · 朝${g < 0 ? '左' : '右'}${onSide ? '，前方空间不够' : ''}`, onSide ? 'bad' : 'good');
+    const closed = S.eyesClosedSince && performance.now() - S.eyesClosedSince > 350;
+    setChip('#aEyes', closed ? '眼睛 · 闭着' : '眼睛 · 睁开', closed ? 'bad' : 'good');
+  } else { setChip('#aGaze', ''); setChip('#aEyes', ''); }
 }
 
 /* ---------- 绘制 ---------- */
@@ -391,6 +559,7 @@ function draw(j){
         ctx.beginPath(); ctx.arc(ax, ay, 5, 0, Math.PI * 2); ctx.fill();
       }
     }
+    drawAnalysis(p);
     if (S.skel){
       ctx.strokeStyle = 'rgba(91,227,140,.9)'; ctx.lineWidth = 2;
       ctx.beginPath();
@@ -400,6 +569,37 @@ function draw(j){
       for (const q of p.P) if (q.v > VIS){ ctx.beginPath(); ctx.arc(q.x*W, q.y*H, 2.5, 0, Math.PI*2); ctx.fill(); }
     }
   }
+}
+
+function drawAnalysis(p){
+  const f = S.face, Lt = S.light, B = S.bg;
+  ctx.save(); ctx.setLineDash([]); ctx.lineCap = 'round';
+  // 头顶竖线：橙色标出来
+  if (B && B.pole > .7 && B.poleX != null){
+    ctx.strokeStyle = '#FF8A5B'; ctx.lineWidth = 4; ctx.shadowColor = '#FF8A5B'; ctx.shadowBlur = 12;
+    ctx.beginPath(); ctx.moveTo(B.poleX * W, B.band.y0 * H); ctx.lineTo(B.poleX * W, (B.band.y1 + .02) * H); ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+  if (f){
+    const b = f.box, cx = (b.x0 + b.x1) / 2 * W, cy = (b.y0 + b.y1) / 2 * H, fw = (b.x1 - b.x0) * W;
+    // 视线方向：脸前方画一段渐隐的虚线，表示应该留出的空间
+    if (S.gaze !== 0){
+      const len = Math.min(W * .35, fw * 2.4), g = S.gaze;
+      const grad = ctx.createLinearGradient(cx, 0, cx + g * len, 0);
+      grad.addColorStop(0, 'rgba(255,255,255,.85)'); grad.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.strokeStyle = grad; ctx.lineWidth = 2; ctx.setLineDash([3, 6]);
+      ctx.beginPath(); ctx.moveTo(cx + g * fw * .6, cy); ctx.lineTo(cx + g * len, cy); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    // 光线方向：在亮的一侧画一个小太阳，箭头指向脸
+    if (Lt && (Lt.kind === 'side' || Lt.kind === 'back')){
+      const sx = Lt.kind === 'back' ? cx : cx + Lt.dir * fw * 1.15, sy = Lt.kind === 'back' ? b.y0 * H - fw * .55 : cy - fw * .25;
+      ctx.strokeStyle = ctx.fillStyle = Lt.kind === 'back' ? '#FF8A5B' : '#FFD43B'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(sx, sy, 7, 0, Math.PI * 2); ctx.fill();
+      for (let k = 0; k < 8; k++){ const a = k * Math.PI / 4; ctx.beginPath(); ctx.moveTo(sx + Math.cos(a) * 11, sy + Math.sin(a) * 11); ctx.lineTo(sx + Math.cos(a) * 15, sy + Math.sin(a) * 15); ctx.stroke(); }
+    }
+  }
+  ctx.restore();
 }
 
 /* ---------- 反馈：声音 + 震动 ---------- */
@@ -435,7 +635,7 @@ function capture(){
 }
 
 /* ---------- 主循环 ---------- */
-let lastVT = -1, lastHint = '';
+let lastVT = -1, lastHint = '', frameN = 0, lastAna = 0;
 function loop(){
   const now = performance.now();
   if (S.landmarker && video.readyState >= 2 && video.currentTime !== lastVT){
@@ -448,8 +648,29 @@ function loop(){
       else if (now - S.personSeen > 400) S.person = null;
     }catch(e){ console.warn(e); }
   }
+  // 脸部模型隔一帧跑一次，省电
+  if (S.faceLm && video.readyState >= 2 && (frameN++ & 1) === 0){
+    try{
+      const fr = S.faceLm.detectForVideo(video, now + .5);
+      const fc = readFace(fr, coverMap());
+      if (fc){
+        S.face = fc; S.faceSeen = now;
+        // 视线方向带一点迟滞，避免来回跳
+        if (fc.yaw > .32) S.gaze = 1; else if (fc.yaw < -.32) S.gaze = -1; else if (Math.abs(fc.yaw) < .16) S.gaze = 0;
+        if (fc.blink > .55){ if (!S.eyesClosedSince) S.eyesClosedSince = now; } else S.eyesClosedSince = 0;
+      } else if (now - S.faceSeen > 500){ S.face = null; S.gaze = 0; S.eyesClosedSince = 0; }
+    }catch(e){ console.warn(e); }
+  }
+  if (now - lastAna > 300){ lastAna = now; try{ analyze(); }catch(e){ console.warn(e); } }
+  // 自动目标：视线朝哪边，就把人放到另一边，给视线留空间
+  if (S.pos === 'A' && S.target){
+    const goal = S.gaze === 1 ? 1/3 : S.gaze === -1 ? 2/3 : .5;
+    S.autoCx += (goal - S.autoCx) * .08;
+    S.target.cx = S.autoCx;
+  }
   const j = judge();
   draw(j);
+  updateChips();
 
   // 顶部文字
   const key = j.text + '|' + j.sub + '|' + j.state;
@@ -489,6 +710,7 @@ function move(e){
   const t = S.target, R = targetRect(t);
   t.cx = Math.min(1 - R.w/2, Math.max(R.w/2, e.clientX / W - drag.dx));
   t.top = Math.min(t.h ? 1 - t.h : .5, Math.max(.03, e.clientY / H - drag.dy));
+  if (S.pos === 'A') S.pos = 'custom';
   setSeg('#segPos', null);
 }
 
