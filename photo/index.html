@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0B0B0C">
+<title>取景助手</title>
+<style>
+/* 相机界面：深色、单一主题（取景器必须暗底，才不干扰判断曝光）。黄色 = 可交互/对准，与系统相机习惯一致。 */
+:root{
+  color-scheme: dark;
+  --bg:#0B0B0C;
+  --ink:#F5F3EE;
+  --muted:#A9A59C;
+  --glass:rgba(20,20,22,.62);
+  --glass-line:rgba(255,255,255,.12);
+  --accent:#FFD43B;      /* 对准 / 选中 */
+  --ok:#5BE38C;          /* 已对准 */
+  --warn:#FF8A5B;        /* 构图警告 */
+  --target:#FFFFFF;
+  --f:-apple-system,BlinkMacSystemFont,"PingFang SC","HarmonyOS Sans SC","MiSans","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --sat:env(safe-area-inset-top,0px); --sab:env(safe-area-inset-bottom,0px);
+  --sal:env(safe-area-inset-left,0px); --sar:env(safe-area-inset-right,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--f);overflow:hidden;overscroll-behavior:none;-webkit-user-select:none;user-select:none}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+
+#stage{position:fixed;inset:0;overflow:hidden;touch-action:none;background:#000}
+#video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#video.mirror{transform:scaleX(-1)}
+#ov{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .35s ease-out}
+
+/* 顶部：状态 + 提示 */
+.top{position:fixed;left:0;right:0;top:0;padding:calc(var(--sat) + 10px) max(14px,var(--sar)) 0 max(14px,var(--sal));display:flex;flex-direction:column;align-items:center;gap:10px;pointer-events:none}
+.chips{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:99px;background:var(--glass);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1px solid var(--glass-line);font-size:12px;color:var(--muted);white-space:nowrap}
+.chip b{color:var(--ink);font-weight:600;font-family:var(--mono);font-size:11.5px}
+.dot{width:7px;height:7px;border-radius:50%;background:#666}
+.dot.on{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.dot.mid{background:var(--accent)}
+#hint{max-width:min(92vw,420px);padding:11px 18px;border-radius:18px;background:var(--glass);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid var(--glass-line);font-size:17px;font-weight:600;letter-spacing:.02em;text-align:center;line-height:1.35;transition:background .25s,color .25s,transform .25s}
+#hint small{display:block;font-size:12.5px;font-weight:500;color:var(--muted);margin-top:3px;letter-spacing:0}
+#hint.ok{background:var(--ok);color:#06210F;border-color:transparent;transform:scale(1.06)}
+#hint.ok small{color:#0D3A1C}
+#hint.warn{border-color:var(--warn)}
+
+/* 底部：目标选择 + 快门 */
+.bottom{position:fixed;left:0;right:0;bottom:0;padding:0 max(14px,var(--sar)) calc(var(--sab) + 14px) max(14px,var(--sal));display:flex;flex-direction:column;align-items:center;gap:12px;background:linear-gradient(to top,rgba(0,0,0,.55),transparent);padding-top:40px}
+.seg{display:flex;gap:2px;padding:3px;border-radius:99px;background:var(--glass);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1px solid var(--glass-line)}
+.seg button{padding:7px 13px;border-radius:99px;font-size:13px;color:var(--muted);min-height:32px}
+.seg button[aria-pressed="true"]{background:rgba(255,255,255,.14);color:var(--accent);font-weight:600}
+.row{display:flex;align-items:center;justify-content:space-between;width:min(100%,420px)}
+.side{width:64px;height:64px;display:grid;place-items:center}
+#thumb{width:48px;height:48px;border-radius:10px;border:2px solid rgba(255,255,255,.8);background:#222 center/cover no-repeat;opacity:.0;transition:opacity .2s}
+#thumb.has{opacity:1}
+#shutter{width:76px;height:76px;border-radius:50%;border:4px solid #fff;display:grid;place-items:center;transition:transform .12s}
+#shutter::after{content:"";width:60px;height:60px;border-radius:50%;background:#fff;transition:background .2s,transform .12s}
+#shutter:active::after{transform:scale(.88)}
+#shutter.ready{border-color:var(--ok)}
+#shutter.ready::after{background:var(--ok)}
+.ibtn{width:48px;height:48px;border-radius:50%;background:var(--glass);border:1px solid var(--glass-line);display:grid;place-items:center;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.ibtn svg{width:24px;height:24px}
+.toggles{display:flex;gap:6px}
+.tg{padding:6px 11px;border-radius:99px;font-size:12px;background:var(--glass);border:1px solid var(--glass-line);color:var(--muted);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.tg[aria-pressed="true"]{color:var(--accent);border-color:rgba(255,212,59,.45)}
+
+/* 启动页 */
+#intro{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;justify-content:flex-end;gap:18px;padding:calc(var(--sat) + 28px) max(24px,var(--sar)) calc(var(--sab) + 32px) max(24px,var(--sal));background:
+  radial-gradient(120% 70% at 50% 18%, rgba(255,212,59,.16), transparent 60%),
+  var(--bg)}
+#intro .vf{position:absolute;left:50%;top:max(14vh,calc(var(--sat) + 40px));transform:translateX(-50%);width:min(62vw,260px);aspect-ratio:3/4;border-radius:22px;border:1.5px solid rgba(255,255,255,.18);overflow:hidden}
+#intro .vf i{position:absolute;background:rgba(255,255,255,.14)}
+#intro .vf .tbox{position:absolute;left:12%;top:20%;width:30%;height:62%;border:2px dashed var(--accent);border-radius:12px;animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35}}
+#intro h1{margin:0;font-size:34px;letter-spacing:.02em;font-weight:800;text-wrap:balance}
+#intro p{margin:0;color:var(--muted);font-size:15px;line-height:1.65;max-width:34em}
+#intro ul{margin:0;padding:0;list-style:none;display:grid;gap:8px;font-size:14px;color:var(--ink)}
+#intro li{display:flex;gap:10px;align-items:baseline}
+#intro li span{color:var(--accent);font-family:var(--mono);font-size:12px}
+#go{margin-top:6px;height:54px;border-radius:16px;background:var(--accent);color:#1A1500;font-weight:700;font-size:17px}
+#err{color:var(--warn);font-size:13px;min-height:1em}
+
+/* 照片预览 */
+#viewer{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:calc(var(--sat) + 16px) max(16px,var(--sar)) calc(var(--sab) + 16px) max(16px,var(--sal))}
+#viewer img{max-width:100%;max-height:78vh;border-radius:12px;-webkit-user-select:auto;user-select:auto;-webkit-touch-callout:default}
+#viewer p{margin:0;color:var(--muted);font-size:13px}
+#viewer button{padding:10px 22px;border-radius:99px;background:rgba(255,255,255,.12);font-size:15px}
+</style>
+</head>
+<body>
+<div id="stage">
+  <video id="video" playsinline muted autoplay></video>
+  <canvas id="ov"></canvas>
+  <div id="flash"></div>
+</div>
+
+<div class="top">
+  <div class="chips">
+    <span class="chip"><span class="dot" id="dPerson"></span>人物 <b id="tPerson">—</b></span>
+    <span class="chip"><span class="dot" id="dLevel"></span>水平 <b id="tLevel">—</b></span>
+    <span class="chip" id="cModel"><span class="dot mid"></span>识别 <b id="tModel">加载中</b></span>
+  </div>
+  <div id="hint">把人放进画面<small>拖动白色虚线框，设定你想要的构图</small></div>
+</div>
+
+<div class="bottom">
+  <div class="toggles">
+    <button class="tg" id="tgGrid" aria-pressed="true">三分线</button>
+    <button class="tg" id="tgAuto" aria-pressed="false">对准自动拍</button>
+    <button class="tg" id="tgSkel" aria-pressed="false">骨架</button>
+  </div>
+  <div class="seg" id="segPos" role="group" aria-label="人物位置">
+    <button data-v="L" aria-pressed="true">左三分</button>
+    <button data-v="C" aria-pressed="false">居中</button>
+    <button data-v="R" aria-pressed="false">右三分</button>
+    <button data-v="off" aria-pressed="false">不设</button>
+  </div>
+  <div class="seg" id="segShot" role="group" aria-label="景别">
+    <button data-v="full" aria-pressed="true">全身</button>
+    <button data-v="half" aria-pressed="false">半身</button>
+    <button data-v="close" aria-pressed="false">特写</button>
+  </div>
+  <div class="row">
+    <div class="side"><button id="thumb" aria-label="查看刚拍的照片"></button></div>
+    <button id="shutter" aria-label="拍照"></button>
+    <div class="side"><button class="ibtn" id="flip" aria-label="切换前后镜头">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9a8 8 0 0 1 14.5-3.5L20 7"/><path d="M20 3v4h-4"/><path d="M20 15a8 8 0 0 1-14.5 3.5L4 17"/><path d="M4 21v-4h4"/></svg>
+    </button></div>
+  </div>
+</div>
+
+<section id="intro">
+  <div class="vf" aria-hidden="true">
+    <i style="left:33.3%;top:0;bottom:0;width:1px"></i><i style="left:66.6%;top:0;bottom:0;width:1px"></i>
+    <i style="top:33.3%;left:0;right:0;height:1px"></i><i style="top:66.6%;left:0;right:0;height:1px"></i>
+    <div class="tbox"></div>
+  </div>
+  <h1>取景助手</h1>
+  <p>给人拍照时，画面上会出现一个目标框。手机实时识别人在哪里，告诉你往哪边移、靠近还是后退，对准的那一刻会提示你按快门。</p>
+  <ul>
+    <li><span>01</span>水平仪：手机拿歪了会提示</li>
+    <li><span>02</span>构图：头顶被切、卡在膝盖脚踝处会提醒</li>
+    <li><span>03</span>目标框：选位置和景别，或者直接拖动它</li>
+  </ul>
+  <div id="err"></div>
+  <button id="go">打开相机</button>
+</section>
+
+<section id="viewer" hidden>
+  <img id="vimg" alt="刚拍的照片">
+  <p>长按图片可以保存到相册</p>
+  <button id="vclose">返回取景</button>
+</section>
+
+<script type="module">
+import {FilesetResolver, PoseLandmarker} from './vendor/vision_bundle.mjs';
+
+const $ = s => document.querySelector(s);
+const video = $('#video'), ov = $('#ov'), ctx = ov.getContext('2d');
+const stage = $('#stage');
+
+/* ---------- 状态 ---------- */
+const S = {
+  facing: 'environment',
+  stream: null,
+  landmarker: null,
+  grid: true, auto: false, skel: false,
+  // 目标：屏幕归一化坐标（0–1）。以后由 AI 返回同样结构：{cx, cy, h}
+  pos: 'L', shot: 'full',
+  target: null,
+  person: null,         // 平滑后的人物框 {cx, cy, h, top, bottom, left, right}
+  personSeen: 0,
+  roll: null,           // 相对水平的偏差（度），null = 没有传感器
+  matchSince: 0, matched: false, lastCapture: 0,
+};
+// 全身：用人物高度判断远近；半身/特写：下半身在画外，用肩宽判断远近，用头顶位置判断上下
+const SHOTS = { full:{top:.15, h:.74}, half:{top:.12, sw:.42}, close:{top:.14, sw:.64} };
+const POSX = { L:1/3, C:.5, R:2/3 };
+function presetTarget(){
+  if (S.pos === 'off') return null;
+  const s = SHOTS[S.shot];
+  return { cx: POSX[S.pos], top: s.top, h: s.h || null, sw: s.sw || null };
+}
+// 目标框在屏幕上的矩形（0–1）
+function targetRect(t){
+  if (t.h){ const w = t.h * .30 * H / W; return { x: t.cx - w/2, y: t.top, w, hh: t.h }; }
+  const w = Math.min(1, t.sw * 1.25); return { x: t.cx - w/2, y: t.top, w, hh: 1.02 - t.top };
+}
+S.target = presetTarget();
+
+/* ---------- 画布尺寸与坐标映射（object-fit: cover） ---------- */
+let W = 0, H = 0, DPR = 1;
+function resize(){
+  DPR = Math.min(devicePixelRatio || 1, 2);
+  W = stage.clientWidth; H = stage.clientHeight;
+  ov.width = W * DPR; ov.height = H * DPR;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+}
+addEventListener('resize', resize); resize();
+function coverMap(){
+  const vw = video.videoWidth || 1, vh = video.videoHeight || 1;
+  const s = Math.max(W / vw, H / vh);
+  return { s, dw: vw * s, dh: vh * s, ox: (W - vw * s) / 2, oy: (H - vh * s) / 2, vw, vh };
+}
+// 识别结果是相对视频帧的 0–1 坐标，转成相对屏幕的 0–1 坐标
+function toScreen(p, m){
+  let x = (m.ox + p.x * m.dw) / W;
+  const y = (m.oy + p.y * m.dh) / H;
+  if (S.facing === 'user') x = 1 - x;
+  return { x, y, v: p.visibility ?? 1 };
+}
+
+/* ---------- 相机 ---------- */
+async function startCamera(){
+  if (S.stream) S.stream.getTracks().forEach(t => t.stop());
+  const s = await navigator.mediaDevices.getUserMedia({
+    audio: false,
+    video: { facingMode: { ideal: S.facing }, width: { ideal: 1920 }, height: { ideal: 1080 } }
+  });
+  S.stream = s; video.srcObject = s;
+  video.classList.toggle('mirror', S.facing === 'user');
+  await video.play().catch(()=>{});
+}
+
+/* ---------- 识别模型（全部从本站加载，不依赖外网） ---------- */
+async function loadModel(){
+  const tModel = $('#tModel');
+  try{
+    const res = await fetch('./vendor/pose_landmarker_lite.task');
+    const total = +res.headers.get('content-length') || 5777746;
+    const reader = res.body.getReader(); const parts = []; let got = 0;
+    for(;;){ const {done, value} = await reader.read(); if (done) break; parts.push(value); got += value.length; tModel.textContent = Math.min(99, Math.round(got / total * 100)) + '%'; }
+    const buf = new Uint8Array(got); let o = 0; for (const p of parts){ buf.set(p, o); o += p.length; }
+    tModel.textContent = '启动中';
+    const files = await FilesetResolver.forVisionTasks(new URL('./vendor/wasm', location.href).href);
+    const make = delegate => PoseLandmarker.createFromOptions(files, {
+      baseOptions: { modelAssetBuffer: buf, delegate },
+      runningMode: 'VIDEO', numPoses: 1,
+      minPoseDetectionConfidence: .5, minPosePresenceConfidence: .5, minTrackingConfidence: .5,
+    });
+    try { S.landmarker = await make('GPU'); } catch { S.landmarker = await make('CPU'); }
+    tModel.textContent = '就绪';
+    $('#cModel .dot').className = 'dot on';
+  }catch(e){
+    console.error(e);
+    tModel.textContent = '失败';
+    $('#cModel .dot').className = 'dot';
+  }
+}
+
+/* ---------- 水平仪：用重力方向算相机绕镜头轴的倾斜 ---------- */
+function onMotion(e){
+  const g = e.accelerationIncludingGravity; if (!g || g.x == null) return;
+  const gx = g.x, gy = g.y, gz = g.z || 0;
+  const flat = Math.abs(gz) / Math.hypot(gx, gy, gz || 1e-6);
+  if (flat > .85){ S.roll = 'flat'; return; }       // 手机朝天/朝地平放时，水平线没有意义
+  const a = Math.atan2(gx, gy) * 180 / Math.PI;      // iOS 与安卓符号相反，但取「离最近 90° 的偏差」后结果一致
+  const dev = a - Math.round(a / 90) * 90;
+  S.roll = S.roll == null || S.roll === 'flat' ? dev : S.roll + (dev - S.roll) * .25;
+}
+
+/* ---------- 人物框 ---------- */
+const VIS = .55;
+function personBox(lm, m){
+  const P = lm.map(p => toScreen(p, m));
+  // 手腕和手指不算进人物框：手一挥，框就乱跳
+  const vis = P.filter((p, i) => (i < 15 || i > 22) && p.v > VIS && p.x > -.02 && p.x < 1.02 && p.y > -.3 && p.y < 1.02);
+  if (vis.length < 5) return null;
+  let top = Math.min(...vis.map(p => p.y)), bottom = Math.max(...vis.map(p => p.y));
+  let left = Math.min(...vis.map(p => p.x)), right = Math.max(...vis.map(p => p.x));
+  // 头顶：识别点只到眼睛和额头附近，按「眼到嘴」的距离往上推估头顶
+  const eye = (P[2].y + P[5].y) / 2, mouth = (P[9].y + P[10].y) / 2;
+  if (P[0].v > VIS && mouth > eye){ top = Math.min(top, eye - (mouth - eye) * 2.2); }
+  const bottomCut = bottom > 1.0 || [25,26,27,28,29,30,31,32].every(i => P[i].v < VIS);
+  if (bottomCut) bottom = Math.min(Math.max(bottom, 1), 1);
+  // 肩宽（屏幕宽度的比例）；肩膀不在画面里时，用两耳间距 × 2.7 估算
+  let sw = null;
+  if (P[11].v > VIS && P[12].v > VIS && P[11].x > 0 && P[11].x < 1 && P[12].x > 0 && P[12].x < 1) sw = Math.abs(P[11].x - P[12].x);
+  else if (P[7].v > VIS && P[8].v > VIS) sw = Math.abs(P[7].x - P[8].x) * 2.7;
+  left = Math.max(0, left); right = Math.min(1, right);
+  // 水平中心：优先用脸（0–10 号点），其次用肩膀中点，比外框稳定
+  const face = P.slice(0, 11).filter(p => p.v > .3);
+  const cx = face.length >= 3 ? face.reduce((a, p) => a + p.x, 0) / face.length
+           : (P[11].v > .3 && P[12].v > .3) ? (P[11].x + P[12].x) / 2 : (left + right) / 2;
+  return { P, top, bottom, left, right, cx, cy: (top + bottom) / 2, h: bottom - top, sw };
+}
+function smooth(prev, next, k){
+  if (!prev) return next;
+  const o = { ...next };
+  for (const key of ['top','bottom','left','right','cx','cy','h','sw']) if (prev[key] != null && next[key] != null) o[key] = prev[key] + (next[key] - prev[key]) * k;
+  return o;
+}
+
+/* ---------- 构图判断 → 一句提示 ---------- */
+const TOL = { x: .05, y: .05, h: .12 };
+function judge(){
+  const p = S.person, t = S.target;
+  if (!S.landmarker) return { text: '识别模型加载中…', sub: '先熟悉一下目标框，可以拖动它', state: '' };
+  if (!p) return { text: '把人放进画面', sub: t ? '人物出现后，会告诉你怎么对准白框' : '人物出现后，会检查构图', state: '' };
+
+  // 1) 构图硬伤优先
+  const P = p.P;
+  const headCut = P[0].v > VIS && p.top < -0.005;
+  if (headCut) return { text: '头顶被切掉了', sub: '镜头往上抬一点，或者后退一步', state: 'warn' };
+  const joints = [[25,'膝盖'],[26,'膝盖'],[27,'脚踝'],[28,'脚踝']];
+  for (const [i, name] of joints){
+    const y = P[i].y;
+    if (P[i].v > .4 && y > .955 && y < 1.045) return { text: `画面边缘卡在${name}上`, sub: '避开关节裁切：多留一点，或者裁得更多', state: 'warn' };
+  }
+  if (typeof S.roll === 'number' && Math.abs(S.roll) > 3) return { text: S.roll > 0 ? '手机向右歪了' : '手机向左歪了', sub: `歪了 ${Math.abs(S.roll).toFixed(1)}°，对齐中间的水平线`, state: 'warn' };
+
+  // 2) 对准目标框
+  if (t && t.h){
+    const feet = [27,28].some(i => P[i].v > VIS && P[i].y < 1);
+    if (!feet) return { text: '后退几步', sub: '全身照要把脚拍进来', state: '' };
+  }
+  if (!t) return { text: '构图没问题', sub: '想要更具体的构图，就选一个目标位置', state: 'okish' };
+  // 远近：全身看高度，半身/特写看肩宽
+  let dh = 0;
+  if (t.h) dh = p.h / t.h - 1;
+  else if (p.sw) dh = p.sw / t.sw - 1;
+  const dx = p.cx - t.cx, dy = p.top - t.top;
+  const ex = Math.abs(dx) / TOL.x, ey = Math.abs(dy) / TOL.y, eh = Math.abs(dh) / TOL.h;
+  const levelOk = typeof S.roll !== 'number' || Math.abs(S.roll) < 1.5;
+  if (ex < 1 && ey < 1 && eh < 1 && levelOk) return { text: '就是现在', sub: '按下快门', state: 'ok' };
+  const worst = Math.max(ex, ey, eh);
+  if (worst === eh) return dh < 0 ? { text: '再靠近一点', sub: '人在画面里小了', state: '' } : { text: '后退一点', sub: '人在画面里太大了', state: '' };
+  if (worst === ex) return dx > 0 ? { text: '镜头往右移一点', sub: '让人落到白框里', state: '' } : { text: '镜头往左移一点', sub: '让人落到白框里', state: '' };
+  if (!levelOk) return { text: '把手机放平', sub: '对齐中间的水平线', state: '' };
+  return dy > 0 ? { text: '镜头往下压一点', sub: '头顶上方空得太多了', state: '' } : { text: '镜头往上抬一点', sub: '头顶离画面边缘太近了', state: '' };
+}
+
+/* ---------- 绘制 ---------- */
+const FONT = getComputedStyle(document.documentElement).getPropertyValue('--f');
+const BONES = [[11,12],[11,13],[13,15],[12,14],[14,16],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28],[27,31],[28,32]];
+function rr(x, y, w, h, r){ ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h); }
+function draw(j){
+  ctx.clearRect(0, 0, W, H);
+  // 三分线
+  if (S.grid){
+    ctx.strokeStyle = 'rgba(255,255,255,.28)'; ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (const f of [1/3, 2/3]){ ctx.moveTo(W*f, 0); ctx.lineTo(W*f, H); ctx.moveTo(0, H*f); ctx.lineTo(W, H*f); }
+    ctx.stroke();
+  }
+  // 水平仪：系统相机式，中间一条线，对准变黄
+  if (typeof S.roll === 'number'){
+    const lv = Math.abs(S.roll) < 1;
+    ctx.save(); ctx.translate(W/2, H/2);
+    ctx.strokeStyle = lv ? '#FFD43B' : 'rgba(255,255,255,.9)'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(-70, 0); ctx.lineTo(-34, 0); ctx.moveTo(34, 0); ctx.lineTo(70, 0); ctx.stroke();
+    if (!lv){ ctx.rotate(S.roll * Math.PI / 180); ctx.beginPath(); ctx.moveTo(-30, 0); ctx.lineTo(30, 0); ctx.stroke(); }
+    else { ctx.beginPath(); ctx.moveTo(-30, 0); ctx.lineTo(30, 0); ctx.stroke(); }
+    ctx.restore();
+  }
+  // 目标框
+  const t = S.target, p = S.person;
+  if (t){
+    const R = targetRect(t);
+    const tw = R.w * W, th = R.hh * H, x = R.x * W, y = R.y * H;
+    const ok = j.state === 'ok';
+    ctx.save();
+    ctx.setLineDash(ok ? [] : [10, 8]); ctx.lineWidth = ok ? 3.5 : 2;
+    ctx.strokeStyle = ok ? '#5BE38C' : 'rgba(255,255,255,.95)';
+    if (ok){ ctx.shadowColor = '#5BE38C'; ctx.shadowBlur = 24; }
+    rr(x, y, tw, th, 14); ctx.stroke();
+    ctx.restore();
+    // 角标：拖动提示
+    ctx.fillStyle = ok ? '#5BE38C' : 'rgba(255,255,255,.95)';
+    ctx.font = '600 11px ' + FONT;
+    ctx.fillText('目标', x + 8, y + 18);
+  }
+  if (p){
+    // 人物框（细黄线）
+    ctx.strokeStyle = 'rgba(255,212,59,.85)'; ctx.lineWidth = 1.5; ctx.setLineDash([]);
+    const pw = Math.max(p.right - p.left, p.h * .3);
+    rr((p.cx - pw/2) * W, p.top * H, pw * W, p.h * H, 10); ctx.stroke();
+    // 箭头：人物中心 → 目标中心
+    if (t && j.state !== 'ok'){
+      const ax = p.cx * W, ay = p.top * H + 40, bx = t.cx * W, by = t.top * H + 40;
+      const d = Math.hypot(bx - ax, by - ay);
+      if (d > 18){
+        ctx.strokeStyle = '#FFD43B'; ctx.fillStyle = '#FFD43B'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+        const ux = (bx - ax) / d, uy = (by - ay) / d, ex = bx - ux * 10, ey = by - uy * 10;
+        ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(ex, ey); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(ex - uy * 7 - ux * 6, ey + ux * 7 - uy * 6); ctx.lineTo(ex + uy * 7 - ux * 6, ey - ux * 7 - uy * 6); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.arc(ax, ay, 5, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+    if (S.skel){
+      ctx.strokeStyle = 'rgba(91,227,140,.9)'; ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (const [a, b] of BONES){ const A = p.P[a], B = p.P[b]; if (A.v > VIS && B.v > VIS && A.y < 1.02 && B.y < 1.02){ ctx.moveTo(A.x*W, A.y*H); ctx.lineTo(B.x*W, B.y*H); } }
+      ctx.stroke();
+      ctx.fillStyle = '#fff';
+      for (const q of p.P) if (q.v > VIS){ ctx.beginPath(); ctx.arc(q.x*W, q.y*H, 2.5, 0, Math.PI*2); ctx.fill(); }
+    }
+  }
+}
+
+/* ---------- 反馈：声音 + 震动 ---------- */
+let AC = null;
+function ding(){
+  try{
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    const t0 = AC.currentTime;
+    for (const [f, d] of [[1318.5, 0], [1760, .09]]){
+      const o = AC.createOscillator(), g = AC.createGain();
+      o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0, t0 + d); g.gain.linearRampToValueAtTime(.18, t0 + d + .01); g.gain.exponentialRampToValueAtTime(.001, t0 + d + .35);
+      o.connect(g).connect(AC.destination); o.start(t0 + d); o.stop(t0 + d + .4);
+    }
+  }catch{}
+  navigator.vibrate?.(25);
+}
+
+/* ---------- 拍照：所见即所得，按屏幕上看到的范围裁切 ---------- */
+function capture(){
+  if (!video.videoWidth) return;
+  const m = coverMap();
+  const sx = -m.ox / m.s, sy = -m.oy / m.s, sw = W / m.s, sh = H / m.s;
+  const c = document.createElement('canvas'); c.width = Math.round(sw); c.height = Math.round(sh);
+  const g = c.getContext('2d');
+  if (S.facing === 'user'){ g.translate(c.width, 0); g.scale(-1, 1); }
+  g.drawImage(video, sx, sy, sw, sh, 0, 0, c.width, c.height);
+  const url = c.toDataURL('image/jpeg', .92);
+  $('#vimg').src = url;
+  const th = $('#thumb'); th.style.backgroundImage = `url(${url})`; th.classList.add('has');
+  const f = $('#flash'); f.style.transition = 'none'; f.style.opacity = .85; requestAnimationFrame(() => { f.style.transition = ''; f.style.opacity = 0; });
+  S.lastCapture = performance.now();
+}
+
+/* ---------- 主循环 ---------- */
+let lastVT = -1, lastHint = '';
+function loop(){
+  const now = performance.now();
+  if (S.landmarker && video.readyState >= 2 && video.currentTime !== lastVT){
+    lastVT = video.currentTime;
+    try{
+      const r = S.landmarker.detectForVideo(video, now);
+      const lm = r.landmarks && r.landmarks[0];
+      const box = lm ? personBox(lm, coverMap()) : null;
+      if (box){ S.person = smooth(S.person, box, .35); S.person.P = box.P; S.personSeen = now; }
+      else if (now - S.personSeen > 400) S.person = null;
+    }catch(e){ console.warn(e); }
+  }
+  const j = judge();
+  draw(j);
+
+  // 顶部文字
+  const key = j.text + '|' + j.sub + '|' + j.state;
+  if (key !== lastHint){
+    lastHint = key;
+    const h = $('#hint'); h.className = j.state === 'ok' ? 'ok' : j.state === 'warn' ? 'warn' : '';
+    h.innerHTML = `${j.text}<small>${j.sub}</small>`;
+  }
+  $('#dPerson').className = 'dot' + (S.person ? ' on' : '');
+  $('#tPerson').textContent = S.person ? '已识别' : '—';
+  if (S.roll === 'flat'){ $('#tLevel').textContent = '平放'; $('#dLevel').className = 'dot'; }
+  else if (typeof S.roll === 'number'){ $('#tLevel').textContent = (S.roll >= 0 ? '' : '−') + Math.abs(S.roll).toFixed(1) + '°'; $('#dLevel').className = 'dot' + (Math.abs(S.roll) < 1 ? ' on' : ' mid'); }
+
+  // 对准：叮一声；开了自动拍就保持 0.5 秒后自动按快门
+  const ok = j.state === 'ok';
+  $('#shutter').classList.toggle('ready', ok);
+  if (ok && !S.matched){ S.matched = true; S.matchSince = now; ding(); }
+  if (!ok) S.matched = false;
+  if (ok && S.auto && now - S.matchSince > 500 && now - S.lastCapture > 2500) capture();
+
+  requestAnimationFrame(loop);
+}
+
+/* ---------- 拖动目标框（以后由 AI 来放） ---------- */
+let drag = null;
+stage.addEventListener('pointerdown', e => {
+  if (!S.target) return;
+  const x = e.clientX / W, y = e.clientY / H, t = S.target, R = targetRect(t);
+  const inside = x > R.x - .06 && x < R.x + R.w + .06 && y > R.y - .04 && y < R.y + R.hh + .04;
+  drag = inside ? { dx: x - t.cx, dy: y - t.top } : { dx: 0, dy: -.1 };
+  move(e); stage.setPointerCapture(e.pointerId);
+});
+stage.addEventListener('pointermove', e => { if (drag) move(e); });
+stage.addEventListener('pointerup', () => { drag = null; });
+stage.addEventListener('pointercancel', () => { drag = null; });
+function move(e){
+  const t = S.target, R = targetRect(t);
+  t.cx = Math.min(1 - R.w/2, Math.max(R.w/2, e.clientX / W - drag.dx));
+  t.top = Math.min(t.h ? 1 - t.h : .5, Math.max(.03, e.clientY / H - drag.dy));
+  setSeg('#segPos', null);
+}
+
+/* ---------- 控件 ---------- */
+function setSeg(sel, v){ document.querySelectorAll(sel + ' button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === v))); }
+$('#segPos').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.pos = b.dataset.v; setSeg('#segPos', S.pos); S.target = presetTarget(); });
+$('#segShot').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.shot = b.dataset.v; setSeg('#segShot', S.shot); if (S.pos === 'off') return; const keep = S.target; S.target = presetTarget(); if (keep && !document.querySelector('#segPos [aria-pressed="true"]')) S.target.cx = keep.cx; S.target.cx = Math.min(1 - targetRect(S.target).w/2, Math.max(targetRect(S.target).w/2, S.target.cx)); });
+function tog(id, key){ $(id).addEventListener('click', () => { S[key] = !S[key]; $(id).setAttribute('aria-pressed', String(S[key])); }); }
+tog('#tgGrid', 'grid'); tog('#tgAuto', 'auto'); tog('#tgSkel', 'skel');
+$('#shutter').addEventListener('click', capture);
+$('#flip').addEventListener('click', async () => { S.facing = S.facing === 'user' ? 'environment' : 'user'; S.person = null; try{ await startCamera(); }catch(e){ console.warn(e); } });
+$('#thumb').addEventListener('click', () => { if ($('#thumb').classList.contains('has')) $('#viewer').hidden = false; });
+$('#vclose').addEventListener('click', () => { $('#viewer').hidden = true; });
+
+/* ---------- 启动：相机、陀螺仪、声音都要用户点一下才给权限 ---------- */
+$('#go').addEventListener('click', async () => {
+  $('#err').textContent = '';
+  try{
+    AC = new (window.AudioContext || window.webkitAudioContext)(); AC.resume?.();
+  }catch{}
+  try{
+    if (typeof DeviceMotionEvent !== 'undefined' && DeviceMotionEvent.requestPermission){
+      const r = await DeviceMotionEvent.requestPermission().catch(() => 'denied');
+      if (r === 'granted') addEventListener('devicemotion', onMotion);
+    } else addEventListener('devicemotion', onMotion);
+  }catch{}
+  try{
+    await startCamera();
+  }catch(e){
+    $('#err').textContent = location.protocol !== 'https:' && location.hostname !== 'localhost'
+      ? '需要 https 网址才能打开相机。'
+      : '打不开相机：请在浏览器设置里允许这个网站使用相机，然后刷新。';
+    return;
+  }
+  $('#intro').hidden = true;
+  loadModel();
+  requestAnimationFrame(loop);
+});
+</script>
+</body>
+</html>
