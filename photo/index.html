@@ -143,6 +143,12 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
     <button data-v="any" aria-pressed="false">都行</button>
   </div>
   <button id="arm" class="sOnly" hidden>开始等待</button>
+  <div class="seg lOnly" id="segSky" role="group" aria-label="地平线位置" hidden>
+    <button data-v="auto" aria-pressed="true">自动</button>
+    <button data-v="sky" aria-pressed="false">多留天空</button>
+    <button data-v="ground" aria-pressed="false">多留地面</button>
+    <button data-v="mid" aria-pressed="false">居中对称</button>
+  </div>
   <div class="seg pOnly" id="segPos" role="group" aria-label="人物位置">
     <button data-v="A" aria-pressed="true">自动</button>
     <button data-v="L" aria-pressed="false">左三分</button>
@@ -158,6 +164,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
   <div class="modes" role="group" aria-label="拍摄模式">
     <button data-v="portrait" aria-pressed="true">人像</button>
     <button data-v="street" aria-pressed="false">街拍</button>
+    <button data-v="land" aria-pressed="false">风景</button>
   </div>
   <div class="row">
     <div class="side"><button id="thumb" aria-label="查看刚拍的照片"></button></div>
@@ -182,6 +189,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
     <li><span>03</span>背景：头顶有没有「长出」电线杆，背景乱不乱</li>
     <li><span>04</span>抓拍：闭眼不算，对准了才叮一声</li>
     <li><span>05</span>街拍：框出一个「舞台」，等路人走进去自动连拍</li>
+    <li><span>06</span>风景：找地平线、引导线和对称，告诉你怎么放</li>
   </ul>
   <div id="err"></div>
   <button id="go">打开相机</button>
@@ -224,6 +232,9 @@ const S = {
   what: 'person',
   armed: false, burstAt: 0, caught: 0, inZone: false,
   shots: [],
+  sky: 'auto',
+  land: null,           // 风景分析结果
+  hz: null,             // 平滑后的地平线 {y, ang, conf}
   target: null,
   person: null,         // 平滑后的人物框 {cx, cy, h, top, bottom, left, right}
   personSeen: 0,
@@ -245,6 +256,8 @@ function targetRect(t){
   const w = Math.min(1, t.sw * 1.25); return { x: t.cx - w/2, y: t.top, w, hh: 1.02 - t.top };
 }
 S.target = presetTarget();
+
+window.__photo = S;   // 调试用
 
 /* ---------- 画布尺寸与坐标映射（object-fit: cover） ---------- */
 let W = 0, H = 0, DPR = 1;
@@ -773,6 +786,7 @@ let lastVT = -1, lastHint = '', frameN = 0, lastAna = 0;
 function loop(){
   const now = performance.now();
   if (S.mode === 'street'){ streetLoop(now); requestAnimationFrame(loop); return; }
+  if (S.mode === 'land'){ landLoop(now); requestAnimationFrame(loop); return; }
   if (S.landmarker && video.readyState >= 2 && video.currentTime !== lastVT){
     lastVT = video.currentTime;
     try{
@@ -832,6 +846,238 @@ function updateLevelChip(){
   if (S.roll === 'flat'){ $('#tLevel').textContent = '平放'; $('#dLevel').className = 'dot'; }
   else if (typeof S.roll === 'number'){ $('#tLevel').textContent = (S.roll >= 0 ? '' : '−') + Math.abs(S.roll).toFixed(1) + '°'; $('#dLevel').className = 'dot' + (Math.abs(S.roll) < 1 ? ' on' : ' mid'); }
 }
+/* ---------- 风景：地平线、引导线、对称（纯计算，不用模型） ---------- */
+const LW = 160; let lcv = null, lctx = null;
+function landAnalyze(){
+  if (!video.videoWidth) return;
+  const m = coverMap(), LH = Math.round(LW * H / W);
+  if (!lcv){ lcv = document.createElement('canvas'); lctx = lcv.getContext('2d', { willReadFrequently: true }); }
+  if (lcv.width !== LW || lcv.height !== LH){ lcv.width = LW; lcv.height = LH; }
+  lctx.save(); if (S.facing === 'user'){ lctx.translate(LW, 0); lctx.scale(-1, 1); }
+  lctx.drawImage(video, -m.ox / m.s, -m.oy / m.s, W / m.s, H / m.s, 0, 0, LW, LH); lctx.restore();
+  const d = lctx.getImageData(0, 0, LW, LH).data, N = LW * LH;
+  const L = new Float32Array(N), B = new Float32Array(N);
+  for (let i = 0, j = 0; i < N; i++, j += 4){ L[i] = .2126 * d[j] + .7152 * d[j + 1] + .0722 * d[j + 2]; B[i] = d[j + 2] - (d[j] + d[j + 1]) / 2; }
+  const GY = new Float32Array(N), GX = new Float32Array(N), G = new Float32Array(N);
+  let gsum = 0;
+  for (let y = 1; y < LH - 1; y++) for (let x = 1; x < LW - 1; x++){
+    const i = y * LW + x;
+    const gx = -L[i - LW - 1] - 2 * L[i - 1] - L[i + LW - 1] + L[i - LW + 1] + 2 * L[i + 1] + L[i + LW + 1];
+    const gy = -L[i - LW - 1] - 2 * L[i - LW] - L[i - LW + 1] + L[i + LW - 1] + 2 * L[i + LW] + L[i + LW + 1];
+    GX[i] = gx; GY[i] = gy; G[i] = Math.hypot(gx, gy); gsum += Math.abs(gy);
+  }
+  const gmean = gsum / N;
+
+  // 1) 地平线：在 ±10° 内找一条贯穿画面、上下明暗差最大的线
+  let best = { s: 0, y0: 0, a: 0 };
+  for (let a = -10; a <= 10; a += .5){
+    const t = Math.tan(a * Math.PI / 180);
+    for (let y0 = Math.round(LH * .06); y0 < LH * .94; y0++){
+      let sum = 0, n = 0;
+      for (let x = 2; x < LW - 2; x += 2){
+        const y = Math.round(y0 + (x - LW / 2) * t); if (y < 1 || y >= LH - 1) continue;
+        sum += Math.abs(GY[y * LW + x]); n++;
+      }
+      if (n > LW * .4){ const sc = sum / n; if (sc > best.s) best = { s: sc, y0, a }; }
+    }
+  }
+  let hzOK = best.s > 28 && best.s > gmean * 3.2;
+  // 真正的地平线：上下两大块的亮度或颜色明显不同（天和地/海），不只是一条边
+  if (hzOK){
+    const t = Math.tan(best.a * Math.PI / 180), band = Math.round(LH * .12);
+    let la = 0, lb = 0, ba = 0, bb = 0, na = 0, nb = 0;
+    for (let x = 0; x < LW; x += 2){
+      const yh = Math.round(best.y0 + (x - LW / 2) * t);
+      for (let k = 3; k < band; k += 2){
+        const ya = yh - k, yb = yh + k;
+        if (ya >= 0){ const i = ya * LW + x; la += L[i]; ba += B[i]; na++; }
+        if (yb < LH){ const i = yb * LW + x; lb += L[i]; bb += B[i]; nb++; }
+      }
+    }
+    const dL = Math.abs(la / Math.max(1, na) - lb / Math.max(1, nb)), dB = Math.abs(ba / Math.max(1, na) - bb / Math.max(1, nb));
+    if (dL < 22 && dB < 18) hzOK = false;
+  }
+
+  // 2) 天空：地平线以上的部分平不平（有没有云、晚霞），过不过曝
+  let skyStd = 0, skyClip = 0, skyEdge = 0;
+  if (hzOK){
+    let s1 = 0, s2 = 0, n = 0, c = 0, e = 0;
+    const t = Math.tan(best.a * Math.PI / 180);
+    for (let x = 0; x < LW; x += 2){
+      const yh = best.y0 + (x - LW / 2) * t;
+      for (let y = 1; y < yh - 3 && y < LH; y += 2){ const i = y * LW + x, v = L[i]; s1 += v; s2 += v * v; n++; if (v > 248) c++; if (G[i] > 60) e++; }
+    }
+    if (n > 20){ const mu = s1 / n; skyStd = Math.sqrt(Math.max(0, s2 / n - mu * mu)); skyClip = c / n; skyEdge = e / n; }
+  }
+
+  // 3) 引导线：霍夫变换找斜线，再找它们的交点（消失点）
+  const lines = [];
+  {
+    const TH = 90, diag = Math.hypot(LW, LH), RB = Math.ceil(diag * 2 / 2);
+    const acc = new Uint16Array(TH * RB);
+    const cs = [], sn = [];
+    for (let k = 0; k < TH; k++){ const th = k * Math.PI / TH; cs.push(Math.cos(th)); sn.push(Math.sin(th)); }
+    // 只用比较强的边缘点
+    let thr = 0; { const arr = []; for (let i = 0; i < N; i += 7) arr.push(G[i]); arr.sort((a, b) => a - b); thr = Math.max(70, arr[Math.floor(arr.length * .9)]); }
+    for (let y = 2; y < LH - 2; y += 1) for (let x = 2; x < LW - 2; x += 1){
+      const i = y * LW + x; if (G[i] < thr) continue;
+      // 用梯度方向只投票附近的角度，又快又准
+      const gth = Math.atan2(GY[i], GX[i]); let kc = Math.round(((gth + Math.PI) % Math.PI) / Math.PI * TH) % TH;
+      for (let dk = -3; dk <= 3; dk++){
+        const k = (kc + dk + TH) % TH;
+        const r = Math.round((x * cs[k] + y * sn[k] + diag) / 2);
+        if (r >= 0 && r < RB) acc[k * RB + r]++;
+      }
+    }
+    const minVotes = Math.max(18, LH * .16);
+    for (let n = 0; n < 8; n++){
+      let bi = -1, bv = minVotes;
+      for (let i = 0; i < acc.length; i++) if (acc[i] > bv){ bv = acc[i]; bi = i; }
+      if (bi < 0) break;
+      const k = Math.floor(bi / RB), r = bi % RB;
+      for (let dk = -5; dk <= 5; dk++) for (let dr = -6; dr <= 6; dr++){ const kk = (k + dk + TH) % TH, rr2 = r + dr; if (rr2 >= 0 && rr2 < RB) acc[kk * RB + rr2] = 0; }
+      const th = k * Math.PI / TH, deg = th * 180 / Math.PI;   // 法线角
+      // 线本身的倾角 = 法线角 - 90°；只要斜线（离水平/竖直都超过 12°）
+      const lineDeg = ((deg - 90) % 180 + 180) % 180, off = Math.min(lineDeg, 180 - lineDeg, Math.abs(90 - lineDeg));
+      if (off < 12) continue;
+      lines.push({ c: Math.cos(th), s: Math.sin(th), rho: r * 2 - diag, votes: bv });
+    }
+  }
+  let vp = null;
+  if (lines.length >= 2){
+    const pts = [];
+    for (let i = 0; i < lines.length; i++) for (let j = i + 1; j < lines.length; j++){
+      const a = lines[i], b = lines[j], det = a.c * b.s - a.s * b.c;
+      if (Math.abs(det) < .26) continue;   // 夹角太小
+      const x = (a.rho * b.s - b.rho * a.s) / det, y = (a.c * b.rho - b.c * a.rho) / det;
+      const nx = x / LW, ny = y / LH;
+      if (nx > -.1 && nx < 1.1 && ny > -.1 && ny < 1.1) pts.push({ x: nx, y: ny });
+    }
+    let bestN = 0;
+    for (const p of pts){
+      const near = pts.filter(q => Math.hypot((q.x - p.x) * W / H, q.y - p.y) < .05);
+      if (near.length > bestN){ bestN = near.length; vp = { x: near.reduce((s, q) => s + q.x, 0) / near.length, y: near.reduce((s, q) => s + q.y, 0) / near.length, n: near.length }; }
+    }
+    if (bestN < 2 && lines.length > 2) vp = null;
+  }
+
+  // 4) 对称：找一条竖轴，让左右两边的「边缘」最像（只比亮度的话，大片天空也会被当成对称）
+  let sym = { score: 0, x: .5 };
+  for (let c = Math.round(LW * .36); c <= Math.round(LW * .64); c += 1){
+    const half = Math.min(c, LW - 1 - c) - 1; let mn = 0, mx = 0;
+    for (let y = 2; y < LH - 2; y += 2) for (let k = 2; k < half; k += 1){
+      const a = G[y * LW + c - k], b = G[y * LW + c + k], hi = a > b ? a : b;
+      if (hi < 50) continue; mn += a < b ? a : b; mx += hi;
+    }
+    if (mx > 0){ const sc = mn / mx; if (sc > sym.score) sym = { score: sc, x: (c + .5) / LW }; }
+  }
+
+  // 平滑地平线
+  if (hzOK){
+    const y = (best.y0 + .5) / LH, a = best.a;
+    if (!S.hz || Math.abs(S.hz.y - y) > .08) S.hz = { y, ang: a, seen: performance.now() };
+    else { S.hz.y += (y - S.hz.y) * .4; S.hz.ang += (a - S.hz.ang) * .4; S.hz.seen = performance.now(); }
+  } else if (S.hz && performance.now() - S.hz.seen > 800) S.hz = null;
+
+  S.land = { lines: lines.map(l => ({ c: l.c, s: l.s, rho: l.rho })), vp, sym, skyStd, skyClip, skyEdge, LH };
+}
+// 推荐的地平线位置
+function hzGoal(){
+  const Ld = S.land;
+  if (S.sky === 'sky') return 2/3;
+  if (S.sky === 'ground') return 1/3;
+  if (S.sky === 'mid') return .5;
+  // 自动：天空有云、有晚霞（明暗变化大）就多留天空，天空平淡就多留地面
+  if (!Ld) return 2/3;
+  return (Ld.skyStd > 22 || Ld.skyEdge > .05) ? 2/3 : 1/3;
+}
+function landJudge(){
+  const Ld = S.land, hz = S.hz;
+  if (!Ld) return { text: '对准风景', sub: '正在找地平线、线条和对称', state: '' };
+  if (hz){
+    // 地平线歪了：画面里看到的，比陀螺仪更准
+    if (Math.abs(hz.ang) > .8) return { text: '地平线歪了 ' + Math.abs(hz.ang).toFixed(1) + '°', sub: hz.ang > 0 ? '手机向右转一点（顺时针）' : '手机向左转一点（逆时针）', state: 'warn' };
+    const goal = hzGoal(), dy = hz.y - goal;
+    if (Ld.skyClip > .3) return { text: '天空过曝了', sub: '天上的细节会丢：换个角度，或等云遮一下太阳', state: 'warn' };
+    if (Math.abs(dy) > .045){
+      const why = S.sky === 'auto' ? (goal > .5 ? '天空好看，多留一点天空' : '天空比较平淡，多留一点地面') : S.sky === 'mid' ? '对称构图，地平线放中间' : '';
+      if (S.sky !== 'mid' && Math.abs(hz.y - .5) < .05) return { text: '地平线在正中间', sub: '画面被切成两半了。' + why, state: '' };
+      return dy > 0 ? { text: '镜头往下压一点', sub: '让地平线往上走到虚线。' + why, state: '' } : { text: '镜头往上抬一点', sub: '让地平线往下走到虚线。' + why, state: '' };
+    }
+    return { text: '就是现在', sub: Ld.vp ? '地平线放平放好了，引导线也在画面里' : '地平线放平，落在三分线上', state: 'ok' };
+  }
+  // 没有地平线：看引导线和对称
+  if (Ld.vp){
+    const pts = [[1/3,1/3],[2/3,1/3],[1/3,2/3],[2/3,2/3],[.5,.5]];
+    const near = pts.reduce((b, p) => { const dd = Math.hypot((Ld.vp.x - p[0]) * W / H, Ld.vp.y - p[1]); return dd < b.d ? { d: dd, p } : b; }, { d: 9, p: null });
+    if (near.d < .05) return { text: '就是现在', sub: '线条汇聚的点落在了' + (near.p[0] === .5 ? '画面正中' : '三分点上'), state: 'ok' };
+    return { text: '线条汇聚到黄色圆点', sub: '移动镜头，把圆点放到三分点或正中间', state: '' };
+  }
+  if (Ld.sym.score > .55){
+    const off = Ld.sym.x - .5;
+    if (Math.abs(off) < .02) return { text: '就是现在', sub: '对称构图，中轴对齐了', state: 'ok' };
+    return { text: '这里适合对称构图', sub: off > 0 ? '镜头往右移一点，让中轴对齐中线' : '镜头往左移一点，让中轴对齐中线', state: '' };
+  }
+  if (typeof S.roll === 'number' && Math.abs(S.roll) > 1.5) return { text: S.roll > 0 ? '手机向右歪了' : '手机向左歪了', sub: '没找到地平线，先用水平仪放平', state: 'warn' };
+  return { text: '没找到明显的线条', sub: '试试找一条路、一道海岸线或一排建筑', state: '' };
+}
+function drawLand(j){
+  const Ld = S.land, hz = S.hz; if (!Ld) return;
+  ctx.save(); ctx.lineCap = 'round';
+  // 引导线
+  for (const l of Ld.lines){
+    // 直线 x·c + y·s = rho（在分析画布坐标里），画到屏幕上
+    const sx = W / LW, sy = H / Ld.LH, P = [];
+    if (Math.abs(l.s) > 1e-3){ P.push([0, l.rho / l.s], [LW, (l.rho - LW * l.c) / l.s]); } else { P.push([l.rho / l.c, 0], [l.rho / l.c, Ld.LH]); }
+    ctx.strokeStyle = 'rgba(120,220,255,.45)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(P[0][0] * sx, P[0][1] * sy); ctx.lineTo(P[1][0] * sx, P[1][1] * sy); ctx.stroke();
+  }
+  if (Ld.vp && !hz){
+    ctx.fillStyle = '#FFD43B'; ctx.strokeStyle = '#1A1500'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(Ld.vp.x * W, Ld.vp.y * H, 9, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    // 目标点：三分点和中心
+    ctx.strokeStyle = 'rgba(255,255,255,.8)'; ctx.lineWidth = 1.5;
+    for (const [a, b] of [[1/3,1/3],[2/3,1/3],[1/3,2/3],[2/3,2/3],[.5,.5]]){ ctx.beginPath(); ctx.arc(a * W, b * H, 12, 0, Math.PI * 2); ctx.stroke(); }
+  }
+  if (hz){
+    const ok = j.state === 'ok', t = Math.tan(hz.ang * Math.PI / 180);
+    const y0 = hz.y * H - W / 2 * t, y1 = hz.y * H + W / 2 * t;
+    ctx.strokeStyle = ok ? '#5BE38C' : Math.abs(hz.ang) > .8 ? '#FF8A5B' : '#7FD8FF'; ctx.lineWidth = 3;
+    if (ok){ ctx.shadowColor = '#5BE38C'; ctx.shadowBlur = 18; }
+    ctx.beginPath(); ctx.moveTo(0, y0); ctx.lineTo(W, y1); ctx.stroke(); ctx.shadowBlur = 0;
+    ctx.fillStyle = ctx.strokeStyle; ctx.font = '600 11px ' + FONT; ctx.fillText('地平线', 10, Math.min(y0, y1) - 8);
+    // 推荐位置：黄色虚线
+    if (!ok){
+      const gy = hzGoal() * H;
+      ctx.setLineDash([10, 8]); ctx.strokeStyle = '#FFD43B'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = '#FFD43B'; ctx.fillText('放到这里', W - 62, gy - 8);
+    }
+  } else if (Ld.sym.score > .55){
+    ctx.setLineDash([6, 6]); ctx.strokeStyle = 'rgba(255,212,59,.9)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(Ld.sym.x * W, 0); ctx.lineTo(Ld.sym.x * W, H); ctx.stroke();
+    ctx.setLineDash([]); ctx.strokeStyle = 'rgba(255,255,255,.6)';
+    ctx.beginPath(); ctx.moveTo(W / 2, 0); ctx.lineTo(W / 2, H); ctx.stroke();
+  }
+  ctx.restore();
+}
+let landOk = false;
+function landLoop(now){
+  if (now - lastAna > 220){ lastAna = now; try{ landAnalyze(); }catch(e){ console.warn(e); } }
+  const j = landJudge();
+  ctx.clearRect(0, 0, W, H);
+  drawGridLevel();
+  drawLand(j);
+  const key = j.text + '|' + j.sub + '|' + j.state;
+  if (key !== lastHint){ lastHint = key; const h = $('#hint'); h.className = j.state === 'ok' ? 'ok' : j.state === 'warn' ? 'warn' : ''; h.innerHTML = `${j.text}<small>${j.sub}</small>`; }
+  const ok = j.state === 'ok';
+  $('#shutter').classList.toggle('ready', ok);
+  if (ok && !landOk) ding();
+  landOk = ok;
+  $('#tPerson').textContent = S.hz ? '已找到' : '—'; $('#dPerson').className = 'dot' + (S.hz ? ' on' : '');
+  updateLevelChip();
+}
+
 function streetLoop(now){
   if (S.det && video.readyState >= 2 && video.currentTime !== lastVT){
     lastVT = video.currentTime;
@@ -902,14 +1148,18 @@ document.querySelector('.modes').addEventListener('click', e => {
   S.mode = b.dataset.v; setSeg('.modes', S.mode);
   document.querySelectorAll('.pOnly').forEach(el => el.hidden = S.mode !== 'portrait');
   document.querySelectorAll('.sOnly').forEach(el => el.hidden = S.mode !== 'street');
+  document.querySelectorAll('.lOnly').forEach(el => el.hidden = S.mode !== 'land');
+  S.land = null; S.hz = null; $('#shutter').classList.remove('ready');
   $('#ana').hidden = S.mode !== 'portrait';
   $('#cFace').hidden = S.mode !== 'portrait';
+  $('#cModel').hidden = S.mode === 'land';   // 风景模式不用模型
   S.armed = false; $('#arm').classList.remove('on'); $('#arm').textContent = '开始等待';
   lastHint = '';
   if (S.mode === 'street') loadDet();
   else if (S.landmarker) $('#tModel').textContent = '就绪';
-  $('#tPerson').previousSibling.textContent = S.mode === 'street' ? '目标 ' : '人物 ';
+  $('#tPerson').previousSibling.textContent = S.mode === 'street' ? '目标 ' : S.mode === 'land' ? '地平线 ' : '人物 ';
 });
+$('#segSky').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.sky = b.dataset.v; setSeg('#segSky', S.sky); });
 $('#segWhat').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.what = b.dataset.v; setSeg('#segWhat', S.what); });
 $('#arm').addEventListener('click', () => {
   S.armed = !S.armed; S.inZone = true;   // 开始时已经在舞台里的人不算，等下一个走进来
